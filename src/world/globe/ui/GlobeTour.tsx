@@ -6,6 +6,8 @@ import { fleetStats, storeApps } from "../../../data/store.ts";
 import { openSource, upstreamMergedPRs } from "../../../data/profile/openSource.ts";
 import { liveDotsLabel } from "../globeRows.ts";
 import { usePresenceGeo } from "../presenceGeo.ts";
+import { isTypingTarget, ownsKey } from "./shortcutTarget.ts";
+import { useCompare } from "../timeMachine/compareStore.ts";
 import { useGlobe } from "../globeStore.ts";
 
 /** LANE L5 (navigation and UI) wrote the stops and the original single
@@ -29,10 +31,6 @@ import { useGlobe } from "../globeStore.ts";
  *  WRONG box. Two mounts, one shared store, no such conflict; the
  *  keyboard/enter effects below only run from the "overlay" instance so
  *  they never double-fire. */
-
-function isTypingTarget(el: EventTarget | null): boolean {
-  return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
-}
 
 const upstreamRepo = openSource.find((c) => c.org === "career-ops-hq")?.repo ?? "career-ops-hq/career-ops";
 
@@ -162,8 +160,9 @@ export default function GlobeTour({ slot }: { tier: 1 | 2 | 3; slot: "row" | "ov
   useEffect(() => {
     if (slot !== "overlay" || !running) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
+      if (isTypingTarget(e.target as HTMLElement | null)) return;
       if (e.key === "Escape") exit();
+      else if (e.defaultPrevented || useCompare.getState().state || ownsKey(e.target as HTMLElement | null, e.key)) return;
       else if (e.key === "ArrowRight") setTourStep(Math.min(STOPS.length - 1, step + 1));
       else if (e.key === "ArrowLeft") setTourStep(Math.max(0, step - 1));
     };

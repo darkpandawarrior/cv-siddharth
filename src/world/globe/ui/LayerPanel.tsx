@@ -1,8 +1,9 @@
-import { Legend } from "./LayerCatalog.tsx";
+import { Legend } from "./Legend.tsx";
+import { GIBS_BASES } from "../layers/gibsCatalog.ts";
 import { WIND_LEGEND } from "../layers/windField.ts";
 import { DENSITY_LEGEND } from "../layers/hexbin.ts";
 import { QUAKE_DEPTH_LEGEND } from "../layers/quake.ts";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Layers, X } from "lucide-react";
 import type { Vector3 } from "three";
 import { PUNE } from "../../../lib/sky.ts";
@@ -22,6 +23,27 @@ import { ShareSlot } from "./ShareView.tsx";
 // LANE P1 (wave 7): the preset chip row — pure preset data/diff logic lives
 // in its own file so it is unit-testable without mounting this component.
 import { LAYER_PRESETS, layerIdsToToggle, presetCaveat, presetImagery, presetLayerRecord, type LayerPreset } from "./layerPresets.ts";
+
+const LayerCatalog = lazy(() => import("./LayerCatalog.tsx"));
+
+function ImagerySection() {
+  const imagery = useGlobe((s) => s.imagery);
+  const [opened, setOpened] = useState(false);
+  const base = GIBS_BASES.find((entry) => entry.id === imagery.base);
+  return <details className="mt-3" onToggle={(event) => setOpened(event.currentTarget.open)}>
+    <summary className="min-h-11 cursor-pointer rounded py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+      Imagery
+      <span className="block break-words text-xs font-mono text-muted">{base?.title ?? imagery.base} · {imagery.overlays.length} active overlays</span>
+    </summary>
+    {opened && <Suspense fallback={<p role="status" className="text-sm text-muted">Loading imagery choices…</p>}><LayerCatalog /></Suspense>}
+  </details>;
+}
+
+export function EarthStatus({ health, style, tier }: { health: LayerHealth | null | undefined; style: EarthStyle; tier: 1 | 2 | 3 }) {
+  return <p data-earth-status-line role="status" className={`mt-2 break-words text-muted ${health?.state === "live" || health?.state === "snapshot" ? "text-xs font-mono" : "text-sm"}`}>
+    {style === "dots" ? "Showing dots. Real imagery is off." : tier === 3 ? "Showing dots. Real imagery is unavailable at this graphics tier." : health?.state === "failed" ? `Imagery unavailable, showing dots. ${health.detail ?? ""}` : !health ? "Showing dots while imagery starts." : health.state === "loading" ? "Loading imagery…" : health.detail ?? "Imagery loaded"}
+  </p>;
+}
 
 // The ISS as SatelliteLayer registers it: `sat:<NORAD id>`.
 const ISS_ENTITY = "sat:25544";
@@ -113,13 +135,13 @@ export function LayerRows({ layers, status, toggleLayer }: { layers: Record<Laye
               className="flex min-h-11 w-full items-center gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
               <span aria-hidden className={`h-2 w-2 shrink-0 rounded-full ${dot.pulse ? "animate-pulse" : ""}`} style={{ backgroundColor: dot.color }} />
-              <span className={`min-w-0 flex-1 truncate ${on ? "text-zinc-200" : "text-zinc-500"}`}>{LABEL[id]}</span>
+              <span className={`min-w-0 flex-1 break-words ${on ? "text-zinc-200" : "text-zinc-400"}`}>{LABEL[id]}</span>
             </button>
             {on && id === "wind" && <Legend legend={WIND_LEGEND} />}
             {on && id === "density" && <Legend legend={DENSITY_LEGEND} />}
             {on && id === "hazards" && <Legend legend={QUAKE_DEPTH_LEGEND} />}
             {health?.detail && (
-              <p className="ml-4 truncate text-xs text-muted" title={health.detail}>
+              <p className="ml-4 break-words font-mono text-xs text-muted">
                 {health.detail}
               </p>
             )}
@@ -194,8 +216,8 @@ function PresetChips({ touchTarget }: { touchTarget: string }) {
 
   const caveat = activePreset ? presetCaveat(activePreset, status) : null;
   return (
-    <section className="mb-3" data-globe-presets data-clouds-on={cloudsOn} data-story-arcs-on={storyArcsOn}>
-      <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Presets</h3>
+    <section className="mb-4" data-globe-presets data-clouds-on={cloudsOn} data-story-arcs-on={storyArcsOn}>
+      <h3 className="mb-2 text-sm font-semibold text-muted">Presets</h3>
       <div className="flex flex-wrap gap-1">
         {LAYER_PRESETS.map((preset) => (
           <button
@@ -203,7 +225,7 @@ function PresetChips({ touchTarget }: { touchTarget: string }) {
             type="button"
             title={preset.summary}
             onClick={() => apply(preset)}
-            className={`rounded-full border border-line px-2 ${touchTarget} text-xs text-zinc-300 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent`}
+            className={`rounded-full border border-line px-2 ${touchTarget} text-sm text-zinc-300 hover:border-accent hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent`}
           >
             {preset.label}
           </button>
@@ -212,7 +234,7 @@ function PresetChips({ touchTarget }: { touchTarget: string }) {
           <button
             type="button"
             onClick={restore}
-            className={`rounded-full border border-accent/60 px-2 ${touchTarget} text-xs text-accent hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent`}
+            className={`rounded-full border border-accent/60 px-2 ${touchTarget} text-sm text-accent hover:bg-accent/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent`}
           >
             Restore
           </button>
@@ -221,7 +243,7 @@ function PresetChips({ touchTarget }: { touchTarget: string }) {
       {/* Says what the chip turned on for every visitor, not just a mouse
           hover reading the `title` above (G8 + accessibility: a claim needs
           a channel every visitor gets, not just a sighted mouse user). */}
-      <p data-preset-announcement role="status" aria-live="polite" className="mt-1 min-h-[1em] text-xs text-muted" style={caveat ? { color: "var(--color-warn)" } : undefined}>
+      <p data-preset-announcement role="status" aria-live="polite" className="mt-1 min-h-[1em] text-sm text-muted" style={caveat ? { color: "var(--color-warn)" } : undefined}>
         {announcement} {caveat}
       </p>
     </section>
@@ -235,7 +257,7 @@ type PanelTab = "layers" | "live";
 
 function TabSwitcher({ tab, setTab }: { tab: PanelTab; setTab: (t: PanelTab) => void }) {
   return (
-    <div className="mb-3 flex overflow-hidden rounded-full border border-line" role="tablist" aria-label="Layer panel tabs">
+    <div className="mb-4 flex overflow-hidden rounded-full border border-line" role="tablist" aria-label="Layer panel tabs">
       {(["layers", "live"] as const).map((t) => (
         <button
           key={t}
@@ -244,7 +266,7 @@ function TabSwitcher({ tab, setTab }: { tab: PanelTab; setTab: (t: PanelTab) => 
           aria-selected={tab === t}
           data-feed-tab={t}
           onClick={() => setTab(t)}
-          className={`flex-1 px-2 py-1.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+          className={`flex-1 min-h-11 min-w-11 px-2 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
             tab === t ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
@@ -319,7 +341,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
         type="button"
         onClick={() => setView("orbit")}
         aria-pressed={view === "orbit"}
-        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+        className={`block w-full rounded px-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
           view === "orbit" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
         }`}
       >
@@ -332,7 +354,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           setView("ground");
         }}
         aria-pressed={view === "ground"}
-        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+        className={`block w-full rounded px-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
           view === "ground" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
         }`}
       >
@@ -348,7 +370,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           setView("street");
         }}
         aria-pressed={view === "street"}
-        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+        className={`block w-full rounded px-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
           view === "street" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
         }`}
       >
@@ -364,8 +386,8 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
         aria-pressed={view === "follow"}
         disabled={!issAvailable}
         title={issAvailable ? undefined : "No ISS position yet"}
-        className={`block w-full rounded px-2 text-left text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
-          !issAvailable ? "cursor-not-allowed text-zinc-600" : view === "follow" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
+        className={`block w-full rounded px-2 text-left text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${touchTarget} ${
+          !issAvailable ? "cursor-not-allowed text-zinc-400" : view === "follow" ? "bg-accent/20 text-accent" : "text-zinc-300 hover:bg-white/5"
         }`}
       >
         Follow the ISS{!issAvailable ? " (no ISS registered yet)" : ""}
@@ -381,7 +403,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           type="button"
           onClick={() => setStyle(s)}
           aria-pressed={style === s}
-          className={`flex-1 px-2 py-1.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+          className={`flex-1 min-h-11 min-w-11 px-2 py-1.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
             style === s ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
@@ -401,17 +423,17 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {panelOpen ? (
         <div
           data-globe-layer-panel
-          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-mono text-xs text-zinc-300 sm:bottom-4 sm:flex"
+          className="pointer-events-auto absolute right-4 top-4 z-30 hidden w-[233px] flex-col overflow-hidden rounded-2xl glass-panel font-body text-sm text-zinc-300 sm:bottom-4 sm:flex"
         >
           <div className="flex items-center justify-between gap-2 border-b border-line p-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
+            <h2 className="text-base font-semibold text-zinc-200">Layers</h2>
             <button
               type="button"
               onClick={() => setPanelOpen(false)}
               aria-pressed
               aria-label="Collapse the layers panel"
               title="Collapse (L)"
-              className="ctrl-icon flex h-7 w-7 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              className="ctrl-icon flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
               <X size={13} />
             </button>
@@ -423,21 +445,23 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
             ) : (
               <>
                 <PresetChips touchTarget="min-h-11" />
-                <section className="mb-3">
-                  <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
+                <section className="mb-4">
+                  <h3 className="mb-2 text-sm font-semibold text-muted">Earth</h3>
                   {earthStyleToggle}
+                  <EarthStatus health={status.earth} style={style} tier={tier} />
+                  <div className="mt-4">
+                    <h3 className="mb-2 text-sm font-semibold text-muted">Layers</h3>
+                    <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
+                  </div>
+                  <ImagerySection />
                 </section>
-                <section className="mb-3">
-                  <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
-                  <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
-                </section>
-                <section className="mb-3">
-                  <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
-                  {viewButtons("py-1.5")}
+                <section className="mb-4">
+                  <h3 className="mb-2 text-sm font-semibold text-muted">Views</h3>
+                  {viewButtons("min-h-11")}
                 </section>
                 <section>
-                  <h3 className="mb-1 text-xs uppercase tracking-wide text-muted">Keys</h3>
-                  <p className="text-xs leading-relaxed text-zinc-500">
+                  <h3 className="mb-1 text-sm font-semibold text-muted">Keys</h3>
+                  <p className="text-sm leading-relaxed text-zinc-400">
                     L panel · 1-{LAYER_IDS.length} layers · R/D earth · O/G/F views · T tour · Esc back · [ ] scrub 1h · Space play
                   </p>
                 </section>
@@ -452,7 +476,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           aria-pressed={false}
           aria-label="Open the layers panel"
           title="Layers (L)"
-          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden h-[34px] w-[34px] items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
+          className="ctrl-icon pointer-events-auto absolute right-4 top-4 z-30 hidden min-h-11 min-w-11 items-center justify-center rounded-full glass-panel text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent sm:flex"
         >
           <Layers size={15} />
         </button>
@@ -467,10 +491,10 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       {sheet === "layers" && (
         <div
           data-globe-layer-sheet
-          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl glass-panel p-4 font-mono text-xs text-zinc-300 sm:hidden"
+          className="pointer-events-auto fixed inset-x-0 bottom-0 z-40 max-h-[min(70vh,var(--globe-sheet-max-h,70vh))] w-full overflow-y-auto rounded-t-2xl glass-panel p-4 font-body text-sm text-zinc-300 sm:hidden"
         >
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Layers</h2>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold text-zinc-200">Layers</h2>
             <div className="flex items-center gap-2">
               <ShareSlot />
               <SoundToggleSlot />
@@ -490,16 +514,18 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
           ) : (
             <>
               <PresetChips touchTarget="min-h-11" />
-              <section className="mb-3">
-                <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Earth</h3>
-                {earthStyleToggle}
-              </section>
-              <section className="mb-3">
-                <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Layers</h3>
-                <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
-              </section>
+              <section className="mb-4">
+                  <h3 className="mb-2 text-sm font-semibold text-muted">Earth</h3>
+                  {earthStyleToggle}
+                  <EarthStatus health={status.earth} style={style} tier={tier} />
+                  <div className="mt-4">
+                    <h3 className="mb-2 text-sm font-semibold text-muted">Layers</h3>
+                    <LayerRows layers={layers} status={status} toggleLayer={toggleLayer} />
+                  </div>
+                  <ImagerySection />
+                </section>
               <section>
-                <h3 className="mb-2 text-xs uppercase tracking-wide text-muted">Views</h3>
+                <h3 className="mb-2 text-sm font-semibold text-muted">Views</h3>
                 {viewButtons("min-h-11")}
               </section>
             </>

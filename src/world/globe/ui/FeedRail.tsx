@@ -1,5 +1,6 @@
+import { feedEmptyState, GROUP_OF, GROUP_LABEL, GROUPS, type FeedGroup } from "./feedEmptyState.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useFeedStore, formatRelative, bucketLabel, minuteBucket, type FeedItem, type FeedKind } from "../feed.ts";
+import { useFeedStore, formatRelative, bucketLabel, minuteBucket, type FeedItem } from "../feed.ts";
 import { useGlobe, type Selection } from "../globeStore.ts";
 
 /** WAVE 6 LANE X1 (live world feed rail). LayerPanel renders this as its
@@ -7,32 +8,6 @@ import { useGlobe, type Selection } from "../globeStore.ts";
  *  reads (`useFeedStore`) is filled by publisher hooks in HazardLayer,
  *  PulseLayer, SatelliteLayer, ArcLayer and TogetherLayer, never by this
  *  file itself. */
-
-// Four broad groups for the filter chips — the exact FeedKind union is
-// finer-grained than a visitor needs to filter by (nobody wants a
-// "wildfires only" chip next to "volcanoes only"); the four groups are also
-// what the site's own layer families already are.
-type FeedGroup = "hazard" | "signal" | "satellite" | "explorer";
-const GROUP_OF: Record<FeedKind, FeedGroup> = {
-  quake: "hazard",
-  wildfire: "hazard",
-  storm: "hazard",
-  volcano: "hazard",
-  gdacs: "hazard",
-  launch: "hazard",
-  aurora: "hazard",
-  flare: "hazard", // LANE S2 (wave 9, space weather): M/X-class X-ray flares
-  "ci-pass": "signal",
-  "ci-fail": "signal",
-  push: "signal",
-  devto: "signal",
-  lichess: "signal",
-  satellite: "satellite",
-  presence: "explorer",
-  together: "explorer",
-};
-const GROUP_LABEL: Record<FeedGroup, string> = { hazard: "Hazards", signal: "Signals", satellite: "Satellites", explorer: "Explorers" };
-const GROUPS: FeedGroup[] = ["hazard", "signal", "satellite", "explorer"];
 
 const SEVERITY_COLOR: Record<FeedItem["severity"], string> = {
   info: "var(--color-probe)",
@@ -104,16 +79,16 @@ function FeedRow({ item, nowMs, onPick }: { item: FeedItem; nowMs: number; onPic
       <button
         type="button"
         onClick={() => onPick(item)}
-        className="flex w-full items-start gap-2 rounded px-1 py-1.5 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="flex min-h-11 w-full items-start gap-2 rounded px-1 py-1.5 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <span aria-hidden className="mt-0.5 shrink-0" style={{ color: SEVERITY_COLOR[item.severity] }}>
           <GroupIcon group={group} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-zinc-200">{item.title}</span>
-          <span className="block truncate text-xs text-muted">{item.detail}</span>
+          <span className="block break-words text-zinc-200">{item.title}</span>
+          <span className="block break-words text-sm text-muted">{item.detail}</span>
         </span>
-        <span className="shrink-0 whitespace-nowrap text-xs text-zinc-500">{formatRelative(item.whenMs, nowMs)}</span>
+        <span className="shrink-0 whitespace-nowrap text-xs font-mono text-zinc-400">{formatRelative(item.whenMs, nowMs)}</span>
       </button>
     </li>
   );
@@ -121,6 +96,9 @@ function FeedRow({ item, nowMs, onPick }: { item: FeedItem; nowMs: number; onPic
 
 export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
   const items = useFeedStore((s) => s.items);
+  const layers = useGlobe((s) => s.layers);
+  const status = useGlobe((s) => s.status);
+  const toggleLayer = useGlobe((s) => s.toggleLayer);
   const timeOffsetMin = useGlobe((s) => s.timeOffsetMin);
   const select = useGlobe((s) => s.select);
   const flyTo = useGlobe((s) => s.flyTo);
@@ -135,6 +113,7 @@ export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
   }, []);
 
   const paused = timeOffsetMin !== 0;
+  const empty = feedEmptyState(items, group, layers, status);
   const filtered = useMemo(() => (group ? items.filter((i) => GROUP_OF[i.kind] === group) : items), [items, group]);
 
   function onPick(item: FeedItem) {
@@ -167,7 +146,7 @@ export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
           type="button"
           onClick={() => setGroup(null)}
           aria-pressed={group === null}
-          className={`rounded-full border border-line px-2 py-0.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${group === null ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"}`}
+          className={`min-h-11 min-w-11 rounded-full border border-line px-2 py-0.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${group === null ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"}`}
         >
           All
         </button>
@@ -177,7 +156,7 @@ export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
             type="button"
             onClick={() => setGroup(g)}
             aria-pressed={group === g}
-            className={`rounded-full border border-line px-2 py-0.5 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${group === g ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"}`}
+            className={`min-h-11 min-w-11 rounded-full border border-line px-2 py-0.5 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${group === g ? "bg-accent/20 text-accent" : "text-zinc-400 hover:text-zinc-200"}`}
           >
             {GROUP_LABEL[g]}
           </button>
@@ -185,11 +164,17 @@ export default function FeedRail(_props: { tier: 1 | 2 | 3 }) {
       </div>
 
       {paused ? (
-        <p data-feed-paused className="px-1 py-3 text-xs text-zinc-500">
+        <p data-feed-paused className="px-1 py-3 text-sm text-zinc-400">
           Paused while you scrub. Feed resumes at the live instant.
         </p>
       ) : filtered.length === 0 ? (
-        <p className="px-1 py-3 text-xs text-zinc-500">Nothing yet. The feed fills as things happen.</p>
+        <div data-feed-empty className="px-1 py-3 text-sm text-muted">
+          <p className="break-words">{empty.text}</p>
+          {empty.action && <button type="button" className="mt-2 min-h-11 min-w-11 rounded border border-line px-3 text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent" onClick={() => {
+            if (empty.action === "all") setGroup(null);
+            else for (const id of empty.layers) if (!layers[id]) toggleLayer(id);
+          }}>{empty.action === "all" ? "Show all" : "Turn on layers"}</button>}
+        </div>
       ) : (
         <ul data-feed-list className="space-y-0.5">
           {filtered.map((item, i) => {
@@ -215,7 +200,7 @@ function FeedGroupBoundary({ showHeader, whenMs, nowMs, children }: { showHeader
   return (
     <>
       {showHeader && (
-        <li aria-hidden className="px-1 pb-0.5 pt-2 text-xs uppercase tracking-wide text-zinc-600 first:pt-0">
+        <li aria-hidden className="px-1 pb-0.5 pt-2 text-xs font-mono text-zinc-400 first:pt-0">
           {bucketLabel(whenMs, nowMs)}
         </li>
       )}
