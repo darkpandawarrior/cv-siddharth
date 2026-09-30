@@ -15,6 +15,12 @@ describe("buildPuneSelection", () => {
     expect(values).toContain(REACH_UPSTREAM_CLAIM);
   });
 
+  it("the Reach row says how old the snapshot is, not just its bare date (data.md #6) - appended here, not baked into globeFacts's own static label (that used to be a hydration-mismatch trap, task Z1)", () => {
+    const s = buildPuneSelection()!;
+    const reach = s.rows.find((r) => r.label === "Reach")!;
+    expect(reach.value).toMatch(/\(\d+ weeks? ago\)$/);
+  });
+
   it("is a snapshot, never live (task 4: 'live false')", () => {
     expect(buildPuneSelection()?.live).toBe(false);
   });

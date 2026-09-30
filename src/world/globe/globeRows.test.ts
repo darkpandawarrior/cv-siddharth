@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { globeFacts, liveDotsLabel, weeksAgoLabel, REACH_INSTALLS_CLAIM, REACH_UPSTREAM_CLAIM } from "./globeRows.ts";
-import { fleetStats, storeGeneratedAt } from "../../data/store.ts";
+import { fleetStats } from "../../data/store.ts";
 
 describe("globeFacts", () => {
   it("carries the exact reach-column claim sentences (living-ledger-spec.md#6.3)", () => {
@@ -23,10 +23,9 @@ describe("globeFacts", () => {
     expect(row.label).not.toContain("2,917,170");
   });
 
-  it("the reach snapshot says how old it is, not just its bare date (data.md #6)", () => {
+  it("does NOT bake '(N weeks ago)' into the static label (task Z1: that used to be a hydration-mismatch trap - GlobePanel/puneSelection append it once a real clock exists)", () => {
     const row = globeFacts.find((r) => r.id === "reach-installs")!;
-    expect(row.label).toContain(weeksAgoLabel(storeGeneratedAt));
-    expect(row.label).toMatch(/\(\d+ weeks? ago\)$/);
+    expect(row.label).not.toMatch(/\(\d+ weeks? ago\)/);
   });
 
   it("states the employer-marker resolution as N of M, never a bare count", () => {

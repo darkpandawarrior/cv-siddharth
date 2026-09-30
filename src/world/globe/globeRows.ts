@@ -13,7 +13,7 @@
 // actually drawn (`altitudes: GLOBE_ONLY` in grammar.ts), so reading their
 // inputs straight is not a second copy of a claim computed elsewhere - it is
 // the same computation, done once, for the one surface that needs it.
-import { fleetStats, storeGeneratedAt } from "../../data/store.ts";
+import { fleetStats } from "../../data/store.ts";
 import { upstreamMergedPRs, upstreamStars } from "../../data/profile.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
 import { ageDays } from "../../data/freshnessSla.ts";
@@ -37,11 +37,22 @@ const employerTotal = employerMarkers.length + employersUnresolved.length;
  *  "as of <date>" chip (GlobePanel.tsx's EvidenceChip), but a visitor has to
  *  do their own date math to know 54 days is nearly two months. This turns
  *  the stamp into the same "N weeks ago" qualifier every other snapshot on
- *  the page carries. `now` defaults to `new Date()` so the label is current
- *  at render time; weeks-only granularity means an SSR/hydration mismatch
- *  would require rendering exactly across a week boundary, which this app
- *  accepts elsewhere (EvidenceChip's own age math has the same shape). */
-export function weeksAgoLabel(stamp: string, now: Date = new Date()): string {
+ *  the page carries.
+ *
+ *  `now` has NO default here on purpose (task Z1 fix: it used to default to
+ *  `new Date()`, evaluated once at whatever moment `globeFacts` below was
+ *  first imported/module-evaluated - the server's copy of that instant and
+ *  the browser bundle's copy are two different processes that can boot
+ *  minutes or days apart, so the baked-in label drifted between SSR and
+ *  client and produced a genuine hydration text mismatch (React error
+ *  #418), not just the "rendered exactly across a week boundary" edge case
+ *  this comment used to shrug off - reproduced with e2e/globe-C1.spec.ts's
+ *  malformed-link test, which freezes the clock before navigating and made
+ *  the drift deterministic instead of rare). Callers now pass `now`
+ *  explicitly: GlobePanel.tsx via `useNow()` (null until mount, same
+ *  SSR-safe pattern useSky.ts already uses - the label appears once
+ *  mounted, not before), puneSelection.ts at its own client-only call site. */
+export function weeksAgoLabel(stamp: string, now: Date): string {
   const weeks = Math.floor(ageDays(stamp, now) / 7);
   if (weeks <= 0) return "less than a week ago";
   return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
@@ -53,8 +64,10 @@ export function weeksAgoLabel(stamp: string, now: Date = new Date()): string {
  *  discipline as the rest of src/world. */
 export const globeFacts: readonly GlobeRow[] = [
   {
+    // No "(N weeks ago)" baked in here on purpose — see weeksAgoLabel's own
+    // comment. GlobePanel/puneSelection append it once a real clock exists.
     id: "reach-installs",
-    label: `${fleetStats.installFloor.toLocaleString("en-IN")} ${REACH_INSTALLS_CLAIM} (${weeksAgoLabel(storeGeneratedAt)})`,
+    label: `${fleetStats.installFloor.toLocaleString("en-IN")} ${REACH_INSTALLS_CLAIM}`,
     file: "store.ts",
     source: "Play Store listings",
   },
