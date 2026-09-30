@@ -119,4 +119,33 @@ describe("subscribeLiveSignal (the shared per-URL bus)", () => {
       vi.unstubAllGlobals();
     }
   });
+  it("resumes only overdue feeds and coalesces repeated visibility events", async () => {
+    const doc = Object.assign(new EventTarget(), { hidden: false });
+    vi.stubGlobal("document", doc);
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: 1 })));
+    const unsub = subscribeLiveSignal("/api/visibility-freshness", 60_000, vi.fn(), fetchImpl);
+    try {
+      await vi.advanceTimersByTimeAsync(0);
+      for (let i = 0; i < 2; i++) {
+        doc.hidden = true; doc.dispatchEvent(new Event("visibilitychange"));
+        await vi.advanceTimersByTimeAsync(15);
+        doc.hidden = false; doc.dispatchEvent(new Event("visibilitychange"));
+      }
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      doc.hidden = true; doc.dispatchEvent(new Event("visibilitychange"));
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      doc.hidden = false; doc.dispatchEvent(new Event("visibilitychange"));
+      doc.dispatchEvent(new Event("visibilitychange"));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetchImpl).toHaveBeenCalledTimes(2);
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(fetchImpl).toHaveBeenCalledTimes(3);
+    } finally {
+      unsub();
+      vi.unstubAllGlobals();
+    }
+  });
+
 });

@@ -1,3 +1,8 @@
+/** Remaining freshness window, including feeds that have never polled. */
+export function pollDelay(lastPollAt: number | null, cadenceMs: number): number {
+  return lastPollAt === null ? 0 : Math.max(0, lastPollAt + cadenceMs - Date.now());
+}
+
 /** Pause network work in hidden tabs; resume only when the last poll is due. */
 export function startVisibilityPolling(poll: () => Promise<void>, cadenceMs: number): () => void {
   let stopped = false;
@@ -9,7 +14,7 @@ export function startVisibilityPolling(poll: () => Promise<void>, cadenceMs: num
   const schedule = () => {
     clear();
     if (stopped || hidden() || inFlight) return;
-    const delay = lastPollAt === null ? 0 : Math.max(0, lastPollAt + cadenceMs - Date.now());
+    const delay = pollDelay(lastPollAt, cadenceMs);
     if (delay === 0) void run();
     else timer = setTimeout(() => void run(), delay);
   };
