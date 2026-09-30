@@ -73,6 +73,9 @@ for (const mobile of [false, true]) test.describe(mobile ? "touch" : "desktop", 
     await expect(panel).toContainText("5.0 m/s");
     await expect(panel).toContainText("2026-09-30 11:00 UTC");
     await expect(panel).toContainText("Unavailable: no event within 300 km");
+    const frame = await panel.boundingBox();
+    const toolbar = await page.locator("[data-explore-bar]").boundingBox();
+    expect(frame?.y, "The comparison must leave Done pinning fully exposed").toBeGreaterThanOrEqual((toolbar?.y ?? 0) + (toolbar?.height ?? 0));
     await shot("compare");
     await panel.locator("[data-pin-scroll]").evaluate(el => { el.scrollTop = el.scrollHeight; });
     await expect(page.getByRole("button", { name: "Close pinned readouts" })).toBeInViewport();

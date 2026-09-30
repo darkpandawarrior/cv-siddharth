@@ -71,7 +71,7 @@ export default function PinnedReadoutPanel({ canvas, extras }: { canvas: HTMLCan
   const wind = getLiveSignalSnapshot<WindResponse>("/api/wind");
   const quakes = getLiveSignalSnapshot<unknown>(QUAKES);
   const columns = pins.map((point, i) => ({ point, values: pinnedValues(point, at, wind.data, quakes.data, wind.error, quakes.error), extras: [...extras(point), meteors[i]] }));
-  return createPortal(<section data-pinned-readouts aria-label="Pinned point comparison" className={`pointer-events-auto flex flex-col fixed bottom-4 left-1/2 z-50 sm:z-30 ${pins.length === 1 ? "max-h-[32vh]" : "max-h-[44vh]"} w-[calc(100%-32px)] max-w-[620px] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 p-3 text-zinc-100 shadow-2xl sm:absolute sm:bottom-6 sm:max-h-[60vh]`}>
+  return createPortal(<section data-pinned-readouts aria-label="Pinned point comparison" className={`pointer-events-auto flex flex-col fixed bottom-4 left-1/2 z-50 sm:z-30 ${pins.length === 1 ? "max-h-[32vh]" : "max-h-[40vh]"} w-[calc(100%-32px)] max-w-[620px] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/20 bg-zinc-950 p-3 text-zinc-100 shadow-2xl sm:absolute sm:bottom-6 sm:max-h-[60vh]`}>
     <div className="shrink-0 flex items-center justify-between gap-2 bg-zinc-950 pb-2">
       <div><h2 className="text-base font-semibold">{pins.length === 2 ? "Compare points" : "Point pinned"}</h2><p role="status" className="text-xs text-zinc-300">{pins.length === 2 ? "Remove a point to choose another. Esc clears both." : "Choose a second point. Scroll for readings."}</p></div>
       <button className={button} aria-label="Close pinned readouts" onClick={() => { useExplore.getState().clearPins(); canvas?.focus(); }}>×</button>
