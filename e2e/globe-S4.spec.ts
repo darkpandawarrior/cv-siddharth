@@ -25,7 +25,6 @@ import type { Page, Locator } from "@playwright/test";
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
 const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
-const aircraftFixture = JSON.parse(readFileSync(join(FIXTURES, "aircraft.json"), "utf8"));
 const whereamiFixture = JSON.parse(readFileSync(join(FIXTURES, "whereami-IN.json"), "utf8"));
 const activityFixture = JSON.parse(readFileSync(join(FIXTURES, "activity.json"), "utf8"));
 
@@ -34,7 +33,7 @@ const ALL_DAY_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/a
 async function withApiFixtures(page: Page, activity: unknown) {
   await page.route("**/api/weather", (route) => route.fulfill({ json: weatherFixture }));
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
-  await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
+  await page.route("**/api/aircraft", (route) => route.abort());
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
   await page.route("**/api/github-activity", (route) => route.fulfill({ json: activity }));
   // PulseLayer's other two feeds (this lane never draws anything from

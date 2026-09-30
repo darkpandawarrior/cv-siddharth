@@ -142,8 +142,8 @@ test.describe("Surprise me", () => {
     const toggle = layerButton(page, "Countries");
     await toggle.click();
     await page.waitForFunction(() => !!window.__W11_COUNTRY__);
-    await page.evaluate(() => window.__W11_COUNTRY__!.pick({ lat: 48.8566, lon: 2.3522 }));
-    await expect(page.getByRole("region", { name: "Selection details" }).getByRole("heading")).toHaveText("France");
+    await page.evaluate(() => window.__W11_COUNTRY__!.pick({ lat: 51.1657, lon: 10.4515 }));
+    await expect(page.getByRole("region", { name: "Selection details" }).getByRole("heading")).toHaveText("Germany");
 
     await page.getByRole("region", { name: "Selection details" }).getByRole("button", { name: "Fly to", exact: true }).click();
 
@@ -163,7 +163,7 @@ test.describe("Surprise me", () => {
     await expect(undo).toBeVisible();
     await undo.click();
     await expect(page.locator("[data-onebox-answer]")).toHaveCount(0);
-    await expect(inspector.getByRole("heading")).toHaveText("France");
+    await expect(inspector.getByRole("heading")).toHaveText("Germany");
   });
 
   test("never disabled: with the ISS untracked, launches uncached and quakes unreachable, it still finds a real place", async ({ page }) => {

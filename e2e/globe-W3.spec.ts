@@ -95,7 +95,7 @@ test("photo markers load from the fixture, and clicking one opens the viewer wit
 
 test("no photos in the bbox says so plainly instead of showing nothing unexplained", async ({ page }) => {
   await openStreetView(page, 0, 0, emptyFixture);
-  await expect(page.locator("[data-street-status]")).toContainText("No open street photos here yet");
+  await expect(page.locator("[data-street-status]")).toContainText("No streets here");
 });
 
 // Break it once: a failed Panoramax search must show a plain failure message,

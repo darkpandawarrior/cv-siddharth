@@ -144,7 +144,7 @@ test("play/pause and Back walk the film without losing position, and Esc exits",
   await tap(card.getByRole("button", { name: "Next" }));
   await page.waitForTimeout(150);
   await tap(card.getByRole("button", { name: "Next" }));
-  await expect(card).toHaveAttribute("data-film-chapter-id", "film:chandigarh");
+  await expect(card).toHaveAttribute("data-film-chapter-id", "film:mumbai");
   await tap(card.getByRole("button", { name: "Back" }));
   await expect(card).toHaveAttribute("data-film-chapter-id", "film:bhopal");
 

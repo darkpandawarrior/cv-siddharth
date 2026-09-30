@@ -110,11 +110,12 @@ test.describe("time scrubber: Next eclipse jump", () => {
     await expect.poll(() => eclipseChunkUrls.length, { timeout: 15_000 }).toBeGreaterThan(0);
 
     // The scrubber's own not-live badge and UTC clock readout prove the jump
-    // actually moved simulated time to the eclipse's greatest instant
-    // (2027-08-02T10:06:34.6Z, this lane's own eclipse.test.ts fixture),
+    // actually moved simulated time to the next eclipse's greatest instant
+    // (2027-02-06T15:59:32.957Z, computed with nextGlobalEclipses from
+    // 2026-09-29T12:00:00Z),
     // not just fetched the chunk.
     await expect(page.locator("[data-globe-not-live]")).toBeVisible({ timeout: 15_000 });
     const scrubber = page.locator("[data-globe-time-scrubber]");
-    await expect(scrubber).toContainText("10:06 UTC", { timeout: 15_000 });
+    await expect(scrubber).toContainText("15:59 UTC", { timeout: 15_000 });
   });
 });

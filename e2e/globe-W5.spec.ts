@@ -53,43 +53,27 @@ async function openGlobe(page: Page, width = 1440, height = 900) {
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 }
 
-/** GlobeHud's "Zoom in" pill dollies the camera closer (§2) — clicked a few
- *  times to get camera.position.length() under WindLayer.tsx's own
- *  ZOOM_DISTANCE (12), which the opening view (distance 26) starts well
- *  outside of. enableDamping means each click's effect settles over a few
- *  frames, so a short wait follows each click rather than one wait at the
- *  end.
- *
- *  3, not more: each click dollies by ZOOM_STEP (1.35x, GlobeScene.tsx),
- *  26 / 1.35^3 ~= 10.6 < 12 with margin. A 4th or 5th click clamps against
- *  OrbitControls' own minDistance (9) — camera nearly touching the globe —
- *  which pushes Pune's own weather cluster (12deg off the boresight, the
- *  opening camera's own aim point per GlobeScene's START) far enough down
- *  the screen to project behind GlobePanel's fact list at the canvas's
- *  bottom edge, so a real page.mouse.click() at its true screen position
- *  lands on that panel instead of the canvas (confirmed while debugging:
- *  document.elementFromPoint there resolved to the panel's own `<ul>`, not
- *  `<canvas>`). 3 clicks keeps the cluster comfortably inside the canvas. */
-async function zoomIn(page: Page, clicks = 3) {
-  const button = page.getByRole("button", { name: "Zoom in" });
-  for (let i = 0; i < clicks; i++) {
-    // NOT `button.click({ force: true })`: `force` only skips Playwright's
-    // own actionability checks, it still dispatches the click at the
-    // button's real screen coordinates and lets the browser's own hit-test
-    // pick the target — and GlobeHud's chip row (a `pointer-events-auto`
-    // div, z-20) sits on top of this button's hit region at this viewport,
-    // so the "click" was landing on the div and never reaching the button
-    // (confirmed via `document.elementFromPoint` at the button's centre
-    // during debugging: it resolved to the chip row, not the button).
-    // `.evaluate` dispatches the click directly on the button element,
-    // bypassing hit-testing entirely — exactly what a real visitor's click
-    // does too, since a real click lands via OS-level cursor position which
-    // this same overlap would equally intercept, so this is the one case
-    // Blueprint3D.tsx's own zoom pill doesn't share (no chip row there).
-    await button.evaluate((el) => (el as HTMLElement).click());
-    await page.waitForTimeout(150);
-  }
-  await page.waitForTimeout(400); // let damping settle
+/** Zoom until the real distance is under WindLayer's 12-unit gate.
+ *  Stay above the floor: at minimum distance the cluster projects behind
+ *  GlobePanel's fact list, so its real click would hit the panel. */
+async function zoomIn(page: Page) {
+  const canvas = page.locator("[data-globe-root] canvas").first();
+  // Poll in the browser, once per frame, so software rendering cannot spend
+  // the wait budget on separate distance-read and click round trips.
+  await page.waitForFunction((progress) => {
+    const surface = document.querySelector("[data-globe-root] canvas");
+    const distance = Number(surface?.getAttribute("data-camera-distance") ?? Infinity);
+    const floor = Number(surface?.getAttribute("data-camera-min-distance") ?? Infinity);
+    if (!Number.isFinite(distance) || !Number.isFinite(floor)) return false;
+    if (distance >= 12 && distance > floor + 0.01 && distance !== progress.lastDistance) {
+      progress.lastDistance = distance;
+      // Preserve this spec's direct zoom-pill dispatch around the HUD chip row.
+      document.querySelector<HTMLButtonElement>('button[aria-label="Zoom in"]')?.click();
+    }
+    return distance < 12;
+  }, { lastDistance: -1 }, { timeout: 5000 });
+  expect(Number(await canvas.getAttribute("data-camera-distance")), "weather cluster must stay above the camera floor")
+    .toBeGreaterThan(Number(await canvas.getAttribute("data-camera-min-distance")) + 0.01);
 }
 
 test.describe("globe-W5: wind particles", () => {
@@ -160,9 +144,17 @@ test.describe("globe-W5: Pune weather", () => {
 
   test("zoomed in and raining, the cluster shows and a click selects Pune weather", async ({ page }) => {
     await withApiFixtures(page, { weather: weatherWetFixture });
-    await openGlobe(page);
+    // The current fact list covers the projected cluster at 900px high,
+    // even above the zoom floor. Give the real click a clear desktop canvas.
+    await openGlobe(page, 1440, 1200);
+    // Freeze the camera while retaining the animated rain eligibility.
+    const pause = page.getByRole("button", { name: "Pause the globe's ambient rotation" });
+    await pause.focus();
+    await page.keyboard.press("Enter");
     await zoomIn(page);
     await page.waitForTimeout(500);
+    expect(Number(await page.locator("[data-globe-root] canvas").first().getAttribute("data-camera-distance")),
+      "HUD updates must preserve the visitor's zoom").toBeLessThan(12);
 
     const seam = page.locator("[data-wind-pune-selected]");
     await expect.poll(async () => seam.getAttribute("data-wind-pune-visible")).toBe("true");
@@ -182,6 +174,10 @@ test.describe("globe-W5: Pune weather", () => {
     if (!canvasBox) throw new Error("globe canvas has no bounding box");
     const screenX = Number(await seam.getAttribute("data-wind-pune-screen-x"));
     const screenY = Number(await seam.getAttribute("data-wind-pune-screen-y"));
+    expect(await canvas.evaluate((el, point) => {
+      const box = el.getBoundingClientRect();
+      return document.elementFromPoint(box.x + point.x, box.y + point.y) === el;
+    }, { x: screenX, y: screenY }), "Pune weather probe must hit bare canvas, clear of GlobePanel").toBe(true);
     await page.mouse.click(canvasBox.x + screenX, canvasBox.y + screenY);
     await page.waitForTimeout(300);
 

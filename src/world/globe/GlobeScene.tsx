@@ -199,7 +199,7 @@ function SceneRig({
   }, -1000);
 
   useEffect(() => {
-    if (framedForReal.current && topOffsetPx == null) return;
+    if (framedForReal.current) return;
     // Read through get(): the camera is three's own mutable object, and
     // framing it IS the point of this effect.
     const { camera: c, size } = get();
