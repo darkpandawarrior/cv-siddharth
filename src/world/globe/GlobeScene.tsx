@@ -5,8 +5,9 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { SceneActivity, useReducedMotion } from "../../SceneActivity.tsx";
-import { PUNE, subsolarPoint } from "../../lib/sky.ts";
+import { PUNE } from "../../lib/sky.ts";
 import { latLonToXyz } from "./geoMath.ts";
+import { createSceneProbe } from "./sceneProbe.ts";
 import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { ReachColumns } from "./ReachColumns.tsx";
 import { Markers } from "./Markers.tsx";
@@ -147,18 +148,8 @@ function SceneRig({
   // pill's text arriving and rewrapping the row) can't snap a visitor's own
   // zoom back out from under them.
   const framedForReal = useRef(false);
-  const probeVectors = useRef([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]);
-  const screen = useRef([0, 0]);
-  const toScreen = useRef((v: THREE.Vector3, cam: THREE.Camera, width: number, height: number, out: number[]) => {
-    v.project(cam);
-    out[0] = (v.x * 0.5 + 0.5) * width;
-    out[1] = (-v.y * 0.5 + 0.5) * height;
-  });
-  useEffect(() => {
-    const sub = subsolarPoint(now);
-    const p = latLonToXyz(sub.lat, sub.lon);
-    probeVectors.current[0].set(p.x, p.y, p.z).multiplyScalar(GLOBE_RADIUS);
-  }, [now]);
+  const probe = useRef(createSceneProbe());
+  useEffect(() => { probe.current.time(now); }, [now]);
 
   // Publish the camera and canvas for DOM-side raycasts (sceneHandles).
   useEffect(() => {
@@ -271,23 +262,7 @@ function SceneRig({
 
     const el = probeRef.current;
     if (!el) return;
-    const vectors = probeVectors.current;
-    const out = screen.current;
-    toScreen.current(vectors[1].copy(vectors[0]), camera, size.width, size.height, out);
-    const x = out[0], y = out[1];
-    // Screen centre and rim use the same scratch vector and output buffer.
-    toScreen.current(vectors[1].set(0, 0, 0), camera, size.width, size.height, out);
-    const cx = out[0], cy = out[1];
-    toScreen.current(vectors[2].setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(GLOBE_RADIUS), camera, size.width, size.height, out);
-    const ex = out[0];
-    const dx = x - cx;
-    const dy = y - cy;
-    el.dataset.subsolarX = String(Math.round(x));
-    el.dataset.subsolarY = String(Math.round(y));
-    el.dataset.globeX = String(Math.round(cx));
-    el.dataset.globeY = String(Math.round(cy));
-    el.dataset.globeR = String(Math.round(Math.abs(ex - cx)));
-    el.dataset.daySide = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? "right" : "left") : dy >= 0 ? "bottom" : "top";
+    probe.current.update(el.dataset, camera, size);
   });
 
   useEffect(() => {

@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
-const scratch = "/private/tmp/claude-501/-Users-darkpandawarrior-Repos/740d63f5-5ee4-444c-898d-1c7247dd41ab/scratchpad/lanes/Z3";
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`fixtures/${name}.json`, import.meta.url), "utf8"));
 
 async function openGlobe(page: Page) {
@@ -29,7 +28,7 @@ async function openGlobe(page: Page) {
 }
 
 for (const close of ["Escape", "Close"] as const) {
-  test(`Inspector returns focus to the clicked live-feed control on ${close}`, async ({ page }) => {
+  test(`Inspector returns focus to the clicked live-feed control on ${close}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openGlobe(page);
@@ -46,7 +45,7 @@ for (const close of ["Escape", "Close"] as const) {
     else await inspector.getByRole("button", { name: "Close", exact: true }).click();
     await expect(inspector).toHaveCount(0);
     await expect(opener).toBeFocused();
-    if (close === "Close") await page.screenshot({ path: `${scratch}/desktop-1440x900.png` });
+    if (close === "Close") await page.screenshot({ path: testInfo.outputPath("desktop-1440x900.png") });
   });
 }
 
@@ -67,10 +66,10 @@ test("changing reduced motion stops the actual quake ripple buffers", async ({ p
 
 test.describe("phone touch composition", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
-  test("captures the reduced-motion globe at 390x844", async ({ page }) => {
+  test("captures the reduced-motion globe at 390x844", async ({ page }, testInfo) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await openGlobe(page);
     await expect.poll(() => page.locator("[data-subsolar-probe]").getAttribute("data-globe-x")).not.toBeNull();
-    await page.screenshot({ path: `${scratch}/phone-390x844.png` });
+    await page.screenshot({ path: testInfo.outputPath("phone-390x844.png") });
   });
 });
