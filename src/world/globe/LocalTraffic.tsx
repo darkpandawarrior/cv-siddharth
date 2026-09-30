@@ -5,11 +5,17 @@ import * as THREE from "three";
 import { useLiveSignal } from "../../lib/useLiveSignal.ts";
 import { latLonToXyz } from "./geoMath.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
-import { useGlobe, entityPositions } from "./globeStore.ts";
+import { useGlobe, entityPositions, sceneHandles } from "./globeStore.ts";
 import { deadReckon, clampDeadReckonSec, pushTrail, pruneTrails, type LatLon } from "./layers/aircraftTrack.ts";
 import { formatTimeAgo } from "./layers/pulseEvents.ts";
 import { formatAltitude } from "./localTrafficFormat.ts";
 import type { AircraftEntry, AircraftResponse } from "../../../api/_lib/aircraft-handler.ts";
+
+declare global {
+  interface Window {
+    __G3_AIRCRAFT__?: { screenPoint: (callsign: string) => { x: number; y: number } | null; face: (callsign: string) => void };
+  }
+}
 
 // S7, ambient (claim: false) - the local Pune cluster only, never global
 // aircraft (living-ledger-spec.md#6.3, GLOBE lens §1 "GLOBE b").
@@ -173,6 +179,28 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
   const metaRef = useRef<(AircraftEntry | null)[]>(new Array(MAX_AIRCRAFT).fill(null));
   const domRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!window.__W11_TEST__) return;
+    window.__G3_AIRCRAFT__ = {
+      face: callsign => {
+        const aircraft = aircraftRef.current.find(a => a.cs === callsign);
+        if (aircraft) useGlobe.getState().flyTo({ kind: "latlon", lat: aircraft.lat, lon: aircraft.lon, distance: 9.5 });
+      },
+      screenPoint: callsign => {
+        const i = metaRef.current.findIndex(a => a?.cs === callsign);
+        const { camera, canvas } = sceneHandles;
+        const mesh = meshRef.current;
+        if (i < 0 || !mesh || !camera || !canvas) return null;
+        const matrix = new THREE.Matrix4();
+        mesh.getMatrixAt(i, matrix);
+        const point = new THREE.Vector3().setFromMatrixPosition(matrix).project(camera);
+        const box = canvas.getBoundingClientRect();
+        return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
+      },
+    };
+    return () => { delete window.__G3_AIRCRAFT__; };
+  }, []);
+
   useFrame(() => {
     const mesh = meshRef.current;
     const trailMesh = trailMeshRef.current;
@@ -255,7 +283,12 @@ export function LocalTraffic({ tier }: { tier: 1 | 2 | 3 }) {
         args={[CHEVRON_GEOMETRY, undefined, MAX_AIRCRAFT]}
         frustumCulled={false}
         count={0}
-        onClick={(e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); onPick(e.instanceId); }}
+        onClick={(e: ThreeEvent<MouseEvent>) => {
+          e.stopPropagation();
+          void import("./useMarkerClick.ts").then(({ claimGuideClick }) => {
+            if (!claimGuideClick(e.nativeEvent)) onPick(e.instanceId);
+          });
+        }}
       >
         <meshBasicMaterial color={AIRCRAFT_COLOR} toneMapped={false} side={THREE.DoubleSide} />
       </instancedMesh>

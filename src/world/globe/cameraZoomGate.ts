@@ -8,6 +8,11 @@
 // this file's consumers, CameraDirector.tsx and StreetView.tsx, are already
 // separate lazy chunks, not the eager "Globe" shell).
 
+export const MAX_CAMERA_FRAME_SEC = 0.1;
+export function clampCameraFrameDelta(dtSec: number): number {
+  return Number.isFinite(dtSec) ? Math.max(0, Math.min(dtSec, MAX_CAMERA_FRAME_SEC)) : 0;
+}
+
 export const ZOOM_HOLD_MS = 400;
 // Loose enough to catch OrbitControls' damping settling a few thousandths
 // short of the exact clamp (enableDamping never lands EXACTLY on

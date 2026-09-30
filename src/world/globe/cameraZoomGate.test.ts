@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   altitudeToStreetZoom,
+  clampCameraFrameDelta,
+  MAX_CAMERA_FRAME_SEC,
   armStreetHandoff,
   clearStreetHandoffForTest,
   consumeStreetHandoff,
@@ -111,4 +113,12 @@ describe("street hand-off box", () => {
     armStreetHandoff({ zoom: 15, bearing: 42.5, pitch: 30 });
     expect(consumeStreetHandoff()).toEqual({ zoom: 15, bearing: 42.5, pitch: 30 });
   });
+});
+
+it("a stalled frame cannot complete the zoom hold in one step", () => {
+  expect(clampCameraFrameDelta(5)).toBe(MAX_CAMERA_FRAME_SEC);
+  expect(stepZoomHold(0, 9, 9, clampCameraFrameDelta(5), 0)).toBeLessThan(ZOOM_HOLD_MS);
+  expect(clampCameraFrameDelta(-1)).toBe(0);
+  expect(clampCameraFrameDelta(NaN)).toBe(0);
+  expect(clampCameraFrameDelta(1 / 60)).toBe(1 / 60);
 });

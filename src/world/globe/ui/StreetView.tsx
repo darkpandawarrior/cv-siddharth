@@ -128,8 +128,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   // WAVE 10 LANE P10B: drives the attribution line's terrain credit — only
   // true while the DEM source is actually loaded, tier-eligible, and past
   // TERRAIN_MIN_ZOOM (never claim a credit for a layer that isn't drawing).
-  const [terrainOn, setTerrainOn] = useState(false);
-  const [terrainFailed, setTerrainFailed] = useState(false);
+  const [terrainState, setTerrainState] = useState<"off" | "loading" | "enabled" | "unreachable">("off");
   // Pending requests remain explicitly pending after 3s (a
   // watchdog, not a repeat of the "loaded, zero results" message below —
   // that one only ever fires once a query has actually FINISHED).
@@ -395,14 +394,23 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         // MapLibre's setTerrain(null) / layer visibility are cheap and this
         // avoids re-adding a source on every zoom crossing.
         if (tier !== 3 && map) {
-          let failed = false;
+          let failed = false, loaded = false;
+          // MapLibre 6 suppresses HTTP 404 error events. The loading event
+          // exposes the same tile object whose state later becomes errored.
+          const pendingTiles = new Set<{ state: string; dem?: unknown }>();
+          let terrainFrame: number | null = null;
+          map.on("sourcedataloading", (event) => {
+            if (failed || event.sourceId !== TERRAIN_SOURCE_ID || !event.tile) return;
+            pendingTiles.add(event.tile);
+            if (terrainFrame === null) terrainFrame = requestAnimationFrame(inspectTerrainTiles);
+          });
+          map.on("remove", () => { if (terrainFrame !== null) cancelAnimationFrame(terrainFrame); });
           map.addSource(TERRAIN_SOURCE_ID, {
             type: "raster-dem",
             encoding: "terrarium",
             tiles: ["/api/terrain?z={z}&x={x}&y={y}"],
             tileSize: 256,
             maxzoom: 15, // matches terrain-handler.ts's curl-verified MAX_Z
-            attribution: TERRAIN_ATTRIBUTION,
           });
           // Hillshade under labels: the style's own first symbol layer id,
           // so shading paints under place-name text instead of over it —
@@ -424,15 +432,34 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
             const on = !failed && map.getZoom() >= TERRAIN_MIN_ZOOM;
             map.setTerrain(on ? { source: TERRAIN_SOURCE_ID, exaggeration: TERRAIN_EXAGGERATION } : null);
             map.setLayoutProperty(TERRAIN_HILLSHADE_LAYER_ID, "visibility", on ? "visible" : "none");
-            setTerrainOn(on);
+            setTerrainState(failed ? "unreachable" : on ? loaded ? "enabled" : "loading" : "off");
           };
           applyTerrainForZoom();
           map.on("zoom", applyTerrainForZoom);
+          const failTerrain = () => {
+            if (failed) return;
+            failed = true;
+            pendingTiles.clear();
+            applyTerrainForZoom();
+          };
+          map.on("sourcedata", (event) => {
+            if (failed || event.sourceId !== TERRAIN_SOURCE_ID || event.tile?.state !== "loaded" || !event.tile.dem) return;
+            pendingTiles.delete(event.tile);
+            if (!loaded) { loaded = true; applyTerrainForZoom(); }
+          });
+          // A suppressed 404 need not repaint a reduced-motion map. Inspect
+          // pending tiles independently until each request has settled.
+          const inspectTerrainTiles = () => {
+            terrainFrame = null;
+            for (const tile of pendingTiles) {
+              if (tile.state === "errored") { failTerrain(); break; }
+              if (tile.state === "unloaded" || tile.state === "loaded") pendingTiles.delete(tile);
+            }
+            if (!failed && pendingTiles.size) terrainFrame = requestAnimationFrame(inspectTerrainTiles);
+          };
           map.on("error", (event) => {
             if (!("sourceId" in event) || event.sourceId !== TERRAIN_SOURCE_ID) return;
-            failed = true;
-            setTerrainFailed(true);
-            applyTerrainForZoom();
+            failTerrain();
           });
         }
       });
@@ -479,8 +506,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       setPhotoStatus("loading");
       setNoFeaturesTimedOut(false);
       setSelectedPhoto(null);
-      setTerrainOn(false);
-      setTerrainFailed(false);
+      setTerrainState("off");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- create/destroy only on `active`; `focus`/`tier` are read once at open time on purpose
   }, [active]);
@@ -506,7 +532,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     <div
       ref={rootRef}
       data-street-view
-      data-terrain-state={terrainFailed ? "unreachable" : terrainOn ? "enabled" : "off"}
+      data-terrain-state={terrainState}
       role="dialog"
       aria-modal="true"
       aria-label="Street level"
@@ -562,8 +588,9 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
           of silently hiding "Photos: Panoramax contributors" off the edge. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 glass-panel px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500">
         © OpenMapTiles © OpenStreetMap contributors, OpenFreeMap{photos.length > 0 ? " · Photos: Panoramax contributors" : ""}
-        {terrainOn ? ` · ${TERRAIN_ATTRIBUTION}` : ""}
-        {terrainFailed ? " · Terrain unreachable; showing a flat map" : ""}
+        {terrainState === "enabled" ? ` · ${TERRAIN_ATTRIBUTION}` : ""}
+        {terrainState === "loading" ? " · Terrain loading" : ""}
+        {terrainState === "unreachable" ? " · Terrain unreachable; showing a flat map" : ""}
       </div>
 
       {selectedPhoto && <StreetPhotoViewer photo={selectedPhoto} onClose={() => setSelectedPhoto(null)} />}

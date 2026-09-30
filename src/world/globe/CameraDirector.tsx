@@ -16,7 +16,7 @@ import {
   type Vec3,
 } from "./cameraMath.ts";
 import { finishIntro, getIntroPhase, INTRO_DURATION_MS, introStartDirectionFromLatLon, subscribeIntro, type IntroPhase } from "./cameraIntro.ts";
-import { altitudeToStreetZoom, armStreetHandoff, stepZoomHold, ZOOM_HOLD_MS } from "./cameraZoomGate.ts";
+import { altitudeToStreetZoom, armStreetHandoff, clampCameraFrameDelta, stepZoomHold, ZOOM_HOLD_MS } from "./cameraZoomGate.ts";
 import { cameraForwardToBearingPitch } from "./cameraOrientation.ts";
 import { entityPositions, useGlobe, type Focus } from "./globeStore.ts";
 
@@ -482,7 +482,8 @@ export default function CameraDirector({
     prevZoomInTickRef.current = zoomInTick;
   }, [zoomInTick]);
 
-  useFrame((state, dt) => {
+  useFrame((state, rawDt) => {
+    const dt = clampCameraFrameDelta(rawDt);
     const { camera, gl } = state;
     const el = gl.domElement;
     if (focusOffsetY.current !== null && camera instanceof THREE.PerspectiveCamera && camera.view && camera.view.offsetY !== focusOffsetY.current) {
@@ -546,6 +547,8 @@ export default function CameraDirector({
         el.dataset.cameraMinDistance = minDistance.toFixed(3);
         const msSinceIntent = performance.now() - zoomIntentRef.current;
         zoomHoldRef.current = stepZoomHold(zoomHoldRef.current, distance, minDistance, dt, msSinceIntent);
+        el.dataset.cameraZoomHold = zoomHoldRef.current.toFixed(0);
+        el.dataset.cameraIntentAge = msSinceIntent.toFixed(0);
         if (zoomHoldRef.current >= ZOOM_HOLD_MS && distance > 1e-6) {
           zoomHoldRef.current = 0;
           const unit = { x: camera.position.x / distance, y: camera.position.y / distance, z: camera.position.z / distance };

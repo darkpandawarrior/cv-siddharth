@@ -32,7 +32,7 @@ import type { GithubActivity } from "../../../../api/_lib/github-activity-handle
 import { localGuide } from "../../../data/profile/localGuide.ts";
 import { guideMedia, guideReviewSelection } from "./guideReviewSelection.ts";
 import { scaleForYear, hourHistogram } from "./guideActivity.ts";
-import { useMarkerClick } from "../useMarkerClick.ts";
+import { claimGuideClick, registerGuideClickTargets, type GuideClickTarget, useMarkerClick } from "../useMarkerClick.ts";
 
 const PIN_GEOMETRY = new THREE.SphereGeometry(0.018, 8, 6);
 const PIN_HIT_GEOMETRY = new THREE.SphereGeometry(0.03, 8, 6);
@@ -52,6 +52,19 @@ const HIT_RADIUS_MULTIPLIER = 1.3;
 const LIFT = 0.008;
 const UP = new THREE.Vector3(0, 0, 1);
 const dummy = new THREE.Object3D();
+
+function projectGuidePoint(slug: string): { x: number; y: number } | null {
+  const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug) ?? mapsReviews.find((review) => review.id === slug);
+  const { camera, canvas } = sceneHandles;
+  if (!p || !camera || !canvas) return null;
+  const xyz = latLonToXyz(p.lat, p.lon);
+  const point = new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + (slug.startsWith("review-") ? 0.06 : LIFT));
+  if (point.dot(camera.position.clone().sub(point)) <= 0) return null;
+  point.project(camera);
+  if (point.z < -1 || point.z > 1) return null;
+  const box = canvas.getBoundingClientRect();
+  return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
+}
 
 function scaleFor(reviews: number, photos: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.sqrt(reviews + photos) * 0.035));
@@ -172,7 +185,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
   const orgRef = useRef<THREE.Mesh>(null);
   const orgHitRef = useRef<THREE.Mesh>(null);
   const select = useGlobe((s) => s.select);
-  const markerClick = useMarkerClick();
+  const markerClick = useMarkerClick(true);
   const setView = useGlobe((s) => s.setView);
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
   const accent = useMemo(() => readColor("--color-accent", "#f2a13d"), []);
@@ -287,15 +300,7 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
         const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug) ?? mapsReviews.find((review) => review.id === slug);
         if (p) useGlobe.getState().flyTo({ kind: "latlon", lat: p.lat, lon: p.lon, distance: slug.startsWith("review-") ? 9.5 : 14 });
       },
-      screenPoint: (slug) => {
-        const p = slug === "career-ops-hq" ? CAREER_OPS_HQ : GUIDE_PLACES.find((p) => p.slug === slug) ?? mapsReviews.find((review) => review.id === slug);
-        const { camera, canvas } = sceneHandles;
-        if (!p || !camera || !canvas) return null;
-        const xyz = latLonToXyz(p.lat, p.lon);
-        const point = new THREE.Vector3(xyz.x, xyz.y, xyz.z).multiplyScalar(GLOBE_RADIUS + (slug.startsWith("review-") ? 0.06 : LIFT)).project(camera);
-        const box = canvas.getBoundingClientRect();
-        return { x: box.left + (point.x + 1) * box.width / 2, y: box.top + (1 - point.y) * box.height / 2 };
-      },
+      screenPoint: projectGuidePoint,
       cameraDistance: () => sceneHandles.camera?.position.length() ?? null,
       screenRadii: () => {
         const { camera, canvas } = sceneHandles;
@@ -309,12 +314,10 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     };
   }, [simYear, activity, activityHistogram]);
 
-  const onClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    const i = e.instanceId;
+  const selectCity = (i: number | undefined, event: { clientX: number; clientY: number }) => {
     if (i === undefined || !GUIDE_PLACES[i]) return;
     const p = GUIDE_PLACES[i];
-    markerClick(e.nativeEvent, () => {
+    markerClick(event, () => {
       const photos = mapsPhotos.filter((ph) => ph.slug === p.slug);
       const notLive = simYear !== new Date().getFullYear();
       setView("orbit");
@@ -387,19 +390,33 @@ export default function GuideLayer(_props: { tier: 1 | 2 | 3 }) {
     if (pinRef.current) pinRef.current.visible = visible;
     if (pinHitRef.current) pinHitRef.current.visible = visible;
   });
+  const selectReview = (i: number, event: { clientX: number; clientY: number }) => {
+    const review = mapsReviews[i];
+    if (review) markerClick(event, () => { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); });
+  };
+  useEffect(() => registerGuideClickTargets(() => {
+    if (useGlobe.getState().view !== "orbit") return [];
+    const targets: GuideClickTarget[] = [];
+    if ((sceneHandles.camera?.position.length() ?? Infinity) < PIN_ZOOM_DISTANCE) {
+      mapsReviews.forEach((review, i) => {
+        const point = projectGuidePoint(review.id);
+        if (point) targets.push({ ...point, priority: 1, select: event => selectReview(i, event) });
+      });
+    }
+    GUIDE_PLACES.forEach((place, i) => {
+      const point = projectGuidePoint(place.slug);
+      if (point) targets.push({ ...point, select: event => selectCity(i, event) });
+    });
+    return targets;
+  }));
+  const onClick = (event: ThreeEvent<MouseEvent>) => {
+    event.stopPropagation();
+    if (!claimGuideClick(event.nativeEvent)) selectCity(event.instanceId, event.nativeEvent);
+  };
   const onReviewClick = (event: ThreeEvent<MouseEvent>) => {
-    // Re-derive the same "close enough to see review pins" gate that the
-    // useFrame above draws every frame, straight from this event's own
-    // camera -- never from `pinHitRef.current.visible`. That ref is only
-    // ever written a frame late (the mesh stays raycastable even while
-    // `visible={false}`, since Three's raycaster never checks `.visible`),
-    // so under load a click could land inside the hit sphere before that
-    // write catches up, silently no-op past `stopPropagation()` and fall
-    // through to the city ring's own onClick underneath it.
     if (event.camera.position.length() >= PIN_ZOOM_DISTANCE) return;
     event.stopPropagation();
-    const review = mapsReviews[event.instanceId ?? -1];
-    if (review) markerClick(event.nativeEvent, () => { setView("orbit"); select(guideReviewSelection(review)); useGlobe.getState().setSheet("inspector"); });
+    if (!claimGuideClick(event.nativeEvent)) selectReview(event.instanceId ?? -1, event.nativeEvent);
   };
   const hover = hoverReview === null ? undefined : mapsReviews[hoverReview];
   const hoverPoint = hover ? latLonToXyz(hover.lat, hover.lon) : null;
