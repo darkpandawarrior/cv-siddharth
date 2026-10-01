@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { debounce, distanceAndBearing, rateLimit } from "../exploreMath.ts";
 import { placeSelection, pointSelection, searchPlaces, type Place } from "../exploreApi.ts";
 import { canvasState, surfaceClicks, surfacePicker } from "../exploreCanvas.ts";
@@ -47,6 +48,20 @@ export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layou
   const register = useCallback((el: HTMLDivElement | null) => { host.current = el; layoutRef(el); }, [layoutRef]);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [focused, setFocused] = useState(false);
+  const [expanded, setExpanded] = useState(() => !window.matchMedia("(pointer: coarse), (max-width: 639px), (max-height: 500px)").matches);
+  const [openerHost] = useState(() => document.querySelector("[data-globe-topbar] > div:first-child"));
+  useEffect(() => {
+    const close = () => setExpanded(false);
+    window.addEventListener("globe-explore-close", close);
+    return () => window.removeEventListener("globe-explore-close", close);
+  }, []);
+  const open = () => {
+    useGlobe.getState().setSheet(null);
+    const overflow = document.querySelector<HTMLDetailsElement>("[data-hud-overflow]");
+    if (overflow && window.matchMedia("(max-width: 639px), (max-height: 500px)").matches) overflow.open = false;
+    setExpanded(true);
+    requestAnimationFrame(() => input.current?.focus());
+  };
   const phone = useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
@@ -101,11 +116,12 @@ export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layou
   // "/" and Cmd/Ctrl-K both focus this box; Esc clears/closes.
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
-      if (event.key === "/" && !typing(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey) { event.preventDefault(); input.current?.focus(); }
+      if (event.key === "/" && !typing(event.target) && !event.ctrlKey && !event.metaKey && !event.altKey) { event.preventDefault(); open(); }
       if (event.key === "Escape") {
         scheduler.current?.cancel(); searchAbort.current?.abort(); pointAbort.current?.abort();
         askToken.current++;
         setFocused(false);
+        if (window.matchMedia("(pointer: coarse), (max-width: 639px), (max-height: 500px)").matches) setExpanded(false);
         setQuery(""); setResults([]); setActive(-1); setMessage(""); setAsking(false); setAnswer(null);
         useExplore.getState().setMode(null);
       }
@@ -128,7 +144,7 @@ export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layou
       if (!root || !root.contains(document.activeElement)) return;
       event.preventDefault();
       event.stopPropagation();
-      input.current?.focus();
+      open();
       input.current?.select();
     };
     window.addEventListener("keydown", onKeyDown, true);
@@ -256,7 +272,9 @@ export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layou
   };
   const measurement = points.length === 2 ? distanceAndBearing(points[0], points[1]) : null;
   return (
-    <div ref={register} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-[var(--globe-explore-left,50%)] top-[var(--globe-explore-top,var(--globe-top-offset,6.5rem))] max-h-[var(--globe-explore-max-h)] z-10 w-[calc(100%-32px)] max-w-[min(377px,calc(var(--globe-explore-room-w,100%)-32px))] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
+    <>
+    {openerHost && createPortal(<button type="button" data-globe-search-toggle aria-label="Search or ask the globe" aria-expanded={expanded} onClick={() => expanded ? setExpanded(false) : open()} className="pointer-events-auto flex min-h-11 min-w-11 items-center justify-center rounded-full glass-panel px-3 font-mono text-xs text-zinc-200">Search</button>, openerHost)}
+    <div hidden={!expanded} ref={register} data-explore-bar className={`${sheet ? "compact:!hidden" : ""} pointer-events-auto absolute left-[var(--globe-explore-left,50%)] top-[var(--globe-explore-top,var(--globe-top-offset,6.5rem))] max-h-[var(--globe-explore-max-h)] z-10 w-[calc(100%-32px)] max-w-[min(377px,calc(var(--globe-explore-room-w,100%)-32px))] -translate-x-1/2 rounded-xl glass-panel p-1 font-mono text-xs text-zinc-200 overflow-y-auto`}>
       {mode === "pin" && <div className="flex items-center justify-between gap-2 px-2">
         <p className="text-zinc-200">Tap, click or Enter to pin.</p>
         <button type="button" className={buttonClass} aria-label="Pin points" aria-pressed="true" onClick={() => toggle("pin")}>Done pinning</button>
@@ -313,5 +331,6 @@ export default function ExploreBar({ tier, layoutRef }: { tier: 1 | 2 | 3; layou
       <p className={mode === "pin" || (!results.length && !answer && !message) ? "hidden" : "px-2 pt-1 text-zinc-400"}><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="hover:text-accent">© OpenStreetMap contributors (ODbL)</a></p>
       <ExploreMeasure canvas={canvas} tier={tier} />
     </div>
+    </>
   );
 }

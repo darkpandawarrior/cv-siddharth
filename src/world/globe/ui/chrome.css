@@ -1,0 +1,41 @@
+/* Globe chrome owns its clearance from the global utility controls. */
+body:has([data-globe-root]) .anomaly-rail { pointer-events: none; }
+body:has([data-globe-root]) .anomaly-rail-link { display: none; }
+body:has([data-globe-root]) .palette-trigger { top: 6px; bottom: auto; right: 16px; left: auto; min-height: 44px; }
+[data-globe-root]:not(:has(canvas)) [data-globe-facts] > summary { display: none; }
+[data-globe-facts] { max-width: 288px; }
+[data-globe-facts] > ul { max-height: 28svh; overflow: auto; padding: 12px; border-radius: 12px; background: var(--color-ink); }
+[data-globe-root]:not(:has(canvas)) [data-globe-facts],
+[data-globe-root]:not(:has(canvas)) [data-globe-facts] > ul { max-width: none; max-height: none; background: none; padding: 0; }
+[data-space-weather-pill] { max-width: 320px; }
+/* Globe uses the header Ask control as its registered chat launcher. */
+body:has([data-globe-root]) .chat-launcher:not([data-globe-chat]) { display: none; }
+body:has([data-globe-root]) [data-globe-chat] { position: static; inset: auto; }
+[data-globe-stage] > button[aria-label="Open the layers panel"] { top: var(--globe-top-offset, 5rem); }
+
+[data-globe-search-toggle] { order: -1; }
+@media (max-width: 639px), (max-height: 500px) {
+  body:has([data-globe-root]) { padding-top: 0; padding-right: 0; padding-bottom: 0; }
+  body:has([data-globe-root]) .palette-trigger { display: none; }
+  [data-globe-topbar] { flex-wrap: nowrap; gap: 8px; padding: 8px; }
+  [data-globe-topbar] > div { flex-wrap: nowrap; max-width: none; overflow: visible; }
+  [data-globe-topbar] > div > [data-globe-weather] { display: none; }
+  [data-hud-overflow] { display: block !important; }
+  [data-hud-overflow] > summary { display: flex; }
+  [data-hud-overflow] > [data-globe-overflow] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; position: fixed; top: calc(var(--globe-room-top, 54px) + 60px); left: 8px; right: 8px; max-height: calc(100svh - var(--globe-room-top, 54px) - 76px); overflow: auto; padding: 12px; border: 1px solid var(--color-glass-border); border-radius: 16px; background: var(--color-ink); box-shadow: var(--shadow-elevation-2); }
+  [data-hud-overflow]:not([open]) > [data-globe-overflow] { display: none; }
+  [data-globe-overflow] > [data-space-weather-pill] { display: grid; }
+  [data-globe-overflow] > button, [data-globe-overflow] > div > button { min-height: 44px; min-width: 44px; }
+  [data-globe-topbar] > div:last-child > [data-brief-trigger],
+  [data-globe-topbar] > div:last-child > [data-story-entry-compact],
+  [data-globe-topbar] > div:last-child > [data-film-entry-compact] { display: none; }
+  [data-globe-search-toggle] { display: flex !important; }
+  [data-explore-bar][hidden] { display: none !important; }
+}
+@media (max-width: 639px) and (min-height: 501px) {
+  [data-globe-stage] { height: calc(100svh - 166px); }
+  [data-explore-bar] { left: 16px; translate: none; }
+  [data-globe-root] > div:last-child { padding: 8px 16px; max-height: none; }
+  [data-scene-receipt] { margin-right: 0; margin-bottom: 8px; }
+  [data-globe-facts] { max-width: none; }
+}

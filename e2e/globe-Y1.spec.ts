@@ -36,6 +36,7 @@ async function openGlobe(page: Page, selection = false, holdExplore?: Promise<vo
   await expect(page.locator("[data-explore-bar]")).toBeAttached();
   await expect(page.locator("[data-globe-stage]")).toHaveAttribute("data-chrome-measured", "true");
   await expect.poll(() => page.locator("[data-subsolar-probe]").getAttribute("data-globe-r")).not.toBeNull();
+  if (!selection && !(await page.locator("[data-explore-bar] input").isVisible())) await page.locator("[data-globe-search-toggle]").click();
   return canvas;
 }
 async function inside(locator: Locator, page: Page) {
@@ -108,6 +109,7 @@ for (const viewport of matrix) {
     });
     if (touch) test("standalone citation links have touch targets", async ({ page }) => {
       await openGlobe(page);
+      await page.locator("[data-globe-facts] > summary").click();
       const links = page.locator("[data-globe-root] a:visible");
       expect(await links.count()).toBeGreaterThan(0);
       for (const link of await links.all()) expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -141,6 +143,7 @@ for (const viewport of matrix) {
     if ([1440, 390, 360, 844].includes(viewport.width)) {
       test("briefing is fully visible with room to read", async ({ page }) => {
         await openGlobe(page);
+        if (await page.locator("[data-hud-overflow] > summary").isVisible()) await page.locator("[data-hud-overflow] > summary").click();
         await page.getByRole("button", { name: "Tonight on Earth", exact: true }).click();
         const panel = page.locator("[data-globe-briefing]");
         await inside(panel, page);
@@ -181,6 +184,7 @@ for (const viewport of matrix) {
         await openGlobe(page);
         const compact = viewport.width < 640 || viewport.height <= 500;
         for (const [entry, prefix, exit] of [["Life journey film", "film", "Exit the life journey film"], ["My story", "story", "Exit my story"]]) {
+          if (compact) await page.locator("[data-hud-overflow] > summary").click();
           await page.getByRole("button", { name: entry, exact: true }).filter({ visible: true }).click();
           const card = page.locator(`[data-${prefix}-chapter-${compact ? "sheet" : "card"}]`);
           await inside(card, page);
@@ -192,12 +196,15 @@ for (const viewport of matrix) {
             expect(await card.evaluate(el => getComputedStyle(el).backgroundColor)).toBe("rgba(17, 22, 25, 0.66)");
           }
           await card.getByRole("button", { name: exit, exact: true }).click();
+          if (!(await explore.isVisible())) await page.locator("[data-globe-search-toggle]").click();
           await expect(explore).toBeVisible();
           if (compact) {
+            await page.locator("[data-hud-overflow] > summary").click();
             await page.getByRole("button", { name: entry, exact: true }).filter({ visible: true }).click();
             await page.getByRole("button", { name: "Open the time sheet", exact: true }).click();
             await expect(card).toBeHidden();
             await page.getByRole("button", { name: "Close the time sheet", exact: true }).click();
+            if (!(await explore.isVisible())) await page.locator("[data-globe-search-toggle]").click();
             await expect(explore).toBeVisible();
           }
         }

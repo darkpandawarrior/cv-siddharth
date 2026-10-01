@@ -4,7 +4,8 @@ import { storeGeneratedAt } from "../../data/store.ts";
 import { useNow } from "../../lib/useSky.ts";
 import { globeFacts, liveDotsLabel, weeksAgoLabel } from "./globeRows.ts";
 import { usePresenceGeo } from "./presenceGeo.ts";
-import { lazy, Suspense } from "react";
+import "./ui/chrome.css";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 const SceneSummary = lazy(() => import("./ui/SceneSummary.tsx"));
 
@@ -44,10 +45,22 @@ export function GlobePanel() {
   // weeksAgoLabel comment has the full story). It fills in one tick after
   // mount, same as the rest of the page's clock-driven text.
   const now = useNow();
+  const [canvas, setCanvas] = useState(false);
+  useEffect(() => {
+    const root = document.querySelector("[data-globe-root]");
+    if (!root) return;
+    const update = () => setCanvas(!!root.querySelector("canvas"));
+    const observer = new MutationObserver(update);
+    observer.observe(root, { childList: true, subtree: true });
+    update();
+    return () => observer.disconnect();
+  }, []);
   return (
     <div data-globe-panel className="pointer-events-auto relative">
       <h2 className="sr-only">GLOBE - reach, in numbers</h2>
       <Suspense fallback={null}><SceneSummary /></Suspense>
+      <details data-globe-facts open={canvas ? undefined : true}>
+      <summary className="min-h-11 cursor-pointer rounded-xl border border-line bg-ink/90 px-3 py-3 font-mono text-xs text-zinc-300">Reach in numbers</summary>
       <ul className="space-y-2 font-mono text-sm text-zinc-300">
         {globeFacts.map((row) => {
           const stamp = STAMP_BY_ROW[row.id];
@@ -68,6 +81,7 @@ export function GlobePanel() {
           <GlobeLiveRow />
         </ClientOnly>
       </ul>
+      </details>
     </div>
   );
 }

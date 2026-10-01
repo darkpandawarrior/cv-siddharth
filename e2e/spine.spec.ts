@@ -94,6 +94,10 @@ for (const { vp, width, height } of VIEWPORTS) {
       await page.locator("main").first().waitFor({ timeout: 20_000 }); // ssr:false rooms (/ops, /pulse) mount <main> after hydration
       await page.evaluate(() => document.fonts.ready);
 
+      if (path === "/globe") {
+        const controls = page.locator("[data-hud-overflow] > summary");
+        if (await controls.isVisible()) await controls.click();
+      }
       const a = await audit(page, false);
       const problems: string[] = [];
       for (const e of DOM) {
