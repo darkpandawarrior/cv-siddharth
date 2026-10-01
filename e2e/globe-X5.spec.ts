@@ -69,7 +69,7 @@ async function zoomToFloor(page: Page, canvas: Locator, width: number) {
   await expect(canvas).toHaveAttribute("data-camera-flying", "false");
   await expect.poll(() => canvas.getAttribute("data-camera-distance")).toBeTruthy();
   await expect.poll(() => canvas.getAttribute("data-camera-min-distance")).toBeTruthy();
-  await page.getByRole("button", { name: "Zoom in", exact: true }).waitFor({ state: "attached" });
+  await page.locator('button[aria-label="Zoom in"]').waitFor({ state: "attached" });
   if (!(await page.getByRole("button", { name: "Zoom in", exact: true }).isVisible())) await page.locator("[data-hud-overflow] > summary").click();
   const zoomInRole = page.getByRole("button", { name: "Zoom in" });
   let atFloor = false;

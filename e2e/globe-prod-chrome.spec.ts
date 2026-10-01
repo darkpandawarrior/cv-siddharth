@@ -95,6 +95,9 @@ for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]
         expect.soft(result.disc.y + result.disc.r).toBeLessThanOrEqual(viewing.y);
         await page.locator('[data-globe-search-toggle]').click();
         await expect(page.getByRole('combobox', { name: 'Search places or ask the globe' })).toBeVisible();
+        const search = (await page.locator('[data-explore-bar]').boundingBox())!;
+        expect(search.x).toBeGreaterThanOrEqual(0);
+        expect(search.x + search.width).toBeLessThanOrEqual(width);
         await page.locator('[data-hud-overflow] > summary').click();
         await expect(page.locator('[data-explore-bar] input')).toBeHidden();
         await expect(page.locator('[data-globe-overflow] [data-globe-weather]')).toBeVisible();
@@ -108,7 +111,17 @@ for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]
         await page.getByRole('button', { name: 'Tonight on Earth', exact: true }).click();
         await expect(page.locator('[data-globe-briefing]')).toBeVisible();
         await expect(page.locator('[data-hud-overflow]')).not.toHaveAttribute('open');
+        await page.getByRole('button', { name: 'Close briefing', exact: true }).click();
       }
+      await expect(page.locator('button.chat-launcher:not([data-globe-chat])')).toBeHidden();
+      const ask = page.locator('[data-globe-chat]');
+      await expect(ask).toBeVisible();
+      if (width < 640) await ask.tap(); else await ask.click();
+      await expect(page.getByRole('dialog', { name: 'Panda, Siddharth’s AI assistant', exact: true })).toBeVisible();
+      await expect(page.getByRole('combobox', { name: 'Ask Panda, or type a slash command', exact: true })).toBeVisible();
+      await page.getByRole('button', { name: 'Close chat', exact: true }).click();
+      if (width < 640) await ask.tap(); else await ask.click();
+      await expect(page.getByRole('combobox', { name: 'Ask Panda, or type a slash command', exact: true })).toBeVisible();
     });
   });
 }

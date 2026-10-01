@@ -8,7 +8,9 @@ body:has([data-globe-root]) .palette-trigger { top: 6px; bottom: auto; right: 16
 [data-globe-root]:not(:has(canvas)) [data-globe-facts],
 [data-globe-root]:not(:has(canvas)) [data-globe-facts] > ul { max-width: none; max-height: none; background: none; padding: 0; }
 [data-space-weather-pill] { max-width: 320px; }
-body:has([data-globe-root]) .chat-launcher { display: none; }
+/* Globe uses the header Ask control as its registered chat launcher. */
+body:has([data-globe-root]) .chat-launcher:not([data-globe-chat]) { display: none; }
+body:has([data-globe-root]) [data-globe-chat] { position: static; inset: auto; }
 [data-globe-stage] > button[aria-label="Open the layers panel"] { top: var(--globe-top-offset, 5rem); }
 
 [data-globe-search-toggle] { order: -1; }
@@ -32,6 +34,7 @@ body:has([data-globe-root]) .chat-launcher { display: none; }
 }
 @media (max-width: 639px) and (min-height: 501px) {
   [data-globe-stage] { height: calc(100svh - 166px); }
+  [data-explore-bar] { left: 16px; translate: none; }
   [data-globe-root] > div:last-child { padding: 8px 16px; max-height: none; }
   [data-scene-receipt] { margin-right: 0; margin-bottom: 8px; }
   [data-globe-facts] { max-width: none; }
