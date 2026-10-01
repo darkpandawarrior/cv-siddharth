@@ -310,7 +310,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
         role="region"
         aria-live="polite"
         aria-label="Selection details"
-        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] flex-col rounded-2xl glass-panel font-mono text-xs text-zinc-300 sm:top-[var(--globe-left-slot-top,5rem)] sm:flex sm:inset-x-auto sm:left-4 sm:bottom-[var(--globe-facts-reserve,calc(45%+16px))] sm:max-h-[calc(100%-var(--globe-facts-reserve,calc(45%+16px))-var(--globe-left-slot-top,5rem))]"
+        className="pointer-events-auto absolute inset-x-4 top-20 z-30 hidden max-h-[calc(100%-45%-96px)] w-[288px] flex-col overflow-hidden rounded-2xl glass-panel font-mono text-xs text-zinc-300 sm:top-[var(--globe-left-slot-top,5rem)] sm:flex sm:inset-x-auto sm:left-4 sm:bottom-[var(--globe-facts-reserve,calc(45%+16px))] sm:max-h-[calc(100%-var(--globe-facts-reserve,calc(45%+16px))-var(--globe-left-slot-top,5rem))]"
       >
         <div className="min-h-0 flex-1 overflow-y-auto p-3">{body}</div>
         {actions("py-1")}

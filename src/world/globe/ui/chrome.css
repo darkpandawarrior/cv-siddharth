@@ -1,0 +1,12 @@
+/* Globe chrome owns its clearance from the global utility controls. */
+body:has([data-globe-root]) .anomaly-rail { pointer-events: none; }
+body:has([data-globe-root]) .anomaly-rail-link { display: none; }
+body:has([data-globe-root]) .palette-trigger { top: 6px; bottom: auto; right: 16px; left: auto; min-height: 44px; }
+[data-globe-root]:not(:has(canvas)) [data-globe-facts] > summary { display: none; }
+[data-globe-facts] { max-width: 288px; }
+[data-globe-facts] > ul { max-height: 28svh; overflow: auto; padding: 12px; border-radius: 12px; background: var(--color-ink); }
+[data-globe-root]:not(:has(canvas)) [data-globe-facts],
+[data-globe-root]:not(:has(canvas)) [data-globe-facts] > ul { max-width: none; max-height: none; background: none; padding: 0; }
+[data-space-weather-pill] { max-width: 320px; }
+body:has([data-globe-root]) .chat-launcher { display: none; }
+[data-globe-stage] > button[aria-label="Open the layers panel"] { top: var(--globe-top-offset, 5rem); }
