@@ -47,6 +47,9 @@ async function gotoPlayground(page: Page, at: string): Promise<void> {
   // same as any other visitor, they reach the drivable world through the
   // "drive the 3D world instead" button rather than an automatic mount.
   const driveButton = page.getByRole("button", { name: "drive the 3D world instead" });
+  // Root hydration precedes Playground's capability/view effect. Wait for its
+  // resolved branch before deciding whether explicit entry is needed.
+  await expect(page.locator(".playground-world").or(driveButton)).toBeVisible();
   if (await driveButton.isVisible().catch(() => false)) await driveButton.click();
   await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 }

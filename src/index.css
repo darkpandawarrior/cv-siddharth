@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Width alone does not imply a tall canvas (phone landscape). */
+@custom-variant short (@media (max-height: 500px));
+@custom-variant compact {
+  @media (max-width: 639px) { @slot; }
+  @variant short { @slot; }
+}
+
+
 @theme {
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
@@ -41,6 +49,7 @@
   --color-signal-dim: #8ff0b4; /* 7x — the same signal, attenuated */
   --color-probe: #5ee6ff; /* 43x — unlit/idle counterpart to signal */
   --color-warn: #f0883e; /* 22x */
+  --color-degraded: #f2a13d;
   --color-danger: #ff5c5c; /* 11x */
   --color-alt: #db61ff; /* 11x */
   --color-text: #e8efe9; /* 22x — bright body text on dark grounds */
@@ -1450,6 +1459,59 @@ html.resume-mode .palette-trigger {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: var(--shadow-elevation-2);
+}
+
+/* Globe controls keep a full touch target even when the glyph is compact. */
+@media (max-width: 639px), (pointer: coarse) {
+  [data-globe-root] button {
+    min-width: calc(var(--spacing) * 11);
+    min-height: calc(var(--spacing) * 11);
+  }
+}
+
+/* No-WebGL facts still size the room without the lazy canvas chrome. */
+[data-globe-root]:not(:has(canvas)) { height: auto; }
+
+/* Chrome is bounded by the live stage; expanded history scrolls in its rail. */
+[data-globe-topbar] > div {
+  max-height: var(--globe-rail-max-h, none);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+@variant compact {
+  [data-globe-topbar] > div > :has([data-space-weather-status]) { display: none; }
+  :root { --globe-compact: 1; }
+  [data-globe-root] .glass-panel.fixed.bottom-0,
+  [data-globe-time-sheet], [data-globe-briefing] {
+    z-index: 51;
+    background: rgba(17, 22, 25, .96);
+    max-height: min(70svh, var(--globe-sheet-max-h, 70svh));
+  }
+  [data-globe-root] a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+@media (pointer: coarse) {
+  [data-globe-root] a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+@variant short {
+  :root { --globe-short: 1; }
+  [data-globe-root] { height: calc(100svh - var(--globe-room-top, 0px)) !important; }
+  [data-globe-topbar] { flex-wrap: nowrap; max-height: none; padding: 8px; padding-right: 8px; }
+  [data-globe-topbar] > div { flex-wrap: nowrap; max-width: none; }
+  [data-globe-topbar] > div > * { flex-shrink: 0; }
+  [data-globe-topbar] > div:first-child > :not(.ctrl-icon):not(:has([aria-label="Zoom in"])),
+  [data-globe-topbar] > div:last-child > :not([data-brief-trigger]):not([data-story-entry-compact]):not([data-film-entry-compact]):not(:has([aria-label="Open the time sheet"])) { display: none; }
+  [data-globe-topbar] > div:last-child > :has([aria-label="Open the time sheet"]) { display: flex; }
+  [data-globe-layer-panel], [aria-label="Open the layers panel"],
+  [data-globe-inspector], [data-globe-tour], [data-story-chapter-card], [data-film-chapter-card] { display: none; }
+  [data-globe-layer-sheet], [data-globe-inspector-sheet], [data-globe-time-sheet], [data-globe-tour-sheet], [data-story-chapter-sheet], [data-film-chapter-sheet] { display: block; }
+  [data-pinned-readouts] { position: fixed; bottom: 8px; max-height: min(40svh, calc(var(--globe-sheet-max-h, 70svh) - 8px)); }
+  [data-pinned-readouts]:has([data-pinned-point]:only-child) { max-height: min(32svh, calc(var(--globe-sheet-max-h, 70svh) - 8px)); }
+  [data-globe-panel] { max-height: 44px; overflow-y: auto; }
+  [data-story-entry], [data-film-entry] { display: none; }
 }
 
 .font-mono-os {

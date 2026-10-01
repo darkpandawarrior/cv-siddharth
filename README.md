@@ -286,7 +286,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Forty `gen:` scripts over forty-five generator files. The ones you will
+Forty `gen:` scripts over forty-six generator files. The ones you will
 actually reach for:
 
 ```bash
@@ -332,6 +332,11 @@ reasoning where a README reader can find it.
 - `gen-store-flavours.mjs`. Refuses to run without `SHELF_RIDER_REPO` and
   `SHELF_DRIVER_REPO` pointing at two private checkouts, so it cannot run on
   a CI box at all.
+- `gen-maps-places.mjs`. Refuses to run without `MAPS_TAKEOUT_DIR` pointing
+  at a private Google Maps Takeout export; `MAPS_PHOTOS_DIR` is optional and
+  falls back to the committed thumbnails when absent. Writes city-level
+  aggregates only, never a business name, address, review text, place URL
+  or original photo filename.
 - `gen-store-siblings.mjs`. Walks each shelf client's Play developer page
   live, looking for a merchant-side sibling app the rider/driver data misses.
   Writes a gitignored cache; `npm run gen:store` merges it.
@@ -349,7 +354,7 @@ reasoning where a README reader can find it.
   refresh.
 - `gen-globe-earth.mjs` (`npm run gen:globe-earth`). Manual and occasional:
   bakes NASA's public-domain Black Marble night-radiance composite into a
-  360x180 land mask, `heavy/globe/earth-720x360.bin`. The build must never
+  360x180 land mask, `public/sky/earth-720x360.bin`. The build must never
   block on NASA's server, so it stays out of every build/refresh/check chain.
 - `gen-globe-geo.mjs` (`npm run gen:globe-geo`). Manual and occasional: bakes
   country centroids from Natural Earth's admin-0 GeoJSON mirror into
@@ -391,8 +396,8 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 2265 unit tests across 231 files (vitest)
-npm run test:e2e  # 630 Playwright tests across 47 files, every registry route
+npm test          # 3342 unit tests across 353 files (vitest)
+npm run test:e2e  # 992 Playwright tests across 110 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```

@@ -189,35 +189,31 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
   return (
     <div className="flex min-h-screen flex-col bg-void">
       <header data-spine="route-header" className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
+        <nav className="mx-auto flex max-w-7xl flex-nowrap items-center justify-between gap-1 px-2 py-1 sm:gap-3 sm:px-6">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-3">
             {/* Was a link to /playground - the hub that lists the rooms. The
                 launcher shows the same set without leaving the room, which is
                 the difference between "go back and choose again" and moving
                 sideways. /playground is still a route and still on the wall. */}
-            <LauncherButton />
+            <LauncherButton className="min-h-11 min-w-11 justify-center" />
             <button
               type="button"
               onClick={() => goToSection("top")}
-              className="ctrl flex items-center gap-1.5 text-sm text-muted hover:text-accent"
+              className="ctrl flex min-h-11 min-w-11 items-center justify-center gap-1.5 text-sm text-muted hover:text-accent"
             >
               <ArrowLeft size={14} /> <span className="label-wide">Portfolio</span>
             </button>
           </div>
-          {/* weeb-1 / blueprint-title-hidden-mobile / compose-no-title-below-desktop:
-              this used to be `hidden ... lg:flex`, so below 1024px a visitor
-              had no on-screen answer to "what page am I on" - the sr-only
-              <h1> below carries the same text but announces to nobody
-              looking at the screen. Always shown now; it truncates instead
-              of pushing the launcher or the Ask button off a narrow row. */}
-          <span className="kicker tagline-wrap min-w-0">
-            {title} · {tagline}
+          {/* Phones keep the room title beside every navigation control.
+              The full tagline returns at sm; the h1 below always keeps it. */}
+          <span className="kicker min-w-0 flex-1 truncate">
+            {title}<span className="hidden sm:inline"> · {tagline}</span>
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             {showAltitudeRail && <AltitudeRail />}
             <button
               onClick={() => openChat()}
-              className="ctrl rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink hover:bg-accent-dim sm:px-4"
+              className="ctrl min-h-11 min-w-11 rounded-full bg-accent px-2 py-1.5 text-sm font-semibold text-ink hover:bg-accent-dim sm:px-4"
             >
               Ask <span className="label-wide">my AI</span>
             </button>

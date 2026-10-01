@@ -23,6 +23,7 @@ import {
   readBoundedBody,
   selectHistory,
   systemPromptFor,
+  tryAnthropicCall,
   validateMessages,
   validateRequest,
   validateRoute,
@@ -1804,5 +1805,134 @@ describe("validateRequest (route)", () => {
     expect(validateRequest({ messages: [], route: "/lab" })).toBeNull();
     expect(validateRequest({ messages: [{ role: "user", content: "x".repeat(2001) }], route: "/lab" })).toBeNull();
     expect(validateRequest({ messages: msgs, mode: "nope", route: "/lab" })).toBeNull();
+  });
+});
+
+// LANE W12 ("Ask the globe"). globe-ask.test.ts covers handleGlobeAsk's own
+// logic in isolation; this covers the one line that actually reaches it —
+// handleChat's `mode === "globe"` dispatch, BEFORE validateRequest's
+// `{ messages }` contract ever sees the body (a `{ text, context }` body
+// would otherwise 400 there). Every guard above the dispatch (origin,
+// rate limit, provider-configured) still applies, unchanged by this branch.
+describe("handleChat: globe mode dispatch", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it('routes { mode: "globe", text, context } to the globe co-pilot, not the { messages } validator', async () => {
+    vi.stubEnv("CHAT_PROVIDER", "groq");
+    vi.stubEnv("GROQ_API_KEY", "test-key");
+    // No stubbed fetch success needed — this only proves the DISPATCH
+    // happened. A rejected upstream call still degrades to globe-ask.ts's
+    // own friendly 200 (see globe-ask.test.ts), which is exactly the shape
+    // (`{ actions, narrate }`) that tells the two modes apart: chat mode
+    // streams SSE, and a { text, context } body would 400 chat mode's own
+    // "Expected { messages: ... }" validator.
+    vi.stubGlobal("fetch", async () => new Response("upstream said no", { status: 500 }));
+    const res = await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://cv-siddharth.vercel.app", "x-forwarded-for": "203.0.113.200" },
+        body: JSON.stringify({ mode: "globe", text: "fly to Tokyo", context: {} }),
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toHaveProperty("actions");
+    expect(body).toHaveProperty("narrate");
+  });
+
+  it("still enforces the origin allowlist before the dispatch", async () => {
+    const res = await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json", origin: "https://evil.com" },
+        body: JSON.stringify({ mode: "globe", text: "fly to Tokyo", context: {} }),
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+});
+
+// audit fix (2026-09-28): the paid Anthropic fallback had no site-wide spend
+// ceiling — only the per-IP windows above, which a caller spread across
+// enough addresses (or a wide free-tier outage) never touches. tryAnthropicCall
+// is the pure counter; `box` is always passed explicitly here so these tests
+// never touch the real module-scope counter production requests share.
+describe("tryAnthropicCall: the daily spend ceiling on the paid fallback", () => {
+  it("allows up to `cap` calls in a UTC day, then refuses without mutating further", () => {
+    const box = { day: "", count: 0 };
+    const now = new Date("2026-09-28T12:00:00Z").getTime();
+    expect(tryAnthropicCall(now, 3, box)).toBe(true);
+    expect(tryAnthropicCall(now, 3, box)).toBe(true);
+    expect(tryAnthropicCall(now, 3, box)).toBe(true);
+    expect(tryAnthropicCall(now, 3, box)).toBe(false); // cap spent
+    expect(tryAnthropicCall(now, 3, box)).toBe(false); // stays refused, doesn't overcount
+    expect(box.count).toBe(3);
+  });
+
+  it("resets on UTC day rollover, not on 24h of wall-clock time elapsed", () => {
+    const box = { day: "", count: 0 };
+    const lateDay1 = new Date("2026-09-28T23:59:00Z").getTime();
+    const earlyDay2 = new Date("2026-09-29T00:01:00Z").getTime(); // 2 min later, new UTC day
+    expect(tryAnthropicCall(lateDay1, 1, box)).toBe(true);
+    expect(tryAnthropicCall(lateDay1, 1, box)).toBe(false); // day 1's single call already spent
+    expect(tryAnthropicCall(earlyDay2, 1, box)).toBe(true); // fresh budget for day 2
+    expect(box.count).toBe(1);
+  });
+
+  it("a cap of 0 refuses every call", () => {
+    const box = { day: "", count: 0 };
+    expect(tryAnthropicCall(Date.now(), 0, box)).toBe(false);
+  });
+});
+
+// Runs LAST in this file on purpose: unlike the tests above, this one calls
+// tryAnthropicCall with its default (module-scope, production-shared) box to
+// exercise handleChat's real integration — nothing earlier in this file
+// forces CHAT_PROVIDER=anthropic through handleChat, so spending that shared
+// box here cannot colour any other test's result.
+describe("handleChat: the anthropic daily cap falls back to the existing 'model unavailable' response", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("skips the paid provider once its daily cap is spent, and never bills Anthropic for it", async () => {
+    vi.stubEnv("CHAT_PROVIDER", "anthropic");
+    vi.stubEnv("ANTHROPIC_API_KEY", "test-key");
+    const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    // Spend the real (default) cap — 25/day, see CHAT_ANTHROPIC_DAILY_CAP's
+    // comment in chat-handler.ts — directly, so this test doesn't depend on
+    // running handleChat 25 times over the network mock.
+    const now = Date.now();
+    for (let i = 0; i < 25; i++) tryAnthropicCall(now);
+    expect(tryAnthropicCall(now)).toBe(false); // confirms the shared box really is spent
+
+    const res = await handleChat(
+      new Request("https://cv-siddharth.vercel.app/api/chat", {
+        method: "POST",
+        // A fresh address: the module-level "chat" rate-limit bucket
+        // (`hits`, keyed by IP) is shared with every other test in this
+        // file, and an address any of them already used would 429 here for
+        // an unrelated reason.
+        headers: {
+          "content-type": "application/json",
+          origin: "https://cv-siddharth.vercel.app",
+          "x-vercel-forwarded-for": "203.0.113.77",
+        },
+        body: JSON.stringify({ messages: [{ role: "user", content: "hi" }] }),
+      }),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    // The pre-existing "model unavailable" wording (exhaustedResponse's default
+    // branch) — never a new error shape, and never a page, just a JSON reply
+    // the chat widget already knows how to render as an apology bubble.
+    expect(body.error).toBe("The model is unavailable right now. Please try again.");
   });
 });

@@ -8,7 +8,7 @@ describe("globeGeo", () => {
     expect(employersUnresolved).toEqual(expected);
     // Pinned to the two known-unresolved locations so a silent GEOCODE edit,
     // or a new employer row, fails loudly here instead of drifting quiet.
-    expect(employersUnresolved).toEqual(["Contract, India", "Remote, India"]);
+    expect(employersUnresolved).toEqual(["Contract, India"]);
   });
 
   it("never invents a coordinate for an unresolved location", () => {
@@ -25,6 +25,7 @@ describe("globeGeo", () => {
       expect(marker).toBeDefined();
       expect(marker).toMatchObject(GEOCODE["Pune, India"]);
     }
-    expect(employerMarkers.length).toBe(puneRows.length);
+    expect(employerMarkers.length).toBe(puneRows.length + 1);
+    expect(employerMarkers.find((marker) => marker.company.startsWith("Jugnoo"))).toMatchObject({ location: "Chandigarh, India", lat: 30.73, lon: 76.78 });
   });
 });

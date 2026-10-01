@@ -85,6 +85,12 @@ for (const src of walkRoots([publicDir, heavyDir])) {
     continue;
   }
   if (!derivableExtensions.includes(ext.slice(1))) continue;
+  // public/globe/maps is scripts/gen-maps-places.mjs's own output: it already
+  // emits the single delivered format (AVIF) itself, sized and privacy-
+  // checked at generation time. A second derivative pass here would just
+  // re-encode an already-lossy thumbnail and ship a duplicate format nothing
+  // reads.
+  if (src.includes(`${sep}globe${sep}maps${sep}`)) continue;
   // Excelsior magazine pages are already the delivered format (see
   // gen-excelsior.mjs). Deriving an .avif per page would be ~400 extra files
   // regenerated on every build for no gain — they have no raster source here.

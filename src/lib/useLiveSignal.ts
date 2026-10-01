@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { pollDelay } from "./visibilityPolling";
 
 /**
  * Fetches `url` and parses the JSON body, or throws. Extracted so it's
@@ -36,6 +37,8 @@ type StoreEntry<T> = {
   timer: ReturnType<typeof setInterval> | null;
   timerIntervalMs: number | null;
   onVisibility: (() => void) | null;
+  lastPollAt: number | null;
+  inFlight: boolean;
   fetchImpl: typeof fetch;
 };
 
@@ -50,6 +53,8 @@ function getOrCreateStore<T>(url: string, fetchImpl: typeof fetch): StoreEntry<T
       timer: null,
       timerIntervalMs: null,
       onVisibility: null,
+      lastPollAt: null,
+      inFlight: false,
       fetchImpl,
     };
     stores.set(url, store as StoreEntry<unknown>);
@@ -64,7 +69,8 @@ function isHidden(): boolean {
 }
 
 async function tick<T>(url: string, store: StoreEntry<T>): Promise<void> {
-  if (isHidden()) return;
+  if (isHidden() || store.inFlight) return;
+  store.inFlight = true;
   // The interval this fetch is being made at, captured before the await —
   // a subscriber's own interval, or the store's current running interval if
   // one is already set (both agree once restartTimer has run).
@@ -75,6 +81,9 @@ async function tick<T>(url: string, store: StoreEntry<T>): Promise<void> {
   } catch {
     store.snapshot = { data: store.snapshot.data, error: true, nextPollAt: Date.now() + intervalMs };
   }
+  store.lastPollAt = Date.now();
+  store.inFlight = false;
+  if (isHidden() || store.intervals.size === 0) store.snapshot = { ...store.snapshot, nextPollAt: null };
   for (const onChange of store.intervals.keys()) onChange();
 }
 
@@ -101,7 +110,7 @@ function ensureVisibilityHandling<T>(url: string, store: StoreEntry<T>): void {
     if (document.hidden) {
       stopTimer(store);
     } else {
-      void tick(url, store);
+      if (pollDelay(store.lastPollAt, Math.min(...store.intervals.values())) === 0) void tick(url, store);
       restartTimer(url, store);
     }
   };

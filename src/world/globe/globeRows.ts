@@ -16,6 +16,7 @@
 import { fleetStats } from "../../data/store.ts";
 import { upstreamMergedPRs, upstreamStars } from "../../data/profile.ts";
 import { employerMarkers, employersUnresolved } from "../../data/globeGeo.ts";
+import { ageDays } from "../../data/freshnessSla.ts";
 
 export interface GlobeRow {
   id: string;
@@ -32,14 +33,41 @@ export const REACH_UPSTREAM_CLAIM = `${upstreamMergedPRs} merged PRs in a reposi
 
 const employerTotal = employerMarkers.length + employersUnresolved.length;
 
+/** data.md finding #6: `storeGeneratedAt` is already shown as an absolute
+ *  "as of <date>" chip (GlobePanel.tsx's EvidenceChip), but a visitor has to
+ *  do their own date math to know 54 days is nearly two months. This turns
+ *  the stamp into the same "N weeks ago" qualifier every other snapshot on
+ *  the page carries.
+ *
+ *  `now` has NO default here on purpose (task Z1 fix: it used to default to
+ *  `new Date()`, evaluated once at whatever moment `globeFacts` below was
+ *  first imported/module-evaluated - the server's copy of that instant and
+ *  the browser bundle's copy are two different processes that can boot
+ *  minutes or days apart, so the baked-in label drifted between SSR and
+ *  client and produced a genuine hydration text mismatch (React error
+ *  #418), not just the "rendered exactly across a week boundary" edge case
+ *  this comment used to shrug off - reproduced with e2e/globe-C1.spec.ts's
+ *  malformed-link test, which freezes the clock before navigating and made
+ *  the drift deterministic instead of rare). Callers now pass `now`
+ *  explicitly: GlobePanel.tsx via `useNow()` (null until mount, same
+ *  SSR-safe pattern useSky.ts already uses - the label appears once
+ *  mounted, not before), puneSelection.ts at its own client-only call site. */
+export function weeksAgoLabel(stamp: string, now: Date): string {
+  const weeks = Math.floor(ageDays(stamp, now) / 7);
+  if (weeks <= 0) return "less than a week ago";
+  return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+}
+
 /** GLOBE's static facts (task 2, task 5): the two reach columns and the
  *  employer-marker resolution state. Static because every input is a
  *  committed data snapshot, not a live read - same "no clock, no fetch"
  *  discipline as the rest of src/world. */
 export const globeFacts: readonly GlobeRow[] = [
   {
+    // No "(N weeks ago)" baked in here on purpose — see weeksAgoLabel's own
+    // comment. GlobePanel/puneSelection append it once a real clock exists.
     id: "reach-installs",
-    label: `${fleetStats.installFloor.toLocaleString("en-US")} ${REACH_INSTALLS_CLAIM}`,
+    label: `${fleetStats.installFloor.toLocaleString("en-IN")} ${REACH_INSTALLS_CLAIM}`,
     file: "store.ts",
     source: "Play Store listings",
   },
