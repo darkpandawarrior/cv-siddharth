@@ -94,6 +94,9 @@ jobs:
         run: |
           mkdir -p ../../Profile
           mv pages-checkout ../../Profile/darkpandawarrior.github.io
+          # The identity must exist before the next step: publish-heavy-assets.mjs commits there.
+          git -C ../../Profile/darkpandawarrior.github.io config user.name "github-actions[bot]"
+          git -C ../../Profile/darkpandawarrior.github.io config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Sync and commit in the Pages repo
         run: node scripts/publish-heavy-assets.mjs
@@ -101,6 +104,4 @@ jobs:
       - name: Push
         working-directory: ../../Profile/darkpandawarrior.github.io
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git push
