@@ -93,6 +93,11 @@ for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]
         expect.soft(chrome.y + chrome.height - header.y, 'at most two chrome rows').toBeLessThanOrEqual(120);
         expect.soft(result.disc.y - result.disc.r).toBeGreaterThanOrEqual(chrome.y + chrome.height);
         expect.soft(result.disc.y + result.disc.r).toBeLessThanOrEqual(viewing.y);
+      }
+    });
+    test('opened controls and chat remain reachable', async ({ page }) => {
+      await prepare(page);
+      if (width < 640) {
         await page.locator('[data-globe-search-toggle]').click();
         await expect(page.getByRole('combobox', { name: 'Search places or ask the globe' })).toBeVisible();
         const search = (await page.locator('[data-explore-bar]').boundingBox())!;
@@ -101,6 +106,9 @@ for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]
         await page.locator('[data-hud-overflow] > summary').click();
         await expect(page.locator('[data-explore-bar] input')).toBeHidden();
         await expect(page.locator('[data-globe-overflow] [data-globe-weather]')).toBeVisible();
+        // Lazy siblings may arrive after the HUD; measure their controls once mounted.
+        await page.locator('[data-globe-overflow] [data-story-entry-compact]').waitFor({ state: 'visible' });
+        await page.locator('[data-globe-overflow] [data-brief-trigger]').waitFor({ state: 'visible' });
         for (const control of await page.locator('[data-globe-overflow] button:visible').all()) {
           const box = (await control.boundingBox())!;
           expect(box.width).toBeGreaterThanOrEqual(44); expect(box.height).toBeGreaterThanOrEqual(44);
