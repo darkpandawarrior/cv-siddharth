@@ -21,6 +21,29 @@
 /** Long enough for a slow CDN, short enough that a build never looks hung. */
 export const DEFAULT_TIMEOUT_MS = 20_000;
 
+/** Never wait longer than this for one retry, Retry-After included — a
+ * generator that honours a multi-minute Retry-After verbatim just trades a
+ * hang on the response for a hang on the delay, the exact failure class this
+ * file exists to prevent. */
+const MAX_RETRY_DELAY_MS = 30_000;
+
+/**
+ * lichess and GitHub both send a numeric (seconds) Retry-After on 429; some
+ * proxies send an HTTP-date instead, so both are parsed. No header, or a
+ * value that doesn't parse to a sane positive delay, falls back to the same
+ * exponential backoff used for a network-level failure.
+ */
+export function retryDelayMs(res, attempt) {
+  const exp = 500 * 2 ** attempt;
+  const header = res.headers.get("retry-after");
+  if (!header) return exp;
+  const secs = Number(header);
+  if (Number.isFinite(secs) && secs >= 0) return Math.min(secs * 1000, MAX_RETRY_DELAY_MS);
+  const dateMs = Date.parse(header) - Date.now();
+  if (Number.isFinite(dateMs) && dateMs > 0) return Math.min(dateMs, MAX_RETRY_DELAY_MS);
+  return exp;
+}
+
 /**
  * One request with a hard deadline, retried on the failures that are worth
  * retrying. A 404 is an answer and is returned as-is; the caller decides.
@@ -47,7 +70,7 @@ export async function fetchWithTimeout(url, init = {}, { timeoutMs = DEFAULT_TIM
       // 429 and 5xx are the ones a second try can fix. Anything else, including
       // a 404, is a real answer and goes back to the caller immediately.
       if ((res.status === 429 || res.status >= 500) && attempt < retries) {
-        await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+        await new Promise((r) => setTimeout(r, retryDelayMs(res, attempt)));
         continue;
       }
       return res;
