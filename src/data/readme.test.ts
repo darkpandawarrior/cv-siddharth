@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync } from "node:fs";
+import { closeSync, mkdtempSync, openSync, readFileSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { repoStats } from "./repoStats.ts";
 import { profile } from "./profile.ts";
 import { surfaces } from "./surfaces.ts";
@@ -137,10 +138,16 @@ describe("the README's numbers are the repo's numbers", () => {
    * runner 110 files take longer than vitest's default 5 s, hence the timeout.
    */
   it("states the real Playwright test count, not just the file count", { timeout: 60_000 }, () => {
-    const out = execFileSync("npx", ["playwright", "test", "--list"], {
-      encoding: "utf8",
-      cwd: ROOT,
-    });
+    // stdout goes to a file, not a pipe: on macOS Node writes pipes asynchronously, and under
+    // load Playwright exited before its listing flushed, so the test read an empty string.
+    const listing = join(mkdtempSync(join(tmpdir(), "pw-list-")), "list.txt");
+    const fd = openSync(listing, "w");
+    try {
+      execFileSync("npx", ["playwright", "test", "--list"], { cwd: ROOT, stdio: ["ignore", fd, "inherit"] });
+    } finally {
+      closeSync(fd);
+    }
+    const out = readFileSync(listing, "utf8");
     const m = /Total: (\d+) tests in (\d+) files/.exec(out);
     expect(m, `playwright test --list should print a Total line; it printed:\n${out.slice(-1500)}`).not.toBeNull();
     const [, total] = m!;
