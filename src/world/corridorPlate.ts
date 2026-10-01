@@ -27,11 +27,11 @@ export interface CorridorPlateMeta {
   years: CorridorPlateYear[];
 }
 export const corridorPlateMeta: CorridorPlateMeta = {
-  "generatedAt": "2026-09-26T12:06:16.004Z",
+  "generatedAt": "2026-10-01T09:42:04.019Z",
   "width": 2400,
   "height": 800,
   "from": "2019-01",
-  "to": "2026-09",
+  "to": "2026-10",
   "lanes": [
     {
       "key": "work",
@@ -65,31 +65,31 @@ export const corridorPlateMeta: CorridorPlateMeta = {
     },
     {
       "year": 2020,
-      "xFraction": 0.1290322580645161
+      "xFraction": 0.12765957446808512
     },
     {
       "year": 2021,
-      "xFraction": 0.25806451612903225
+      "xFraction": 0.25531914893617025
     },
     {
       "year": 2022,
-      "xFraction": 0.3870967741935484
+      "xFraction": 0.3829787234042553
     },
     {
       "year": 2023,
-      "xFraction": 0.5161290322580645
+      "xFraction": 0.5106382978723405
     },
     {
       "year": 2024,
-      "xFraction": 0.6451612903225806
+      "xFraction": 0.6382978723404256
     },
     {
       "year": 2025,
-      "xFraction": 0.7741935483870968
+      "xFraction": 0.7659574468085106
     },
     {
       "year": 2026,
-      "xFraction": 0.9032258064516128
+      "xFraction": 0.8936170212765957
     }
   ]
 };

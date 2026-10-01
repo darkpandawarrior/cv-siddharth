@@ -185,7 +185,7 @@ export const NODES: StoryNode[] = [
   {
     "id": "oss",
     "label": "Open source",
-    "sub": "26 merged upstream",
+    "sub": "27 merged upstream",
     "r": 12,
     "color": "#5ee6ff",
     "target": "#source",

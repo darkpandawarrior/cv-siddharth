@@ -23,12 +23,12 @@
  */
 
 /** ATS and job-board provider modules in the upstream `providers/` directory. */
-export const providerCount = 89;
+export const providerCount = 98;
 
 /** Rounded down, because the exact figure is wrong within the hour and "68k+"
  *  is not. Stars only climb on a live repo, so the generator reads a SMALLER
  *  value as a rate-limited response rather than as news. */
-export const upstreamStars = "71k+";
+export const upstreamStars = "73k+";
 
 export interface UpstreamStat {
   repo: string;
@@ -47,10 +47,10 @@ export const upstreamStats: UpstreamStat[] = [
   {
     "repo": "career-ops-hq/career-ops",
     "org": "career-ops-hq",
-    "merged": 24,
-    "open": 1,
+    "merged": 25,
+    "open": 0,
     "closedUnmerged": 2,
-    "measuredAt": "2026-09-24"
+    "measuredAt": "2026-10-01"
   },
   {
     "repo": "openMF/kmp-project-template",
@@ -58,7 +58,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 2,
     "open": 0,
     "closedUnmerged": 1,
-    "measuredAt": "2026-09-24"
+    "measuredAt": "2026-10-01"
   },
   {
     "repo": "openMF/mifos-passcode-cmp",
@@ -66,7 +66,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 0,
     "open": 1,
     "closedUnmerged": 0,
-    "measuredAt": "2026-09-24"
+    "measuredAt": "2026-10-01"
   },
   {
     "repo": "openMF/mifos-x-actionhub",
@@ -74,7 +74,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 0,
     "open": 1,
     "closedUnmerged": 0,
-    "measuredAt": "2026-09-24"
+    "measuredAt": "2026-10-01"
   }
 ];
 
