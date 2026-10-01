@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
-import { fibonacciLattice, isDayAt, latLonToXyz } from "./geoMath.ts";
-import { heavy } from "../../lib/assetBase.ts";
+import { GLOBE_RADIUS, fibonacciLattice, isDayAt, latLonToXyz } from "./geoMath.ts";
+import { Atmosphere } from "./layers/Atmosphere.tsx";
+import { OCEAN_FRAG, VERT, useSunUniforms } from "./layers/sun.ts";
 
-// Kept in sync with the sibling globe/*.tsx files rather than imported from
-// one of them - same "restated, not shared" call Ghosts.tsx's CART_HALF
-// already makes in this codebase (this lane's own file list has no room for
-// a seventh, constants-only module).
-export const GLOBE_RADIUS = 6;
+// Re-exported for the layers that already import it from here; it lives in
+// geoMath.ts so the atmosphere module can use it without an import cycle.
+export { GLOBE_RADIUS };
 
-/** heavy/globe/earth-720x360.bin's own layout (scripts/gen-globe-earth.mjs):
+/** public/sky/earth-720x360.bin's own layout (scripts/gen-globe-earth.mjs):
  *  an 8-byte "GLOB" + u16LE width + u16LE height header, then one byte per
  *  cell - bit 0x80 is land, the low nibble is a 0-15 Black Marble radiance. */
 export interface EarthMask {
@@ -61,28 +60,38 @@ function sampleMask(mask: EarthMask, lat: number, lon: number): { land: boolean;
 // literal hex, not a theme token, because this is the one house rule that
 // says these dots must NOT follow the site's own palette.
 const DAY_COLOR = new THREE.Color("#e7efe9");
-const NIGHT_UNLIT_COLOR = new THREE.Color("#141a17");
+// Lifted from #141a17, which sat within a few levels of the ocean and made
+// the night-side continents vanish outright.
+const NIGHT_UNLIT_COLOR = new THREE.Color("#2b3530");
 const NIGHT_CITY_COLOR = new THREE.Color("#ffdba3");
 
-const DOT_GEOMETRY = new THREE.SphereGeometry(0.035, 6, 6);
+// Flat six-sided discs turned to face outward: 6 triangles a dot instead of
+// a sphere's 60, which is what pays for the denser lattice.
+const DOT_GEOMETRY = new THREE.CircleGeometry(0.05, 6);
 const dummy = new THREE.Object3D();
 
 /**
  * GLOBE's Earth: a Fibonacci-lattice dot matrix over the real 360x180 land
  * mask, one InstancedMesh, coloured by the real subsolar day/night split
- * plus baked Black Marble night radiance (§6.3, task 1). `count` is the
- * tier's lattice sample size (6,000 / 2,500 / 1,200) - filtered to land, so
+ * plus baked Black Marble night radiance (§6.3, task 1), over a shaded ocean
+ * sphere and an atmosphere halo. The ocean renders unconditionally: a mask
+ * that fails to load leaves a plain lit globe, never an empty sky (the
+ * failure the live site shipped while the mask 404'd on the heavy host).
+ * `earthRef` lands on the ocean so the callouts can occlude against it.
+ * `count` is the tier's lattice sample size - filtered to land, so
  * the rendered instance count is smaller than `count` (about 29% of Earth is
  * land). Positions and land/radiance are fixed once the mask loads; only the
  * per-instance colour is recomputed, and only when `now` actually changes
  * (`useSky`'s once-a-minute tick) - never per frame, since nothing here
  * animates.
  */
-export function EarthDots({ count, now }: { count: number; now: Date }) {
+export function EarthDots({ count, now, earthRef }: { count: number; now: Date; earthRef?: RefObject<THREE.Mesh> }) {
   const [mask, setMask] = useState<EarthMask | null>(null);
   useEffect(() => {
     let alive = true;
-    loadEarthMask(heavy("/globe/earth-720x360.bin")).then((m) => {
+    // Same-origin (64 KB), not heavy(): the heavy host publishes on its own
+    // schedule, and this file 404'd there from the day it shipped.
+    loadEarthMask("/sky/earth-720x360.bin").then((m) => {
       if (alive) setMask(m);
     });
     return () => {
@@ -105,7 +114,9 @@ export function EarthDots({ count, now }: { count: number; now: Date }) {
       const d = dots[i];
       const p = latLonToXyz(d.lat, d.lon);
       dummy.position.set(p.x * GLOBE_RADIUS, p.y * GLOBE_RADIUS, p.z * GLOBE_RADIUS);
-      dummy.lookAt(0, 0, 0);
+      // +Z (the disc's face) points away from the centre, so the front face
+      // is the one a camera outside the globe sees.
+      dummy.lookAt(p.x * 2 * GLOBE_RADIUS, p.y * 2 * GLOBE_RADIUS, p.z * 2 * GLOBE_RADIUS);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
       const day = isDayAt(now, d.lat, d.lon);
@@ -117,11 +128,20 @@ export function EarthDots({ count, now }: { count: number; now: Date }) {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   }, [dots, now]);
 
-  if (dots.length === 0) return null;
+  const uniforms = useSunUniforms(now);
 
   return (
-    <instancedMesh ref={meshRef} args={[DOT_GEOMETRY, undefined, dots.length]} frustumCulled={false}>
-      <meshBasicMaterial toneMapped={false} />
-    </instancedMesh>
+    <group>
+      <mesh ref={earthRef}>
+        <sphereGeometry args={[GLOBE_RADIUS * 0.995, 64, 48]} />
+        <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: OCEAN_FRAG, uniforms }]} />
+      </mesh>
+      <Atmosphere uniforms={uniforms} />
+      {dots.length > 0 && (
+        <instancedMesh ref={meshRef} args={[DOT_GEOMETRY, undefined, dots.length]} frustumCulled={false}>
+          <meshBasicMaterial toneMapped={false} />
+        </instancedMesh>
+      )}
+    </group>
   );
 }

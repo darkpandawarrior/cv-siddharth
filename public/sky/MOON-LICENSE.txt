@@ -1,0 +1,11 @@
+moon-512x256.jpg, a colour map of the Moon
+Source: Solar System Scope (solarsystemscope.com/textures), 2k_moon.jpg
+
+Licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Downsized from the source 2048x1024 JPEG to 512x256 (scratchpad, sips) to
+stay inside this lane's 80 KB per-asset budget; no other edits made.
+
+Attribution text used on this site: "Moon texture: Solar System Scope
+(solarsystemscope.com), CC BY 4.0."

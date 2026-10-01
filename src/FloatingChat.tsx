@@ -386,9 +386,9 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
     }
   }, [messages, expanded, busy]);
 
-  const applyOpenDetail = useCallback((detail: OpenChatDetail | undefined) => {
+  const applyOpenDetail = useCallback((detail: OpenChatDetail | null | undefined) => {
     setOpen(true);
-    if (detail === undefined) return; // openChat() with no argument — just opens
+    if (detail == null) return; // Plain CustomEvent opens carry null; no payload to apply.
     if (typeof detail === "string") {
       if (detail.trim()) setPendingAsk({ text: detail });
       return;

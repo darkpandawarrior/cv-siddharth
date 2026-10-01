@@ -1,6 +1,37 @@
 import { guarded } from "./guard.js";
+import { governed, type GovernorOptions } from "./upstream.js";
 
 declare const process: { env: Record<string, string | undefined> };
+
+// audit fix (2026-09-28): streams.ts's own "radio" stream polls /api/spotify
+// every 60_000ms, but the edge cache was s-maxage=15 — almost every client
+// poll missed the CDN and hit Spotify directly. Raise to 60s + a 5 min swr
+// (ratio kept close to github-activity-handler's 120/900), and coalesce the
+// actual Spotify round-trip through governed() (aircraft/tle's pattern) so
+// concurrent edge isolates during a cold-cache moment share one fetch and a
+// real network failure backs off instead of retrying every poll. The OAuth
+// token exchange above (D3) is a separate, already-memoised concern and is
+// untouched by this.
+const GOVERNOR_OPT: GovernorOptions = {
+  minIntervalMs: 30_000, // floor under the 60 s edge cache, for coalescing across isolates
+  maxStaleMs: 5 * 60_000, // matches the cache-control swr below
+  maxBytes: 128 * 1024, // "now playing" + 5 recently-played tracks is a few KB
+  cooldownMs: 30_000,
+  maxCooldownMs: 5 * 60_000,
+};
+const OK_CACHE_CONTROL = "s-maxage=60, stale-while-revalidate=300";
+const UPSTREAM_TIMEOUT_MS = 8000;
+
+// Reuse the router's private readCapped via governed. These body reads have
+// no cache/backoff; the outer poll governor owns both policies.
+async function cappedJson<T>(key: string, res: Response): Promise<T> {
+  const { value } = await governed<T>(`spotify-body:${key}`,
+    async () => new Response(res.body, { status: 200 }),
+    (text) => JSON.parse(text) as T,
+    { ...GOVERNOR_OPT, minIntervalMs: 0, maxStaleMs: -1, cooldownMs: 0, maxCooldownMs: 0 });
+  if (value === null) throw new Error("Spotify upstream body unavailable");
+  return value;
+}
 
 export type SpotifyTrack = { track: string; artist: string; albumArt?: string; url?: string; playedAt?: string };
 export type SpotifyNow = {
@@ -64,6 +95,7 @@ async function getAccessToken(
   if (!id || !secret || !refresh) return null;
   const res = await fetchImpl("https://accounts.spotify.com/api/token", {
     method: "POST",
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     headers: {
       "content-type": "application/x-www-form-urlencoded",
       authorization: `Basic ${btoa(`${id}:${secret}`)}`,
@@ -71,12 +103,51 @@ async function getAccessToken(
     body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh }).toString(),
   });
   if (!res.ok) return null;
-  const json = (await res.json()) as { access_token: string; expires_in?: number };
+  const json = await cappedJson<{ access_token: string; expires_in?: number }>("token", res);
   // Refresh a little early (60s of slack) so a token that's about to expire
   // is never handed out only to die mid-request.
   const ttlMs = Math.max(0, ((json.expires_in ?? 3600) - 60) * 1000);
   cache.value = { token: json.access_token, expiresAt: now + ttlMs };
   return json.access_token;
+}
+
+// The discriminated shape governed() caches/coalesces — one poll of "what is
+// Spotify doing right now", covering the currently-playing call and (only
+// when nothing is playing) the recently-played fallback in a single unit,
+// since both share the same edge-cache TTL anyway. Packaged as a normal ok
+// Response so governed() never treats a Spotify-side refusal (401/403) as an
+// upstream outage worth a cooldown — getSpotifyNow below decides what a
+// refusal means; only a real fetch() rejection (network/timeout) reaches
+// governed()'s own backoff.
+type SpotifyPoll =
+  | { kind: "refused"; status: 401 | 403 }
+  | { kind: "playing"; isPlaying: boolean; item: SpotifyApiTrack }
+  | { kind: "idle"; recent: { played_at: string; track: SpotifyApiTrack }[] };
+
+async function fetchSpotifyPoll(fetchImpl: typeof fetch, auth: Record<string, string>): Promise<Response> {
+  const nowRes = await fetchImpl("https://api.spotify.com/v1/me/player/currently-playing", { headers: auth, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+
+  // A refusal is not "nothing playing". Dev-mode apps get 403 "Active premium
+  // subscription required for the owner of the app"; a revoked token gets 401.
+  if (nowRes.status === 401 || nowRes.status === 403) {
+    const poll: SpotifyPoll = { kind: "refused", status: nowRes.status };
+    return new Response(JSON.stringify(poll), { status: 200 });
+  }
+
+  if (nowRes.status === 200) {
+    const json = await cappedJson<{ is_playing: boolean; item: SpotifyApiTrack | null }>("playing", nowRes);
+    if (json.item) {
+      const poll: SpotifyPoll = { kind: "playing", isPlaying: json.is_playing, item: json.item };
+      return new Response(JSON.stringify(poll), { status: 200 });
+    }
+  }
+
+  const recentRes = await fetchImpl("https://api.spotify.com/v1/me/player/recently-played?limit=5", { headers: auth, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+  const recent = recentRes.ok
+    ? (await cappedJson<{ items: { played_at: string; track: SpotifyApiTrack }[] }>("recent", recentRes)).items
+    : [];
+  const poll: SpotifyPoll = { kind: "idle", recent };
+  return new Response(JSON.stringify(poll), { status: 200 });
 }
 
 /** Testable core: no Request/Response, just env + an injectable fetch/clock/cache. */
@@ -86,36 +157,36 @@ export async function getSpotifyNow(
   now: number = Date.now(),
   cache: SpotifyTokenCacheBox = tokenCache,
 ): Promise<SpotifyNow> {
-  const token = await getAccessToken(env, fetchImpl, now, cache);
+  const token = await getAccessToken(env, fetchImpl, now, cache).catch(() => null);
   if (!token) return EMPTY;
 
   const auth = { authorization: `Bearer ${token}` };
-  const nowRes = await fetchImpl("https://api.spotify.com/v1/me/player/currently-playing", { headers: auth });
+  const { value } = await governed<SpotifyPoll>(
+    "spotify-now",
+    () => fetchSpotifyPoll(fetchImpl, auth),
+    (text) => JSON.parse(text) as SpotifyPoll,
+    GOVERNOR_OPT,
+  );
+  if (value === null) return EMPTY;
 
-  // A refusal is not "nothing playing". Dev-mode apps get 403 "Active premium
-  // subscription required for the owner of the app"; a revoked token gets 401.
-  // Report disconnected so no empty chip renders; the first request after the
-  // refusal lifts goes live on its own. A 401 also drops the cached token so
-  // the next request re-exchanges instead of reusing a dead one for an hour.
-  if (nowRes.status === 401 || nowRes.status === 403) {
-    if (nowRes.status === 401) cache.value = null;
-    return { ...EMPTY, refusedStatus: nowRes.status };
+  if (value.kind === "refused") {
+    // Report disconnected so no empty chip renders; the first request after
+    // the refusal lifts goes live on its own. A 401 also drops the cached
+    // token so the next request re-exchanges instead of reusing a dead one
+    // for an hour — runs every time this refusal is observed, including a
+    // cached/stale replay, which is harmless (clearing an already-null cache).
+    if (value.status === 401) cache.value = null;
+    return { ...EMPTY, refusedStatus: value.status };
   }
 
-  if (nowRes.status === 200) {
-    const json = (await nowRes.json()) as { is_playing: boolean; item: SpotifyApiTrack | null };
-    if (json.item) {
-      return { connected: true, isPlaying: json.is_playing, ...fromApiTrack(json.item), recent: [] };
-    }
+  if (value.kind === "playing") {
+    return { connected: true, isPlaying: value.isPlaying, ...fromApiTrack(value.item), recent: [] };
   }
 
-  const recentRes = await fetchImpl("https://api.spotify.com/v1/me/player/recently-played?limit=5", { headers: auth });
-  if (!recentRes.ok) return { connected: true, isPlaying: false, recent: [] };
-  const recentJson = (await recentRes.json()) as { items: { played_at: string; track: SpotifyApiTrack }[] };
   return {
     connected: true,
     isPlaying: false,
-    recent: recentJson.items.map((it) => ({ ...fromApiTrack(it.track), playedAt: it.played_at })),
+    recent: value.recent.map((it) => ({ ...fromApiTrack(it.track), playedAt: it.played_at })),
   };
 }
 
@@ -125,7 +196,7 @@ async function spotifyHandler(_request: Request): Promise<Response> {
     status: 200,
     headers: {
       "content-type": "application/json",
-      "cache-control": "s-maxage=15, stale-while-revalidate=60",
+      "cache-control": OK_CACHE_CONTROL,
     },
   });
 }

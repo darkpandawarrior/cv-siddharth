@@ -1,0 +1,9 @@
+Natural Earth admin-0 countries, 1:110m. Public domain.
+Source: https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_admin_0_countries.geojson
+Upstream Git blob SHA: 1e6ab74c7042f97013be69ceec798be8e1aff27d
+Downloaded 2026-09-28 through the GitHub connector (shell DNS unavailable).
+Terms: https://www.naturalearthdata.com/about/terms-of-use/
+Derived format: name = NAME_LONG, iso = ISO_A2_EH, polygons = GeoJSON
+MultiPolygon coordinates quantized to integer hundredths of a degree.
+No simplification; rings, holes and antimeridian splits are retained.
+Natural Earth shows de facto boundaries. Inclusion does not imply endorsement.

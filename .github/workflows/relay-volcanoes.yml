@@ -1,0 +1,48 @@
+name: Relay the weekly volcano report
+
+# Smithsonian's Cloudflare answers Vercel's datacenter IPs with 403 but serves GitHub's runners
+# (probed 2026-10-01). This copies the weekly RSS verbatim to the relay-volcanoes branch, which
+# api/_lib/volcano-handler.ts reads through raw.githubusercontent.com. Pushes to a non-main branch
+# skip Vercel builds (scripts/vercel-ignore.sh), and the branch only gets a commit when the report
+# changes, about once a week.
+on:
+  schedule:
+    - cron: '37 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: relay-volcanoes
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch the weekly report
+        run: |
+          curl -sSf --max-time 30 -o WeeklyVolcanoRSS.xml https://volcano.si.edu/news/WeeklyVolcanoRSS.xml
+          grep -q '<rss' WeeklyVolcanoRSS.xml
+          grep -q '<item>' WeeklyVolcanoRSS.xml
+
+      - name: Commit to the relay branch when the report changed
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q relay
+          cd relay
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin relay-volcanoes; then
+            git checkout -q -b relay-volcanoes FETCH_HEAD
+          else
+            git checkout -q --orphan relay-volcanoes
+          fi
+          cp ../WeeklyVolcanoRSS.xml .
+          git add WeeklyVolcanoRSS.xml
+          if git diff --cached --quiet; then echo "report unchanged"; exit 0; fi
+          git commit -q -m "chore(relay): Smithsonian weekly volcano report"
+          git push -q origin relay-volcanoes
