@@ -60,6 +60,8 @@ for (const [width, height] of [[1440, 900], [1024, 768], [820, 1180]]) {
     await expect(page.locator("[data-globe-inspector]")).toBeVisible({ timeout: 30_000 });
     const collapse = page.getByRole("button", { name: "Collapse the layers panel" });
     if (await collapse.isVisible()) await collapse.click();
+    await page.locator("[data-xray-toggle]").waitFor({ state: "attached" });
+    if (!(await page.locator("[data-xray-toggle]").isVisible())) await page.locator("[data-hud-overflow] > summary").click();
     await page.locator("[data-xray-toggle]").click();
     const readout = page.locator("[data-xray-panel]");
     await expect(readout).toBeVisible();
@@ -74,6 +76,8 @@ for (const [width, height] of [[1440, 900], [1024, 768], [820, 1180]]) {
       const b = (await other.boundingBox())!;
       expect(box.x < b.x + b.width && box.x + box.width > b.x && box.y < b.y + b.height && box.y + box.height > b.y, selector).toBe(false);
     }
+    await page.locator("[data-xray-toggle]").waitFor({ state: "attached" });
+    if (!(await page.locator("[data-xray-toggle]").isVisible())) await page.locator("[data-hud-overflow] > summary").click();
     await page.locator("[data-xray-toggle]").click();
     await expect(readout).toHaveCount(0);
     const panel = await layers(page, width);
@@ -81,9 +85,13 @@ for (const [width, height] of [[1440, 900], [1024, 768], [820, 1180]]) {
     await expect(panel).toContainText("/ or Cmd-K search");
     // Reopening from a scrolled panel must bring its readout into view too.
     await panel.getByText("X X-ray", { exact: false }).scrollIntoViewIfNeeded();
+    await page.locator("[data-xray-toggle]").waitFor({ state: "attached" });
+    if (!(await page.locator("[data-xray-toggle]").isVisible())) await page.locator("[data-hud-overflow] > summary").click();
     await page.locator("[data-xray-toggle]").click();
     await expect(readout).toBeVisible();
     await contained(readout, panel);
+    await page.locator("[data-xray-toggle]").waitFor({ state: "attached" });
+    if (!(await page.locator("[data-xray-toggle]").isVisible())) await page.locator("[data-hud-overflow] > summary").click();
     await page.locator("[data-xray-toggle]").click();
     await expect(readout).toHaveCount(0);
   });
@@ -114,10 +122,14 @@ for (const [width, height] of [[390, 844], [360, 740]]) {
     await toggle.click();
     await expect(readout).toHaveCount(0);
     await sheet.getByRole("button", { name: "Close the layers sheet" }).click();
+    await page.locator("[data-xray-toggle]").waitFor({ state: "attached" });
+    if (!(await page.locator("[data-xray-toggle]").isVisible())) await page.locator("[data-hud-overflow] > summary").click();
     await page.locator("[data-xray-toggle]").click();
     await expect(sheet).toBeVisible();
     await expect(sheet.locator("[data-xray-panel]")).toBeVisible();
     await contained(sheet.locator("[data-xray-panel]"), sheet);
+    await page.locator("[data-xray-toggle]").waitFor({ state: "attached" });
+    if (!(await page.locator("[data-xray-toggle]").isVisible())) await page.locator("[data-hud-overflow] > summary").click();
     await page.locator("[data-xray-toggle]").click();
     await expect(page.locator("[data-xray-panel]")).toHaveCount(0);
     await page.screenshot({ path: `test-results/Y2-phone-${width}.png` });

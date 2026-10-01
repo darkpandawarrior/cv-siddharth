@@ -27,6 +27,9 @@ for (const touch of [false, true]) {
       }
       await page.goto("/globe");
       await waitForHydration(page);
+      await page.locator("[data-explore-bar]").waitFor({ state: "attached" });
+      if (touch) await page.locator("[data-globe-search-toggle]").click();
+      await page.locator("[data-explore-bar]").waitFor({ state: "visible" });
       const canvas = page.locator("[data-globe-root] canvas").first();
       await expect(canvas).toBeVisible();
       await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
@@ -85,7 +88,8 @@ test.describe("phone disc centre", () => {
     await waitForHydration(page);
     const canvas = page.locator("[data-globe-root] canvas").first();
     await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
-    await expect(page.locator("[data-explore-bar]")).toBeVisible();
+    await page.locator("[data-explore-bar]").waitFor({ state: "attached" });
+    await expect(page.locator("[data-explore-bar]")).toBeHidden();
     const probe = page.locator("[data-subsolar-probe]");
     await expect.poll(async () => Number(await probe.getAttribute("data-globe-r"))).toBeGreaterThan(0);
     const box = (await canvas.boundingBox())!;

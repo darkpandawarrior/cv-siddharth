@@ -23,6 +23,8 @@ export async function openPinnedGlobe(page: Page, failed = false) {
   const canvas = page.locator("[data-globe-root] canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30000 });
   await expect(canvas).toHaveAttribute("tabindex", "0", { timeout: 30000 });
+  await page.locator("[data-explore-bar]").waitFor({ state: "attached" });
+  if (!(await page.locator("[data-explore-bar] input").isVisible())) await page.locator("[data-globe-search-toggle]").click();
   await page.getByRole("button", { name: "Pin points", exact: true }).click();
   await expect(page.getByRole("button", { name: "Pin points", exact: true })).toHaveAttribute("aria-pressed", "true");
   return canvas;
@@ -100,6 +102,7 @@ for (const mobile of [false, true]) test.describe(mobile ? "touch" : "desktop", 
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
     // Escape exits pin mode; pointer pinning must be explicitly re-enabled.
+    if (!(await page.locator("[data-explore-bar] input").isVisible())) await page.locator("[data-globe-search-toggle]").click();
     await page.getByRole("button", { name: "Pin points", exact: true }).click();
     await expect(page.getByRole("button", { name: "Pin points", exact: true })).toHaveAttribute("aria-pressed", "true");
     const again = await surfacePosition(page, -0.2);

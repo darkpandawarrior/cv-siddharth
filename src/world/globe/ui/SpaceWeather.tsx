@@ -73,7 +73,7 @@ export default function SpaceWeather() {
 
   if (allFailed) {
     return (
-      <div data-space-weather-pill className="flex max-w-full flex-wrap items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
+      <div data-space-weather-pill className="grid w-fit max-w-full gap-2 rounded-xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
         <span data-space-weather-status="failed">Space weather feed unreachable</span>
       </div>
     );
@@ -83,7 +83,7 @@ export default function SpaceWeather() {
   if (!detail) return null;
 
   return (
-    <div data-space-weather-pill className="flex max-w-full flex-wrap items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
+    <div data-space-weather-pill className="grid w-fit max-w-full gap-2 rounded-xl glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300">
       {sun.error ? <span>Solar image unreachable</span> : sun.data && /^https:\/\/api\.helioviewer\.org\/v2\/downloadScreenshot\/\?id=\d+$/.test(sun.data.image) && Number.isFinite(sun.data.observedAt) ? <SolarDisc key={sun.data.image} image={sun.data.image} at={sun.data.observedAt} /> : <span>Solar image loading</span>}
       <span data-space-weather-status="live">{detail}</span>
     </div>
@@ -93,5 +93,5 @@ export default function SpaceWeather() {
 function SolarDisc({ image, at }: { image: string; at: number }) {
   const [failed, setFailed] = useState(false);
   if (failed) return <span>Solar image unreachable</span>;
-  return <figure className="max-w-24 shrink-0"><img src={image} alt="SDO AIA 171 solar disc" title="Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams." width={64} height={64} onError={() => setFailed(true)} /><figcaption className="break-words text-xs">Helioviewer / NASA SDO<br />{new Date(at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC</figcaption></figure>;
+  return <figure className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3"><img src={image} alt="SDO AIA 171 solar disc" title="Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams." width={64} height={64} onError={() => setFailed(true)} /><figcaption className="break-words text-xs">Helioviewer / NASA SDO<br />{new Date(at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "UTC" })} UTC</figcaption></figure>;
 }

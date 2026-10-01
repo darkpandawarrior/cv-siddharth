@@ -213,7 +213,8 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             {showAltitudeRail && <AltitudeRail />}
             <button
               onClick={() => openChat()}
-              className="ctrl min-h-11 min-w-11 rounded-full bg-accent px-2 py-1.5 text-sm font-semibold text-ink hover:bg-accent-dim sm:px-4"
+              data-globe-chat={pathname === "/globe" ? true : undefined}
+              className={`${pathname === "/globe" ? "chat-launcher " : ""}ctrl min-h-11 min-w-11 rounded-full bg-accent px-2 py-1.5 text-sm font-semibold text-ink hover:bg-accent-dim sm:px-4`}
             >
               Ask <span className="label-wide">my AI</span>
             </button>

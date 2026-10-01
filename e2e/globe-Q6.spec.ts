@@ -11,6 +11,8 @@ async function openGlobe(page: Page, width: number, height: number) {
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.goto("/globe");
   await waitForHydration(page);
+  await page.locator("[data-explore-bar]").waitFor({ state: "attached" });
+  if (width < 640) await page.locator("[data-globe-search-toggle]").click();
   await expect(page.getByRole("combobox", { name: "Search places or ask the globe" })).toBeVisible({ timeout: 30_000 });
 }
 
@@ -59,6 +61,7 @@ test("phone search is readable and clears the sheet edge", async ({ page }) => {
 
 test("tablet fact labels wrap inside their scrollable panel", async ({ page }) => {
   await openGlobe(page, 1024, 768);
+  await page.locator("[data-globe-facts] > summary").click();
   const labels = page.locator("[data-globe-panel] ul > li > span");
   expect(await labels.count()).toBeGreaterThan(0);
   for (const label of await labels.all()) {

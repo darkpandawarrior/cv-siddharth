@@ -9,9 +9,12 @@ import { tleEpoch } from "../../../lib/satellites.ts";
 import { inspectBriefingSatellite, satelliteBriefingSelection } from "./feedItemSelection.ts";
 import { briefingLaunchSnapshot, buildBriefing } from "./briefing.ts";
 
+import { useOverflowHost } from "./overflowHost.ts";
+
 const buttonClass = "min-h-11 min-w-11 rounded-full border border-line px-3 text-sm text-zinc-100 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export default function Briefing() {
+  const overflow = useOverflowHost();
   const trigger = useRef<HTMLButtonElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const [triggerBox, setTriggerBox] = useState<{ bottom: number; right: number }>();
@@ -39,7 +42,7 @@ export default function Briefing() {
   const close = () => {
     setDesktopOpen(false);
     if (useGlobe.getState().sheet === "brief") useGlobe.getState().setSheet(null);
-    trigger.current?.focus();
+    (trigger.current?.closest("details")?.querySelector<HTMLElement>("summary") ?? trigger.current)?.focus();
   };
   useEffect(() => {
     if (!open) return;
@@ -49,7 +52,7 @@ export default function Briefing() {
       event.stopImmediatePropagation();
       setDesktopOpen(false);
       if (useGlobe.getState().sheet === "brief") useGlobe.getState().setSheet(null);
-      trigger.current?.focus();
+      (trigger.current?.closest("details")?.querySelector<HTMLElement>("summary") ?? trigger.current)?.focus();
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
@@ -92,5 +95,6 @@ export default function Briefing() {
       </div>
     </section>
   ) : null;
-  return <><button ref={trigger} type="button" data-brief-trigger aria-expanded={open} aria-controls={open ? "globe-briefing" : undefined} className={`pointer-events-auto glass-panel ${buttonClass}`} onClick={() => { if (open) close(); else { const box = trigger.current?.getBoundingClientRect(); const topbar = trigger.current?.closest("[data-globe-topbar]")?.getBoundingClientRect(); if (box) setTriggerBox({ right: box.right, bottom: topbar?.bottom ?? box.bottom }); setNowMs(Date.now()); if (phone) useGlobe.getState().setSheet("brief"); else setDesktopOpen(true); } }}>Tonight on Earth</button>{panel && createPortal(panel, document.querySelector("[data-globe-stage]") ?? document.body)}</>;
+  const triggerButton = <button ref={trigger} type="button" data-brief-trigger aria-expanded={open} aria-controls={open ? "globe-briefing" : undefined} className={`pointer-events-auto glass-panel ${buttonClass}`} onClick={() => { if (open) close(); else { const box = trigger.current?.getBoundingClientRect(); const topbar = trigger.current?.closest("[data-globe-topbar]")?.getBoundingClientRect(); if (box) setTriggerBox({ right: box.right, bottom: topbar?.bottom ?? box.bottom }); setNowMs(Date.now()); if (phone) useGlobe.getState().setSheet("brief"); else setDesktopOpen(true); } }}>Tonight on Earth</button>;
+  return <>{overflow ? createPortal(triggerButton, overflow) : triggerButton}{panel && createPortal(panel, document.querySelector("[data-globe-stage]") ?? document.body)}</>;
 }

@@ -21,9 +21,9 @@ export function parseBuoys(text: string): Buoy[] {
 export async function handleBuoys(request: Request): Promise<Response> {
   if (request.method !== "GET") return new Response(null, { status: 405 });
   const result = await proxyFeed("buoys", () => fetch("https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt", { signal: AbortSignal.timeout(8000) }), parseBuoys,
-    { minIntervalMs: 600000, maxStaleMs: 600000, maxBytes: 300000, cooldownMs: 600000, maxCooldownMs: 3600000 });
-  if (!result.value || result.stale) return Response.json({ error: "NOAA NDBC unreachable" }, { status: 502, headers: { "cache-control": "no-store" } });
-  const body = JSON.stringify({ buoys: result.value, fetchedAt: result.at, stale: result.stale, source: "NOAA NDBC", sampled: true });
+    { minIntervalMs: 600000, maxStaleMs: 3600000, maxBytes: 300000, cooldownMs: 600000, maxCooldownMs: 3600000 });
+  if (result.value === null) return Response.json({ error: "NOAA NDBC unreachable" }, { status: 502, headers: { "cache-control": "no-store" } });
+  const body = JSON.stringify({ buoys: result.value, fetchedAt: result.at, stale: result.stale, ageMs: result.ageMs, source: "NOAA NDBC", sampled: true });
   if (new TextEncoder().encode(body).length > 40000) return Response.json({ error: "buoy response too large" }, { status: 502 });
-  return new Response(body, { headers: { "content-type": "application/json", "cache-control": "public, max-age=0, s-maxage=600" } });
+  return new Response(body, { headers: { "content-type": "application/json", "cache-control": `public, max-age=0, s-maxage=${result.stale ? 30 : Math.max(1, Math.ceil((600000 - (result.ageMs ?? 0)) / 1000))}` } });
 }

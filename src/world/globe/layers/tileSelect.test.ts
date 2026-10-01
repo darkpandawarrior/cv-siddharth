@@ -91,3 +91,11 @@ describe("selectVisibleTiles", () => {
     expect(GLOBE_RADIUS).toBe(6);
   });
 });
+
+it("selects the source-verified padded tile under a southern coarse-view camera", () => {
+  const tiles = selectVisibleTiles("250m", 1, cameraOver(-40, 73.9, 6.01));
+  const hit = tiles.find(t => t.bounds.lat1 <= -40 && t.bounds.lat0 >= -40 && t.bounds.lon0 <= 73.9 && t.bounds.lon1 >= 73.9);
+  expect(hit).toBeDefined();
+  // At level 1 the north row spans 90 to -54, not 90 to 0.
+  expect(hit?.row).toBe(0);
+});

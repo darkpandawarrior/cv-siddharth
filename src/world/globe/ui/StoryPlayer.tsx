@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useOverflowHost } from "./overflowHost.ts";
 import { createPortal } from "react-dom";
 import { BookOpen, Clapperboard, Pause, Play, SkipForward } from "lucide-react";
 import { useGlobe, type LayerId } from "../globeStore.ts";
@@ -50,6 +51,7 @@ const btn = "rounded-full border border-line px-2 text-xs hover:text-accent focu
 const pill = "pointer-events-auto flex w-fit items-center gap-1.5 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300 hover:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent";
 
 export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
+  const overflowHost = useOverflowHost();
   const selected = useGlobe((s) => s.selected);
   const tourStep = useGlobe((s) => s.tourStep);
   const sheet = useGlobe((s) => s.sheet);
@@ -235,7 +237,7 @@ export default function StoryPlayer(_props: { tier: 1 | 2 | 3 }) {
   const filmFabBusy = busy || open;
   const compact = getComputedStyle(document.documentElement).getPropertyValue("--globe-compact").trim() === "1";
   const sheetOpen = (sheet !== null && (compact || sheet !== "story")) || tourStep !== null;
-  const entryHost = document.querySelector("[data-globe-topbar] > div:last-child");
+  const entryHost = overflowHost ?? document.querySelector("[data-globe-topbar] > div:last-child");
   const compactFabs = entryHost && createPortal(
     <>
       {!open && !sheetOpen && (

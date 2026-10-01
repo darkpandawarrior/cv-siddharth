@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EOX_LEVELS, groundResolutionMetersPerPixel, latStepDeg, lonStepDeg, tileBounds, tileKey, tileRowColForLatLon, wrapLon } from "./tileMatrix.ts";
+import { EOX_LEVELS, groundResolutionMetersPerPixel, levelDef, latStepDeg, lonStepDeg, tileBounds, tileKey, tileRowColForLatLon, wrapLon } from "./tileMatrix.ts";
 
 describe("wrapLon", () => {
   it("leaves in-range values alone", () => {
@@ -32,9 +33,9 @@ describe("tileRowColForLatLon / tileBounds round-trip", () => {
     }
   });
 
-  it("level 0 is the whole globe split into exactly 2 tiles (verified GetCapabilities shape, not a guess)", () => {
-    expect(tileBounds(0, 0, 0)).toEqual({ lat0: 90, lat1: -90, lon0: -180, lon1: 0 });
-    expect(tileBounds(0, 0, 1)).toEqual({ lat0: 90, lat1: -90, lon0: 0, lon1: 180 });
+  it("level 0 clips the two padded 288-degree WMTS tiles to the globe", () => {
+    expect(tileBounds(0, 0, 0)).toEqual({ lat0: 90, lat1: -90, lon0: -180, lon1: 108 });
+    expect(tileBounds(0, 0, 1)).toEqual({ lat0: 90, lat1: -90, lon0: 108, lon1: 180 });
   });
 
   it("clamps latitude at the poles instead of wrapping", () => {
@@ -59,9 +60,9 @@ describe("lonStepDeg / latStepDeg", () => {
     expect(latStepDeg(3)).toBeCloseTo(36);
   });
 
-  it("level 1 tiles are NOT square in degrees — the real table's own irregularity, not a bug", () => {
-    expect(lonStepDeg(1)).toBeCloseTo(120);
-    expect(latStepDeg(1)).toBeCloseTo(90);
+  it("level 1 tiles span 144 degrees square before edge clipping", () => {
+    expect(lonStepDeg(1)).toBeCloseTo(144);
+    expect(latStepDeg(1)).toBeCloseTo(144);
   });
 });
 
@@ -110,7 +111,7 @@ describe("EOX_LEVELS (WGS84 / GoogleCRS84Quad)", () => {
   });
 
   it("lonStepDeg/latStepDeg read the EOX table when passed explicitly, not GIBS_LEVELS", () => {
-    // GIBS level 1 is 120deg x 90deg (irregular); EOX level 1 is 90deg x 90deg
+    // GIBS level 1 is 144deg x 144deg (padded); EOX level 1 is 90deg x 90deg
     // (regular quadtree) — a real behavioural difference, not just a renamed
     // constant, so this proves the `levels` param actually routes.
     expect(lonStepDeg(1, EOX_LEVELS)).toBeCloseTo(90);
@@ -137,5 +138,29 @@ describe("EOX_LEVELS (WGS84 / GoogleCRS84Quad)", () => {
   // wrong table the moment EOX_LEVELS existed alongside it.
   it("break-it: omitting the levels param still reads GIBS_LEVELS, not EOX_LEVELS", () => {
     expect(lonStepDeg(1)).not.toBeCloseTo(lonStepDeg(1, EOX_LEVELS));
+  });
+});
+
+describe("NASA WMTS geometry from the trimmed GetCapabilities fixture", () => {
+  const xml = readFileSync(new URL("./__fixtures__/gibs-epsg4326-matrices.xml", import.meta.url), "utf8");
+  const tag = (text: string, name: string) => text.match(new RegExp(`<${name}>(.*?)</${name}>`))![1];
+  const sets = [...xml.matchAll(/<TileMatrixSet>([\s\S]*?)<\/TileMatrixSet>/g)];
+  it("derives every published level for 250m, 500m, 1km and 2km from scale, tile pixels and origin", () => {
+    expect(sets.map(m => tag(m[1], "ows:Identifier")).sort()).toEqual(["1km", "250m", "2km", "500m"]);
+    for (const set of sets) for (const matrix of set[1].matchAll(/<TileMatrix>([\s\S]*?)<\/TileMatrix>/g)) {
+      const level = Number(tag(matrix[1], "ows:Identifier"));
+      const [west, north] = tag(matrix[1], "TopLeftCorner").split(" ").map(Number);
+      const span = Number(tag(matrix[1], "ScaleDenominator")) * 0.00028 * Number(tag(matrix[1], "TileWidth")) / (6378137 * Math.PI / 180);
+      expect(lonStepDeg(level)).toBeCloseTo(span, 8);
+      expect(latStepDeg(level)).toBeCloseTo(span, 8);
+      const def = levelDef(level);
+      expect(def.matrixWidth).toBe(Number(tag(matrix[1], "MatrixWidth")));
+      expect(def.matrixHeight).toBe(Number(tag(matrix[1], "MatrixHeight")));
+      const corner = tileBounds(level, def.matrixHeight - 1, def.matrixWidth - 1);
+      expect(corner.lon0).toBeCloseTo(west + (def.matrixWidth - 1) * span, 8);
+      expect(corner.lat0).toBeCloseTo(north - (def.matrixHeight - 1) * span, 8);
+      expect(corner.lon1).toBeCloseTo(Math.min(180, west + def.matrixWidth * span), 8);
+      expect(corner.lat1).toBeCloseTo(Math.max(-90, north - def.matrixHeight * span), 8);
+    }
   });
 });
