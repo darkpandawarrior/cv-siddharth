@@ -137,7 +137,16 @@ function buildFeature<R>(rule: GrowthRule<R>, r: R, all: readonly R[]): Feature 
   const date = rule.dateOf(r);
   const partial = rule.featureOf(r, all);
   const jitter = JITTER_BY_RULE[rule.id] ?? DEFAULT_JITTER;
-  const x = hashNoise(stringSeed(seed)) * jitter;
+  // Rounded to 6dp: hashNoise's sin(seed * 12.9898) needs internal range
+  // reduction for large seeds (stringSeed caps at 1e5, so this argument can
+  // reach ~1.3e6 radians), and that reduction is not guaranteed bit-identical
+  // across platforms or Node/V8 versions — the classic GLSL sin-hash
+  // portability gap (gen-world-grammar's CI run regenerated placements.json
+  // with ~1e-10 drift on a Linux runner that matched byte-for-byte locally).
+  // Six decimal places is far coarser than that drift and far finer than the
+  // render can show, so it absorbs the gap without changing how this looks
+  // (gen-world-grammar.test.mjs, placements.test.ts).
+  const x = Math.round(hashNoise(stringSeed(seed)) * jitter * 1e6) / 1e6;
   const z = zFor(rule.id, date);
   return {
     id: `${rule.id}:${seed}`,
