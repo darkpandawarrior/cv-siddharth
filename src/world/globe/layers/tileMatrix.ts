@@ -35,6 +35,8 @@ export const GIBS_LEVELS: readonly TileLevel[] = [
 ];
 
 export const TILE_SIZE_PX = 512;
+// EPSG:4326 GetCapabilities: TopLeftCorner is longitude, latitude.
+export const TILE_TOP_LEFT = [-180, 90] as const;
 
 // LANE V1 (wave 7, step B): EOX's own WMTS EPSG:4326 "WGS84" tile matrix
 // (https://tiles.maps.eox.at/wmts/1.0.0/WMTSCapabilities.xml, fetched
@@ -100,11 +102,15 @@ export function levelDef(level: number, levels: readonly TileLevel[] = GIBS_LEVE
 }
 
 export function lonStepDeg(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): number {
-  return 360 / levelDef(level, levels).matrixWidth;
+  const pixels = levels === EOX_LEVELS ? EOX_TILE_SIZE_PX : TILE_SIZE_PX;
+  // WMTS dimensions include padding at the east/south edges. Scale defines
+  // texel extent, not 360 / MatrixWidth (wrong at GIBS levels 0-2).
+  const span = groundResolutionMetersPerPixel(level, levels) * pixels / (6378137 * Math.PI / 180);
+  return Math.round(span * 1e9) / 1e9; // remove scale-denominator rounding noise
 }
 
 export function latStepDeg(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): number {
-  return 180 / levelDef(level, levels).matrixHeight;
+  return lonStepDeg(level, levels);
 }
 
 /** WMTS's standard pixel size is 0.28mm (OGC 07-057r7 §7); ground metres per
@@ -138,8 +144,8 @@ export function tileRowColForLatLon(latDeg: number, lonDeg: number, level: numbe
   const { matrixWidth, matrixHeight } = levelDef(level, levels);
   const lat = Math.max(-90, Math.min(90, latDeg));
   const lon = wrapLon(lonDeg);
-  const col = Math.min(matrixWidth - 1, Math.max(0, Math.floor(((lon + 180) / 360) * matrixWidth)));
-  const row = Math.min(matrixHeight - 1, Math.max(0, Math.floor(((90 - lat) / 180) * matrixHeight)));
+  const col = Math.min(matrixWidth - 1, Math.max(0, Math.floor((lon - TILE_TOP_LEFT[0]) / lonStepDeg(level, levels))));
+  const row = Math.min(matrixHeight - 1, Math.max(0, Math.floor((TILE_TOP_LEFT[1] - lat) / latStepDeg(level, levels))));
   return { level, row, col };
 }
 
@@ -160,9 +166,9 @@ export interface TileBounds {
 export function tileBounds(level: number, row: number, col: number, levels: readonly TileLevel[] = GIBS_LEVELS): TileBounds {
   const lonStep = lonStepDeg(level, levels);
   const latStep = latStepDeg(level, levels);
-  const lon0 = -180 + col * lonStep;
-  const lat0 = 90 - row * latStep;
-  return { lat0, lat1: lat0 - latStep, lon0, lon1: lon0 + lonStep };
+  const lon0 = TILE_TOP_LEFT[0] + col * lonStep;
+  const lat0 = TILE_TOP_LEFT[1] - row * latStep;
+  return { lat0, lat1: Math.max(-90, lat0 - latStep), lon0, lon1: Math.min(180, lon0 + lonStep) };
 }
 
 export function tileKey(matrixSet: TileMatrixSetId, level: number, row: number, col: number): string {

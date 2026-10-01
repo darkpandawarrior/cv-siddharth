@@ -5,7 +5,7 @@ import { GLOBE_RADIUS } from "../geoMath.ts";
 import { useGlobe, type ImageryStack } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { sunDirection, VERT } from "./sun.ts";
-import { TILE_MATRIX_SETS, type TileBounds, type TileMatrixSetId } from "./tileMatrix.ts";
+import { TILE_MATRIX_SETS, EOX_LEVELS, GIBS_LEVELS, lonStepDeg, latStepDeg, type TileBounds, type TileMatrixSetId } from "./tileMatrix.ts";
 import { selectVisibleTiles, type SelectedTile } from "./tileSelect.ts";
 import { selectVisibleEoxTiles } from "./tileSelectEox.ts";
 import { buildTilePatchGeometry, TILE_SEGMENTS } from "./tileGeometry.ts";
@@ -413,6 +413,13 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
       const b = tile.bounds;
       const segments = Math.max(TILE_SEGMENTS, Math.ceil(Math.max(b.lat0 - b.lat1, b.lon1 - b.lon0) / 2));
       const geometry = buildTilePatchGeometry(b, TILE_RADIUS, segments);
+      // Edge tiles retain their full image footprint beyond +/-180, +/-90.
+      // Clip the mesh and its UVs together; never stretch padding over Earth.
+      const levels = role.catalogEntry.matrixSet === "WGS84" ? EOX_LEVELS : GIBS_LEVELS;
+      const uScale = (b.lon1 - b.lon0) / lonStepDeg(tile.level, levels);
+      const vScale = (b.lat0 - b.lat1) / latStepDeg(tile.level, levels);
+      const uv = geometry.getAttribute("uv");
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * uScale, uv.getY(i) * vScale);
       // Always the same uniform SHAPE regardless of shader variant (the
       // plain overlay fragment shader just never references uSun) — three
       // only binds what a compiled program actually declared, and this

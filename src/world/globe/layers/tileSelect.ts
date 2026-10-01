@@ -47,8 +47,8 @@ export function selectVisibleTiles(matrixSet: TileMatrixSetId, maxLevel: number,
 
   const latMin = Math.max(-90, subLat - capDeg);
   const latMax = Math.min(90, subLat + capDeg);
-  const rowMin = Math.max(0, Math.floor(((90 - latMax) / 180) * matrixHeight));
-  const rowMax = Math.min(matrixHeight - 1, Math.ceil(((90 - latMin) / 180) * matrixHeight));
+  const rowMin = Math.max(0, Math.floor((90 - latMax) / latStep));
+  const rowMax = Math.min(matrixHeight - 1, Math.ceil((90 - latMin) / latStep));
 
   // Longitude padding widens toward the poles (1/cos(lat)) because a fixed
   // degree span covers ever-less real ground there, not more — capped at a
@@ -56,7 +56,7 @@ export function selectVisibleTiles(matrixSet: TileMatrixSetId, maxLevel: number,
   // column many times over.
   const lonPadDeg = Math.min(180, capDeg / Math.max(0.15, Math.cos((subLat * Math.PI) / 180)));
   const colSpan = Math.min(matrixWidth, Math.ceil((2 * lonPadDeg) / lonStep) + 1);
-  const centerCol = Math.floor(((wrapLon(subLon) + 180) / 360) * matrixWidth);
+  const centerCol = Math.floor((wrapLon(subLon) + 180) / lonStep);
   const colLo = -Math.floor(colSpan / 2);
   const colHi = Math.ceil(colSpan / 2);
 
