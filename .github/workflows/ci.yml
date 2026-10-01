@@ -36,7 +36,19 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 (full history), same as doctor.yml and refresh-media.yml:
+      # gen-lanes.mjs stamps lanesGeneratedAt from `git log -1 -- src/data/timeline.ts`,
+      # never Date.now() (see that file's own comment). Under the default
+      # depth-1 checkout, that git log finds nothing whenever the tip commit
+      # didn't touch timeline.ts, so it silently fell back to `new Date()` —
+      # today's wall-clock date instead of the real commit date. That wrong,
+      # ever-changing stamp then flows through ops.ts's max-reduce over every
+      # src/data/*.ts stamp into evidence.ts and, via gen-kotlin-data.mjs, into
+      # the Compose twin's generated Kotlin — one shallow checkout cascading
+      # into check:generated failing on all three cv-siddharth files plus the
+      # four .kt files (2026-09-27, main red after PR #128).
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       # check:generated's cross-repo half (the whole reason it exists — a stale
       # CvChessData.kt broke the Compose twin with 159 errors past two green
       # CIs) used to silently no-op here: this repo was the only one checked
