@@ -64,13 +64,14 @@ export const sync = {
       ["screenshots/ios_catalog_all_native.png", "ios_catalog_all_native.png"],
     ],
   },
-  // Private repos (Stutter, Candidai) — code stays unlinked from the site,
-  // but the existing GITHUB_TOKEN CI secret already needs private-repo read
-  // access for gen-candidai-stats.mjs (santifer/career-ops fork chain), and
-  // a personal PAT with `repo` scope always covers its own owner's private
-  // repos too, so this daily sync "just works" the same way as the public ones.
+  // Private repos (Stutter, Candidai): code stays unlinked from the site. CI's automatic
+  // GITHUB_TOKEN reads only this repo, so on the daily run these 404 (run 36716122556, ten MISS
+  // lines) unless refresh-media.yml is given a MEDIA_READ_TOKEN secret that can read them.
+  // `private: true` makes the sync keep the committed copies and say SKIP when it cannot see the
+  // repo at all, instead of reporting every file as missing. A public repo still MISSes on a 404.
   stutter: {
     repo: "darkpandawarrior/Stutter",
+    private: true,
     files: [
       ["assets/readme/screenshots/title.webp", "title.webp"],
       ["assets/readme/screenshots/echo-cooperation.webp", "echo-cooperation.webp"],
@@ -83,6 +84,7 @@ export const sync = {
   },
   candidai: {
     repo: "darkpandawarrior/Candidai",
+    private: true,
     // First three real Roborazzi captures (2026-07-24) — dashboard, board,
     // pipeline. More land here as the rest of the app's 13 screens get the
     // same screenshot-test treatment.

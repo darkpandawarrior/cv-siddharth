@@ -192,7 +192,10 @@ jobs:
         if: always()
         continue-on-error: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # lifts the raw/API rate limit; repos are public
+          # Lifts the raw/API rate limit. Stutter and Candidai are private, which the automatic
+          # token cannot read; an optional MEDIA_READ_TOKEN (read-only on those two) lets
+          # sync:media refresh them, and without it they are kept and logged SKIP.
+          GITHUB_TOKEN: ${{ secrets.MEDIA_READ_TOKEN || secrets.GITHUB_TOKEN }}
         run: npm run refresh
       # H2 fixture: forces a diff outside every declared generator output, so
       # classify-diff.mjs below has something real to reject even on a day

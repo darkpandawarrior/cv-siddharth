@@ -112,9 +112,15 @@ async function pull(repo, srcPath, dest) {
   }
 }
 
-for (const [slug, { repo, files }] of Object.entries(sync)) {
+for (const [slug, { repo, files, private: isPrivate }] of Object.entries(sync)) {
   const dir = join(root, "heavy", "projects", slug, "screenshots");
   mkdirSync(dir, { recursive: true });
+  // A token that cannot see a private repo gets 404 for every file in it. That is an access
+  // limit, not missing media (media-manifest.mjs, stutter), so keep the committed copies.
+  if (isPrivate && (await get(`https://api.github.com/repos/${repo}`)) === 404) {
+    console.warn(`[sync-media] SKIP ${repo}: private, not visible to this token; kept ${files.length} committed files`);
+    continue;
+  }
   for (const [srcPath, destName] of files) {
     await pull(repo, srcPath, join(dir, destName));
   }
