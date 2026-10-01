@@ -3,7 +3,7 @@
 // Run after a build, against a running preview server:
 //
 //   npm run build && npm run serve &
-//   node scripts/capture-globe-plate.mjs [--base http://localhost:4173]
+//   node scripts/capture-globe-plate.mjs [--base=http://localhost:4173]
 //
 // One screenshot, two widths: a 1440-wide capture and a 720-wide resize of
 // the SAME frame, rather than two separate page loads: /globe's SSR/no-WebGL
