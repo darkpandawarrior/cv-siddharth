@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { historyGeneratedAt } from "../src/data/history.ts";
+import { laneMonths } from "../src/data/lanes.ts";
 
 /**
  * R5/P1-03 (reality-spec §6, §7): the data rooms' live layer.
@@ -89,11 +90,17 @@ test.describe("/chess: the live IST hour marker and back-links (T6)", () => {
 
 test("/lanes shows the newest activity.json push as the live tip", async ({ page }) => {
   await mockLiveRoutes(page);
+  // The tip only draws pushes on or after the grid's last month, and every refresh moves that
+  // month (2026-10 after the 2026-10-01 refresh). Re-date the fixture into it so this tests the
+  // tip, not the calendar distance between the fixture's capture and the last refresh.
+  const lastMonth = laneMonths[laneMonths.length - 1];
+  const items = ACTIVITY.items.map((i) => ({ ...i, at: `${lastMonth}${i.at.slice(7)}` }));
+  await page.route("**/api/github-activity", (route) => route.fulfill({ json: { ...ACTIVITY, items } }));
   await page.clock.setFixedTime(new Date(NIGHT));
   await page.goto("/lanes");
   await waitForHydration(page);
 
-  const newest = ACTIVITY.items
+  const newest = items
     .filter((i) => i.type === "push")
     .reduce((a, b) => (b.at > a.at ? b : a));
   const tip = page.locator("[data-lane-tip]");
