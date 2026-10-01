@@ -50,7 +50,7 @@ const r3 = (n) => (Number.isFinite(n) ? Math.round(n * 1000) / 1000 : null);
 async function fetchLichessCorpus(seenAt, joinedAt) {
   const cached = readCache("lichess-games");
   if (cached && cached.seenAt === seenAt) return { games: cached.games, unresolved: [] };
-  const { games, unresolved } = await fetchLichessMonthly(U, { sinceMs: joinedAt });
+  const { games, unresolved } = await fetchLichessMonthly(U, { sinceMs: joinedAt, seenAtMs: seenAt });
   if (!unresolved.length) writeCache("lichess-games", { seenAt, games });
   return { games, unresolved };
 }
