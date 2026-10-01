@@ -868,9 +868,12 @@ export const projects: Project[] = [
     ],
     status: "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
+    // The site accent is one step brighter than the #3B82F6 brand blue: the brand blue measured
+    // 4.27:1 on this card colour, under WCAG AA's 4.5 for the headings and tabs it colours.
+    // #60A5FA measures 6.2:1 on the card and 7.4:1 under ink-coloured CTA text.
     theme: {
-      accent: "#3B82F6",
-      accentDim: "#1D4ED8",
+      accent: "#60A5FA",
+      accentDim: "#3B82F6",
       ink: "#0A1120",
       surface: "#0F1B2E",
       card: "#16233A",
