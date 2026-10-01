@@ -10,7 +10,7 @@ export interface KmpDependencyEdge { from: string; to: string }
 export interface KmpGraph { generatedAt: string; modules: KmpModule[]; consumers: KmpConsumer[]; dependencySpine: KmpDependencyEdge[] }
 
 export const kmpGraph: KmpGraph = {
-  "generatedAt": "2026-09-25",
+  "generatedAt": "2026-10-01",
   "modules": [
     {
       "id": "result",
@@ -264,6 +264,10 @@ export const kmpGraph: KmpGraph = {
           "firstMonth": "2026-07"
         }
       ]
+    },
+    {
+      "id": "app-shell-location-gms",
+      "usedBy": []
     },
     {
       "id": "payments-api",

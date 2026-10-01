@@ -258,9 +258,23 @@ export function districtAnchors(
   const arcStart = (200 * Math.PI) / 180;
   const arcEnd = (340 * Math.PI) / 180;
   const r = 95;
+  // An ODD roster always lands its middle anchor at t=0.5, theta=270° —
+  // cos(270°)=0, so x lands exactly on the basin's own x=0 axis, which is
+  // also the river's own axis (riverX crosses x=0 at the basin, spec §2.1).
+  // resolveRiverScale()'s compression fallback (M5 task 2) cannot rescue
+  // that anchor: shrinking the river's meander AMPLITUDE moves riverX(z)
+  // toward 0 too, so an anchor already AT x=0 collides at every scale,
+  // including 0 — proven when a 7th real tributary source (candidai)
+  // first produced this exact roster size and basin.z's real growth moved
+  // it onto a stretch of river wide enough to reach x=0. A small fixed
+  // angular nudge, the same "tuned constant, not a solver" shape as
+  // RIVER_SCALE_FALLBACK just below, breaks the exact-zero case without
+  // visibly disturbing the amphitheatre's even spacing for every other id.
+  const EXACT_CENTRE_NUDGE_DEG = 10;
   return ids.map((id, i) => {
     const t = n === 1 ? 0.5 : i / (n - 1);
-    const theta = arcStart + (arcEnd - arcStart) * t;
+    const isOddMiddle = n % 2 === 1 && i === (n - 1) / 2;
+    const theta = arcStart + (arcEnd - arcStart) * t + (isOddMiddle ? (EXACT_CENTRE_NUDGE_DEG * Math.PI) / 180 : 0);
     return {
       id,
       x: basin.x + r * Math.cos(theta),
