@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26",
+  "generatedAt": "2026-10-01",
   "counts": {
     "year-strata": 8,
     "weir": 4,
@@ -9,7 +9,7 @@
     "archive-kite": 10,
     "chess-paddy": 8,
     "firefly": 208,
-    "deepmal-niche": 173,
+    "deepmal-niche": 178,
     "benchmark": 53,
     "site-courses": 23,
     "employer-marker": 2
@@ -616,9 +616,9 @@
       "peakAt": "2026-09-25"
     },
     "reach-installs:reach-installs": {
-      "current": 2917170,
-      "peak": 2917170,
-      "peakAt": "2026-09-25"
+      "current": 2937070,
+      "peak": 2937070,
+      "peakAt": "2026-10-01"
     },
     "reach-upstream:reach-upstream": {
       "current": 24,
