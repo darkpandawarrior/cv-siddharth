@@ -16,6 +16,13 @@ it("uses six-hour CDN cache and fails honestly", async () => {
   expect((await (await import("./volcano-handler")).handleVolcanoes(new Request("https://cv.test/api/volcanoes"))).status).toBe(502);
 });
 
+it("reads the GitHub relay, because Smithsonian refuses Vercel's IPs", async () => {
+  vi.resetModules(); const fetcher = vi.fn().mockResolvedValue(new Response(rss)); vi.stubGlobal("fetch", fetcher);
+  const { handleVolcanoes } = await import("./volcano-handler");
+  expect((await handleVolcanoes(new Request("https://cv.test/api/volcanoes"))).status).toBe(200);
+  expect(fetcher.mock.calls[0][0]).toBe("https://raw.githubusercontent.com/darkpandawarrior/cv-siddharth/relay-volcanoes/WeeklyVolcanoRSS.xml");
+});
+
 it("serves paced weekly data with its actual age", async () => {
   vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-01T00:00:00Z")); vi.resetModules();
   const fetcher = vi.fn().mockResolvedValue(new Response(rss)); vi.stubGlobal("fetch", fetcher);
