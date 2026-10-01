@@ -41,7 +41,7 @@ export const perimeter = [
   },
   {
     "file": "lanes.ts",
-    "generatedAt": "2026-09-25",
+    "generatedAt": "2026-10-01",
     "slaDays": 45,
     "generator": "npm run gen:lanes"
   },
@@ -71,7 +71,7 @@ export const perimeter = [
   },
   {
     "file": "store.ts",
-    "generatedAt": "2026-08-07",
+    "generatedAt": "2026-10-01",
     "slaDays": 45,
     "generator": "npm run gen:store"
   },
