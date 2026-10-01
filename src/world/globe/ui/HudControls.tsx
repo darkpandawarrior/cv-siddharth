@@ -1,7 +1,8 @@
-import { lazy, Suspense, useEffect, useSyncExternalStore } from "react";
+import { lazy, Suspense, useEffect, useRef, useSyncExternalStore } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, MapPinOff, Pause, Play, ZoomIn, ZoomOut } from "lucide-react";
 import { WMO_LABEL, type SkyState } from "../../../lib/sky.ts";
+import { useGlobe } from "../globeStore.ts";
 import { isXrayEnabled, setXrayEnabled, subscribeXray } from "../layers/xrayState.ts";
 
 // LANE V4 (hover readout): lazy so this chunk never joins the Globe shell.
@@ -28,6 +29,12 @@ const SpaceWeather = lazy(() => import("./SpaceWeather.tsx"));
 // that module drags the r3f import into the server bundle too, which the
 // import-protection plugin denies outright (verified: `npx vite build`
 // fails with "Import denied in server environment... @react-three/fiber").
+const COMPACT_QUERY = "(max-width: 639px), (max-height: 500px)";
+function subscribeCompact(callback: () => void) {
+  const media = window.matchMedia(COMPACT_QUERY);
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 function subscribeReducedMotion(callback: () => void): () => void {
   if (typeof window === "undefined") return () => {};
@@ -83,6 +90,10 @@ export interface GlobeHudProps {
  */
 export default function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, autoRotatePaused = false, onToggleAutoRotate, markersHidden = false, onToggleMarkers }: GlobeHudProps) {
   const reducedMotion = useReducedMotion();
+  const compact = useSyncExternalStore(subscribeCompact, () => window.matchMedia(COMPACT_QUERY).matches, () => false);
+  const overflow = useRef<HTMLDetailsElement>(null);
+  const sheet = useGlobe(s => s.sheet);
+  useEffect(() => { if (sheet && compact && overflow.current) overflow.current.open = false; }, [sheet, compact]);
   const autoRotate = hasWebGL && !reducedMotion && tier !== 3 && !autoRotatePaused;
   const daypart = sky?.daypart ?? null;
   const tempC = sky?.weather?.tempC;
@@ -103,9 +114,9 @@ export default function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, aut
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  return (
-    <>
+  const weather = (
       <div
+        data-globe-weather
         data-autorotate={autoRotate ? "on" : "off"}
         className="flex items-center gap-2 rounded-full glass-panel px-3 py-1.5 font-mono text-xs text-zinc-300"
       >
@@ -116,6 +127,8 @@ export default function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, aut
         </span>
         {hasWebGL && <span className="hidden text-muted sm:inline">{"· drag to orbit"}</span>}
       </div>
+  );
+  const controls = <>
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><HoverReadout /></Suspense></ClientOnly>}
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><DaylightReadout /></Suspense></ClientOnly>}
       {hasWebGL && <ClientOnly fallback={null}><Suspense fallback={null}><SpaceWeather /></Suspense></ClientOnly>}
@@ -169,6 +182,17 @@ export default function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, aut
           </button>
         </div>
       )}
-    </>
-  );
+  </>;
+  return <>
+    {!compact && weather}
+    {compact ? <details ref={overflow} data-hud-overflow onToggle={event => {
+      if (event.currentTarget.open) {
+        useGlobe.getState().setSheet(null);
+        window.dispatchEvent(new Event("globe-explore-close"));
+      }
+    }}>
+      <summary className="pointer-events-auto flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full glass-panel px-3 font-mono text-xs text-zinc-300">Controls</summary>
+      <div data-globe-overflow className="pointer-events-auto">{weather}{controls}</div>
+    </details> : controls}
+  </>;
 }

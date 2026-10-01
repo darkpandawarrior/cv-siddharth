@@ -13,9 +13,12 @@ async function open(page: Page, url = '/globe') {
   await page.routeWebSocket(/^wss?:\/\//, socket => socket.close());
   await page.goto(url);
   await waitForHydration(page);
+  await page.locator('[data-explore-bar]').waitFor({ state: 'attached' });
+  if (!(await page.locator('[data-explore-bar] input').isVisible())) await page.locator('[data-globe-search-toggle]').click();
   await expect(page.getByRole('combobox', { name: 'Search places or ask the globe' })).toBeVisible({ timeout: 30_000 });
   // Shared URLs already carry the camera framing; setup must preserve it.
   if (url === '/globe') {
+    if (!(await page.getByRole('button', { name: 'Zoom out', exact: true }).isVisible())) await page.locator('[data-hud-overflow] > summary').click();
     await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
     await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
   }
@@ -23,6 +26,7 @@ async function open(page: Page, url = '/globe') {
   if (await pause.isVisible()) await pause.click();
   const panel = page.getByRole('button', { name: 'Open the layers panel' });
   if (await panel.isVisible()) await panel.click();
+  if (!(await page.locator('[data-explore-bar] input').isVisible())) await page.locator('[data-globe-search-toggle]').click();
 }
 async function shot(page: Page, info: TestInfo, name: string) {
   const path = info.outputPath(`${name}.png`);
@@ -108,9 +112,11 @@ test.describe('W11A touch', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   test('phone targets, examples and captured seam drag', async ({ page }, info) => {
     await open(page);
+    if (!(await page.locator('[data-xray-toggle]').isVisible())) await page.locator('[data-hud-overflow] > summary').click();
     await target(page.locator('[data-xray-toggle]'));
     await target(page.getByRole('button', { name: /the globe's ambient rotation/ }));
     await target(page.getByRole('button', { name: /the Pune ring and reach columns/ }));
+    if (!(await page.locator('[data-explore-bar] input').isVisible())) await page.locator('[data-globe-search-toggle]').click();
     for (const button of await page.locator('[data-explore-bar] > div').first().getByRole('button').all()) await target(button);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const input = page.getByRole('combobox'); await input.focus();

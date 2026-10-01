@@ -87,6 +87,27 @@ for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]
       if (width < 640) {
         expect.soft(result.discHits, JSON.stringify(result.disc)).toEqual(Array(5).fill('CANVAS'));
         await expect.soft(page.locator('[data-explore-bar] input')).toBeHidden();
+        const header = (await page.locator('header[data-spine="route-header"]').boundingBox())!;
+        const chrome = (await page.locator('[data-globe-topbar]').boundingBox())!;
+        const viewing = (await page.locator('[data-scene-receipt] summary').boundingBox())!;
+        expect.soft(chrome.y + chrome.height - header.y, 'at most two chrome rows').toBeLessThanOrEqual(120);
+        expect.soft(result.disc.y - result.disc.r).toBeGreaterThanOrEqual(chrome.y + chrome.height);
+        expect.soft(result.disc.y + result.disc.r).toBeLessThanOrEqual(viewing.y);
+        await page.locator('[data-globe-search-toggle]').click();
+        await expect(page.getByRole('combobox', { name: 'Search places or ask the globe' })).toBeVisible();
+        await page.locator('[data-hud-overflow] > summary').click();
+        await expect(page.locator('[data-explore-bar] input')).toBeHidden();
+        await expect(page.locator('[data-globe-overflow] [data-globe-weather]')).toBeVisible();
+        for (const control of await page.locator('[data-globe-overflow] button:visible').all()) {
+          const box = (await control.boundingBox())!;
+          expect(box.width).toBeGreaterThanOrEqual(44); expect(box.height).toBeGreaterThanOrEqual(44);
+          expect((await control.getAttribute('aria-label')) || (await control.innerText()).trim()).toBeTruthy();
+        }
+        for (const name of ['Zoom in', 'Zoom out', 'Tonight on Earth', 'My story', 'Life journey film']) await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
+        expect((await chromeViolations(page)).overlaps).toEqual([]);
+        await page.getByRole('button', { name: 'Tonight on Earth', exact: true }).click();
+        await expect(page.locator('[data-globe-briefing]')).toBeVisible();
+        await expect(page.locator('[data-hud-overflow]')).not.toHaveAttribute('open');
       }
     });
   });
