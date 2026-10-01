@@ -90,12 +90,27 @@ try {
   // (upstreamMergedPRs + the recentGrowth entry) — a pattern below can land in
   // either, or both (the "N merged PRs to the public career-ops project" line
   // appears once in each), so every sub() now tries both buffers rather than one.
+  //
+  // projectCards.ts joined the same `files` array here (previously only
+  // patched for the stars literal, separately, at the end of this script):
+  // it hand-copies these exact PR/provider/status strings from projects.ts
+  // (projectCards.test.ts enforces byte-for-byte parity), but projects.ts and
+  // openSource.ts render their numbers from live `${upstreamStars}`/
+  // `${prs}`-shaped template vars at IMPORT time, not at generation time, so
+  // every sub() below already no-ops harmlessly against those two files'
+  // literal template-expression text and only really bites in projectCards.ts,
+  // which hardcodes the rendered digits because it is plain data, not a
+  // template. One `files` array means one write path keeps all three synced
+  // on every refresh, instead of projectCards.ts drifting until the parity
+  // test fails and someone re-copies it by hand.
+  const cardsPath = join(root, "src", "data", "profile", "projectCards.ts");
   const files = [
     { path: projectsPath, src: readFileSync(projectsPath, "utf8") },
     { path: openSourcePath, src: readFileSync(openSourcePath, "utf8") },
+    { path: cardsPath, src: readFileSync(cardsPath, "utf8") },
   ];
   const sub = (re, to) => {
-    if (!files.some((f) => (f.src.match(re) || []).length)) misses.push(`${re} (profile/projects.ts + profile/openSource.ts)`);
+    if (!files.some((f) => (f.src.match(re) || []).length)) misses.push(`${re} (profile/projects.ts + profile/openSource.ts + profile/projectCards.ts)`);
     for (const f of files) f.src = f.src.replace(re, to);
   };
 
@@ -138,13 +153,24 @@ try {
   // The trailing clause (org membership, etc.) is captured and preserved rather than
   // rewritten: hand-editing the status line used to kill this pattern outright, and a dead
   // pattern freezes the PR count at whatever it last wrote while the script still exits 0.
+  // projectCards.ts is JSON-shaped (quoted keys: `"status": "..."`) while
+  // projects.ts is a TS object literal (`status: "..."`) — one optional
+  // quote in the key match covers both without a second pattern.
   sub(
-    /status: "Active · \d+ PRs merged to public career-ops(?<rest>[^"]*)"/,
-    (_m, rest) => `status: "Active · ${prs} PRs merged to public career-ops${rest}"`,
+    /"?status"?: "Active · \d+ PRs merged to public career-ops(?<rest>[^"]*)"/,
+    (m, rest) => `${m.startsWith('"') ? '"status"' : "status"}: "Active · ${prs} PRs merged to public career-ops${rest}"`,
   );
   // The single source the résumé prints, so it stops disagreeing with the rest
   // of the site by using the curated array's length instead.
   sub(/export const upstreamMergedPRs = \d+;/, `export const upstreamMergedPRs = ${prs};`);
+  // projectCards.ts is the only file where this ever fires: projects.ts and
+  // openSource.ts render stars via the live `${upstreamStars}` template var
+  // (text this regex cannot and should not touch), but projectCards.ts
+  // hand-renders the digits, e.g. "(71k+ stars)" — the dead `/\(⭐[^)]*\)/g`
+  // pattern this replaces never matched that shape at all, which is why
+  // candidai's star count in projectCards.ts froze while careerOpsUpstream.ts
+  // kept moving underneath it.
+  sub(/\(\d+k\+ stars\)/g, `(${stars} stars)`);
   for (const f of files) writeFileSync(f.path, f.src);
 
   // The Fan-out Lab's ring size lives in its own file, so it needs its own
@@ -166,15 +192,6 @@ try {
   const hs = readFileSync(careerOpsUpstreamPath, "utf8");
   if (!providerRe.test(hs)) misses.push(`${providerRe} (careerOpsUpstream.ts)`);
   if (!starRe.test(hs)) misses.push(`${starRe} (careerOpsUpstream.ts)`);
-  /* projectCards.ts hand-copies projects.ts (projectCards.test.ts enforces it),
-   * but projects.ts interpolates ${upstreamStars} while the card hardcodes the
-   * rendered string. So every star refresh silently desynced the two until the
-   * test failed and somebody re-typed it. Rewriting the literal here closes it. */
-  const cardsPath = join(root, "src", "data", "profile", "projectCards.ts");
-  const cardStarRe = /\(⭐[^)]*\)/g;
-  const cards = readFileSync(cardsPath, "utf8");
-  if (!cardStarRe.test(cards)) misses.push(`${cardStarRe} (projectCards.ts)`);
-  writeFileSync(cardsPath, cards.replace(cardStarRe, `(⭐${stars})`));
 
   writeFileSync(
     careerOpsUpstreamPath,
@@ -194,7 +211,7 @@ try {
    * loudly enough that somebody fixes the prose. */
   const joined = files.map((f) => f.src).join("\n");
   for (const [, n] of joined.matchAll(/(\w+) merged (?:PRs|pull requests)/g))
-    if (n !== String(prs)) misses.push(`stale count "${n} merged …" in profile/{projects,openSource}.ts`);
+    if (n !== String(prs)) misses.push(`stale count "${n} merged …" in profile/{projects,openSource,projectCards}.ts`);
   if (misses.length) {
     console.error(`[gen-candidai-stats] dead patterns / stale counts:\n  ${misses.join("\n  ")}`);
     process.exitCode = 1;

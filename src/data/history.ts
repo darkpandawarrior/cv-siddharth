@@ -74,10 +74,10 @@ export const historyMonths: HistoryMonth[] = [
   },
   {
     "ym": "2026-09",
-    "commits": 690,
-    "insertions": 97827,
-    "deletions": 20344,
-    "filesChanged": 4305,
+    "commits": 762,
+    "insertions": 101485,
+    "deletions": 21485,
+    "filesChanged": 4485,
     "subjects": [
       "feat(ci): fail when a committed artifact disagrees with its generator (#58)",
       "fix(gen): widen the drift guard to nine, and catch up two stale artifacts (#59)",
@@ -87,13 +87,33 @@ export const historyMonths: HistoryMonth[] = [
       "feat(ops): the board arrives, and only the alarm keeps moving"
     ],
     "cumulative": {
-      "commits": 1153,
-      "insertions": 250928,
-      "deletions": 49743
+      "commits": 1225,
+      "insertions": 254586,
+      "deletions": 50884
+    }
+  },
+  {
+    "ym": "2026-10",
+    "commits": 6,
+    "insertions": 55117,
+    "deletions": 914,
+    "filesChanged": 681,
+    "subjects": [
+      "feat(globe): the living earth, with real imagery, live feeds and places (#133)",
+      "fix(globe): production polish for chrome, imagery, feeds and assets (#134)",
+      "fix(globe): drop the dead chat lane beside the globe at 768-1279 (#135)",
+      "fix(globe): read the volcano report through a GitHub Actions relay (#136)",
+      "fix(candidai): sync projectCards.ts in the stats generator",
+      "fix(net): honour Retry-After and widen chess fetch resilience"
+    ],
+    "cumulative": {
+      "commits": 1231,
+      "insertions": 309703,
+      "deletions": 51798
     }
   }
 ] as const;
-export const historyGeneratedAt = "2026-09-26";
+export const historyGeneratedAt = "2026-10-01";
 export const historyFrom = "2026-06";
-export const historyTo = "2026-09";
-export const totalCommits = 1153;
+export const historyTo = "2026-10";
+export const totalCommits = 1231;
