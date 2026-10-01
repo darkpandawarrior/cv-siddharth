@@ -62,6 +62,8 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
       await page.clock.setFixedTime(new Date("2026-09-30T00:07:00Z"));
       await page.goto("/globe");
       await waitForHydration(page);
+      if (viewport.width < 640) await page.locator("[data-hud-overflow] > summary").click();
+      await page.getByRole("button", { name: "Pause the globe's ambient rotation", exact: true }).click();
       if (viewport.width < 640) await page.getByRole("button", { name: "Open the layers sheet", exact: true }).click();
       const panel = page.locator(viewport.width < 640 ? "[data-globe-layer-sheet]" : "[data-globe-layer-panel]");
       await expect(panel).toBeVisible();
@@ -69,7 +71,6 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
       // features to their gate specs instead of rendering them in every case.
       await panel.getByRole("button", { name: "Clean", exact: true }).click();
       await expect(page.locator("[data-earth-style]")).toHaveAttribute("data-earth-style", "imagery");
-      await page.getByRole("button", { name: "Pause the globe's ambient rotation", exact: true }).click();
       await panel.locator("summary").filter({ hasText: "Imagery" }).click();
       const catalog = panel.locator("[data-globe-layer-catalog]");
       await expect(catalog).toBeVisible();

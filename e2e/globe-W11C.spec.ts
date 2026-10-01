@@ -31,6 +31,8 @@ async function setup(page: Page, down = false, url = "/globe", iss = false) {
   await page.goto(url);
   expect((await launchResponse).status()).toBe(down ? 503 : 200);
   await waitForHydration(page);
+  await page.locator("[data-brief-trigger]").waitFor({ state: "attached" });
+  if ((page.viewportSize()?.width ?? 1440) < 640) await page.locator("[data-hud-overflow] > summary").click();
   await expect(page.locator("[data-brief-trigger]")).toBeVisible({ timeout: 30000 });
   // Wait for the scene's loaded feeds, rather than the first lazy DOM paint.
   await expect.poll(() => page.evaluate(() => window.__HAZARD_DEBUG__?.status.detail), { timeout: 30000 }).toContain(down ? "Launch Library unreachable" : "1 launches");
@@ -161,6 +163,7 @@ test.describe("phone", () => {
     await expect(enable).toHaveCount(0);
     await expect(panel).not.toContainText("Satellites layer is off");
     await page.getByRole("button", { name: "Close briefing" }).tap();
-    await expect(page.locator("[data-brief-trigger]")).toBeFocused();
+    // APG dialog focus return: a hidden invoker yields to its visible Controls parent.
+    await expect(page.locator("[data-hud-overflow] > summary")).toBeFocused();
   });
 });

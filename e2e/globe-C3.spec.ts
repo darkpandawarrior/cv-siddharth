@@ -52,6 +52,10 @@ async function openGlobe(page: Page, width: number, height: number) {
   const canvas = page.locator("[data-globe-root] canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
   await page.waitForTimeout(700);
+  if (width < 640) {
+    await page.locator("[data-film-entry-compact]").waitFor({ state: "attached" });
+    await page.locator("[data-hud-overflow] > summary").click();
+  }
 }
 
 /** The compact entry affordance is mounted unconditionally (only its
