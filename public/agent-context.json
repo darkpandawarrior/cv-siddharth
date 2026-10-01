@@ -1,5 +1,5 @@
 {
-  "generatedAt": "a6f22c3c2040",
+  "generatedAt": "95c1ef40c231",
   "profile": {
     "name": "Siddharth Pandalai",
     "title": "Senior Android Engineer",
@@ -211,15 +211,15 @@
     "branches": 1642,
     "clients": 1322,
     "live": 88,
-    "setUpByHim": 12,
-    "carryingHisCommits": 80,
-    "installFloor": 2917170,
+    "setUpByHim": 10,
+    "carryingHisCommits": 79,
+    "installFloor": 2937070,
     "developers": 47,
-    "delisted": 85,
-    "archiveChecked": 1241,
-    "predatingHim": 22,
+    "delisted": 90,
+    "archiveChecked": 1257,
+    "predatingHim": 20,
     "joined": "2021-01",
     "clientsLive": 47,
-    "clientsGone": 64
+    "clientsGone": 69
   }
 }
