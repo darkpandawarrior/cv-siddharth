@@ -68,11 +68,11 @@ async function chromeViolations(page: Page) {
     const x = canvas.left + Number(probe.dataset.globeX), y = canvas.top + Number(probe.dataset.globeY), r = Number(probe.dataset.globeR);
     const discHits = [[0, 0], [.6, 0], [-.6, 0], [0, .6], [0, -.6]].map(([dx, dy]) => document.elementFromPoint(x + dx * r, y + dy * r)?.tagName);
     const strayFacts = [...document.querySelectorAll('[data-globe-panel] > ul > li')].filter(el => painted(el, el.getBoundingClientRect())).map(el => el.textContent);
-    return { escaped, overlaps, strayFacts, discHits, disc: { x, y, r } };
+    return { escaped, overlaps, strayFacts, discHits, disc: { x, y, r }, stageGap: innerWidth - canvas.right };
   });
 }
 
-for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]) {
+for (const [width, height] of [[1440, 900], [1280, 800], [1024, 768], [390, 844], [360, 740]]) {
   test.describe(`production chrome ${width}x${height}`, () => {
     test.use({ viewport: { width, height }, isMobile: width < 640, hasTouch: width < 1280, deviceScaleFactor: width < 640 ? 2 : 1, serviceWorkers: 'block' });
     test('first load keeps text contained and controls clear', async ({ page }, info) => {
@@ -84,6 +84,7 @@ for (const [width, height] of [[1440, 900], [1024, 768], [390, 844], [360, 740]]
       expect.soft(result.escaped, 'inspector text escapes its card').toEqual([]);
       expect.soft(result.strayFacts, 'standalone inspector facts spill over the starfield').toEqual([]);
       expect.soft(result.overlaps, 'interactive controls overlap').toEqual([]);
+      expect.soft(result.stageGap, 'the globe stage leaves an empty strip at the right edge').toBeLessThanOrEqual(1);
       if (width < 640) {
         expect.soft(result.discHits, JSON.stringify(result.disc)).toEqual(Array(5).fill('CANVAS'));
         await expect.soft(page.locator('[data-explore-bar] input')).toBeHidden();

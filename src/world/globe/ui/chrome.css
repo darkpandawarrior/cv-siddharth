@@ -12,6 +12,12 @@ body:has([data-globe-root]) .palette-trigger { top: 6px; bottom: auto; right: 16
 body:has([data-globe-root]) .chat-launcher:not([data-globe-chat]) { display: none; }
 body:has([data-globe-root]) [data-globe-chat] { position: static; inset: auto; }
 [data-globe-stage] > button[aria-label="Open the layers panel"] { top: var(--globe-top-offset, 5rem); }
+/* With no floating chat launcher here, index.css's 104px chat lane is dead space beside the
+   globe at 768-1279. Drop it, and reserve the fixed Cmd+K trigger's width inside the header. */
+@media (min-width: 640px) and (min-height: 501px) {
+  body:has([data-globe-root]) { padding-right: 0; }
+  body:has([data-globe-root]) header[data-spine="route-header"] { padding-right: 4.5rem; }
+}
 
 [data-globe-search-toggle] { order: -1; }
 @media (max-width: 639px), (max-height: 500px) {
