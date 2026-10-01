@@ -98,7 +98,7 @@ export function buildHowItsBuiltEntries(now: Date = new Date()): HowItsBuiltEntr
       shaders: [],
       provenance: [
         { label: "NOAA NDBC latest observations (sampled 200 stations maximum, 10 min cache)", endpoint: "https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt", licence: "NOAA NWS public domain; https://www.weather.gov/disclaimer" },
-        { label: "Smithsonian GVP / USGS weekly report (6 hour cache, report week shown)", endpoint: "https://volcano.si.edu/news/WeeklyVolcanoRSS.xml", licence: "US government employee product; https://volcano.si.edu/gvp_termsofuse.cfm" },
+        { label: "Smithsonian GVP / USGS weekly report, copied every 6 hours by a GitHub Actions relay because the source refuses Vercel (6 hour cache, report week shown)", endpoint: "https://volcano.si.edu/news/WeeklyVolcanoRSS.xml", licence: "US government employee product; https://volcano.si.edu/gvp_termsofuse.cfm" },
         { label: "Helioviewer / NASA SDO AIA 171 (256 px PNG, 30 min cache)", endpoint: "https://api.helioviewer.org/v2/takeScreenshot/", licence: "Courtesy of NASA/SDO and the AIA, EVE, and HMI science teams; https://sdo.gsfc.nasa.gov/data/rules.php" },
       ],
     },
