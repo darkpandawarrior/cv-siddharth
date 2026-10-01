@@ -47,6 +47,15 @@ export default defineConfig({
    */
   workers: 3,
   retries: process.env.CI ? 2 : 0,
+  /*
+   * CI's runner has no GPU, so every WebGL room renders through SwiftShader on the CPU. With the
+   * suite sharded to one worker per runner (lighthouse.yml), 24 tests still failed on run
+   * 36847333049, nearly all 30 s test timeouts waiting on globe UI, and every one of them passed
+   * on a laptop at one worker. The budget scales with the renderer, not per spec: 3x on CI, the
+   * same ratio as test.slow(). Locally a slow test still fails at the default.
+   */
+  timeout: process.env.CI ? 90_000 : 30_000,
+  expect: { timeout: process.env.CI ? 15_000 : 5_000 },
   use: {
     baseURL: `http://localhost:${PORT}`,
     // The globe's cinematic first-visit intro (cameraIntro.ts) plays for any
