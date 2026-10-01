@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<rss version="2.0"
+      xmlns:georss="http://www.georss.org/georss"
+      xmlns:atom="https://www.w3.org/2005/Atom">
+	<channel>
+		<title>Smithsonian / USGS Weekly Volcanic Activity Report</title>
+		<link>https://volcano.si.edu/reports_weekly.cfm</link>
+		<description>The Weekly Volcanic Activity Report is a cooperative project between the Smithsonian's Global Volcanism Program and the US Geological Survey's Volcano Hazards Program. Updated by 2300 UTC every Thursday, these notices are preliminary and subject to change as events are studied in more detail. This is not a comprehensive list of eruptions during the week, but rather a summary of activity that meet selected criteria. Carefully reviewed, detailed reports are published in the Bulletin of the Global Volcanism Network.</description>
+		<language>en-us</language>
+		<copyright>Smithsonian Institution</copyright>
+		<managingEditor>kuhns@si.edu (Sally Kuhn Sennert)</managingEditor>
+		<webMaster>gvp@si.edu (Ed Venzke)</webMaster>
+		<atom:link href="https://volcano.si.edu/news/WeeklyVolcanoRSS.xml" rel="self" type="application/rss+xml" />
+		<pubDate>Thu, 17 Sep 2026 01:20:04 -0500</pubDate>
+
+
+
+<item>
+<title>Krakatau (Indonesia) - Report for 10 September-16 September 2026 - New Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported ongoing eruptive activity at Krakatau during 9-16 September. During 6-11 September there were 14 Strombolian eruptions reported. There was one eruption detected on a seismograph at 0047 on 9 September, but it was not visually confirmed. According to an analysis of a HIMAWARI-9 RGB image taken on that same day, an ash plume rose 2.1 km above the summit and drifted NW at 1000. As of 16 September the five journalists and three crew members of a missing ship had not been found. The Alert Level remained at 3 (on a scale of 1-4) and the public was advised to stay 3 km away from summit.&lt;/p&gt;
+&lt;p&gt;Sources: Antara News,Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_262000</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>-6.1009 105.4233</georss:point>
+</item>
+
+<item>
+<title>Aira (Japan) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Japan Meteorological Agency (JMA) reported ongoing eruptive activity at Minamidake Crater (Aira Caldera?s Sakurajima volcano) during 8-14 September. Crater incandescence was visible in nighttime webcam images during 11-14 September. An eruptive event at 1246 on 8 September generated an ash plume that rose 1.3 km above the crater rim and drifted S. Volcanologists conducted a field survey on 10 September and measured high sulfur dioxide emissions, averaging 2,100 tons per day. A total of eight eruptive events during 13-14 September produced ash plumes that rose as high as 2.5 km above the crater and ejected large blocks 600 m from the vent. The Alert Level remained at 3 (on a 5-level scale), and the public was warned to be cautious within 1 km of both the Minimadake and Showa craters.&lt;/p&gt;
+&lt;p&gt;Source: Japan Meteorological Agency (JMA) &lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_282080</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>31.5772 130.6589</georss:point>
+</item>
+
+<item>
+<title>Dukono (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that eruptive activity at Dukono continued during 10-15 September. White-and-gray ash plumes rose 200-1,100 m above the summit and drifted in different directions during 10-11 and 13-14 September; weather conditions obscured the summit on the other days or no plumes were emitted. The Alert Level remained at Level 2 (on a scale of 1-4) and the public was warned to stay 4 km away from the Malupang Warirang Crater.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_268010</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>1.6992 127.8783</georss:point>
+</item>
+
+<item>
+<title>Great Sitkin (United States) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Alaska Volcano Observatory (AVO) reported that slow lava effusion continued to feed a thick flow in Great Sitkin?s summit crater during 10-15 September based on webcam and satellite images. Minor earthquakes were detected daily, likely associated with rockfalls on the growing dome. Weather clouds obscured webcam and satellite views during most of the week; though steaming at the lava dome was visible in webcam images and slightly elevated surface temperatures were identified in satellite data during 10-11 September. The Volcano Alert Level remained at Watch (the third level on a four-level scale) and the Aviation Color Code remained at Orange (the third color on a four-color scale).&lt;/p&gt;
+&lt;p&gt;Source: US Geological Survey Alaska Volcano Observatory (AVO)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_311120</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>52.0760 -176.1300</georss:point>
+</item>
+
+<item>
+<title>Ibu (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that activity at Ibu continued during 10-17 September, with daily eruptive events recorded by the seismic network. Gray or white-and-gray ash plumes rose as high as 800 m above the summit and drifted in multiple directions. Incandescence at the summit was visible in some nighttime webcam images. The Alert Level remained at 2 (the second lowest level on a four-level scale) and the public was advised to stay 2 km away from the active crater and 3.5 km away from the N crater wall opening.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_268030</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>1.4941 127.6324</georss:point>
+</item>
+
+<item>
+<title>Kanlaon (Philippines) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Philippine Institute of Volcanology and Seismology (PHIVOLCS) reported continuing eruptive activity at Kanlaon during 10-16 September. The seismic network recorded 0-9 daily volcanic earthquakes. Sulfur dioxide emissions ranged from 1,085 to 4,074 tonnes per day. Volcanic emissions generally rose as high as 900 m above the summit and drifted E, NE, and S on most days. A total of six ash emissions were recorded during 10-14 September, each lasting 38 to 88 minutes long. The Alert Level remained at 2 (on a scale of 0-5); the public was warned to stay out of the 4-km-radius Permanent Danger Zone (PDZ) and pilots were advised to avoid flying close to the summit.&lt;/p&gt;
+&lt;p&gt;Source: Philippine Institute of Volcanology and Seismology (PHIVOLCS) &lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_272020</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>10.4096 123.1300</georss:point>
+</item>
+
+<item>
+<title>Karangetang (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that the eruption at Karangetang?s North Crater (Kawah Dua) continued during 10-16 September. Daily white and white-and-gray plumes rose as high as 500 m above the summit and drifted in various directions. Incandescence at the North Crater and from lava flows and/or incandescent avalanches on the flanks was visible in some webcam images throughout the week. The Alert Level remained at 2 (on a scale of 1-4) and the public was advised to stay 1.5 km away from both craters, with an extension to 2.5 km on the NW and SW flanks of North Crater.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_267020</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>2.7810 125.4070</georss:point>
+</item>
+
+<item>
+<title>Kilauea (United States) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Hawaiian Volcano Observatory (HVO) reported that the eruption within Kilauea?s Kaluapele summit caldera, characterized by episodic fountaining, incandescence, and intermittent spatter from craters along the SW margin of Halema`uma`u Crater, continued at variable levels during 10-15 September. Occasional incandescence and flames were observed in webcams images from all three eruptive vents (S, W, and N) at Halema`uma`u Crater. On 10 September overflows were less frequent, slower, shorter in duration (less than 10 minutes), not fed by a dome fountain, and did not travel as far from the N vent. Overflows during the morning of 11 September were more vigorous and lasted longer than 10 minutes. Several of these were fed by dome fountains that were 5-10 m tall. They also traveled farther from the N vent compared to those from the 10th. 
+  
+There were 104 lava overflows from the N vent during 7-12 September, with the last one starting at 0727 on 12 September. Occasional spattering and flames were observed from the W vent and less frequently from the S vent; more energetic spatter and large flames were noted during drainback events. Each overflow during 11-12 September averaged about 20 minutes, separated by periods of about 10-15 minutes. The size and vigor of the dome fountains in the N vent gradually doubled in size to 10-15 m high on 12 September. 
+  
+Intermittent spatter bursts were visible at the N vent during the early morning of 13 September and increased in intensity throughout the day. Around noon, the bursts began depositing spatter that started to build a small cone on the rim of the N vent. During the afternoon, effusive activity began to cool within the upper regions of the conduit. There were distinct Strombolian eruptions reported throughout the night, characterized by large, individual spatter bursts. A seismic swarm consisting of shallow earthquakes occurred during 2115-2125 on 13 September.
+  
+Eruptive activity significantly slowed at 0600 on 14 September; no lava flows were observed after 12 September. By the afternoon of 14 September, the small cone around the N vent measured 11-12 m tall. Just before 2100, cracks on and near the base of the NW wall of Halema`uma`u Crater erupted lava just N of the vent complex. This was the same area where the short seismic swarm occurred the previous day. No fountaining was associated with these new vents, which began to feed a small lava flow in the NW corner of the crater floor. The Volcano Alert Level remained at Watch (the second highest level on a four-level scale) and the Aviation Color Code at Orange (the second highest color on a four-color scale).
+&lt;/p&gt;
+&lt;p&gt;Source: US Geological Survey Hawaiian Volcano Observatory (HVO) &lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_332010</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>19.4210 -155.2870</georss:point>
+</item>
+
+<item>
+<title>Klyuchevskoy (Russia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Kamchatkan Volcanic Eruption Response Team (KVERT) reported that a thermal anomaly over Klyuchevskoy was identified in satellite images on most days during 10-15 September; weather clouds occasionally obscured views. The Aviation Color Code was lowered to Yellow (the second lowest level on a four-color scale) on 9 September. Dates are based on UTC; specific events are in local time where noted.&lt;/p&gt;
+&lt;p&gt;Source: Kamchatkan Volcanic Eruption Response Team (KVERT)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_300260</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>56.0560 160.6420</georss:point>
+</item>
+
+<item>
+<title>Krasheninnikov (Russia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Kamchatkan Volcanic Eruption Response Team (KVERT) reported that lava flows at Krasheninnikov continued to effuse onto the E flank of the Northern Cone during 10-15 September. A daily large thermal anomaly was identified in satellite images. Gas-and-steam emissions sometimes contained ash. The Aviation Color Code remained at Yellow (the second lowest level on a four-color scale). Dates and times are provided in Coordinated Universal Time (UTC); events are in local time only where specified.&lt;/p&gt;
+&lt;p&gt;Source: Kamchatkan Volcanic Eruption Response Team (KVERT)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_300190</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>54.5960 160.2700</georss:point>
+</item>
+
+<item>
+<title>Lewotolok (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported continuing eruptive activity at Lewotolok during 10-16 September. Daily gray ash plumes rose 100-700 m above the summit and drifted NW, W, and SW. The lava flows on the SSE and NE flanks did not advance, remaining at 1.8 km and 1.1 km long, respectively. During 11-13 September a new lava flow traveled 300-700 m down the SE flank, over older flows. Webcam images from 9, 11, and 13-16 September showed incandescent material being ejected above the summit and onto the flanks. The Alert Level remained at 2 (on a scale of 1-4). The public was warned to stay 2 km away from the summit with an extension to 3 km on the S and SE flanks.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_264230</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>-8.2740 123.5080</georss:point>
+</item>
+
+<item>
+<title>Mayon (Philippines) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Philippine Institute of Volcanology and Seismology (PHIVOLCS) reported ongoing ash emissions and unrest at Mayon during 9-16 September. Each day the seismic network recorded 2-38 volcanic earthquakes; one rockfall was detected on 6 September. Sulfur dioxide emissions (SO?) generally averaged 500-5,363 tonnes per day (t/d). Emissions rose 100-750 m above the crater and drifted in different directions on 12, 13, 15, and 16 September. A total of three ash emissions, each lasting one minute long, were recorded on 14 and 15 September. One ash emission, lasting 46 seconds, was reported on 16 September. The Alert Level remained at 2 (on a 0-5 scale) and the public was reminded to stay away from the 6-km-radius Permanent Danger Zone (PDZ). PHIVOLCS recommended that civil aviation authorities advise pilots to avoid flying close to the summit.&lt;/p&gt;
+&lt;p&gt;Source: Philippine Institute of Volcanology and Seismology (PHIVOLCS) &lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_273030</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>13.2570 123.6850</georss:point>
+</item>
+
+<item>
+<title>Merapi (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that the eruption at Merapi (on Java) continued during 10-16 September with lava avalanches produced by the active lava dome on the upper SW flank. The seismic network recorded as many as 43 lava avalanches that traveled as far as 2 km down the Sat/Putih drainage on the SW flank during 10-11, 13, and 15-16 September and one lava avalanche that traveled as far as 1.5 km down the Krasak drainage on the SW flank on 13 and 16 September. On 14 September as many as 25 lava avalanches were reported on the SW flank, affecting the Sat/Putih, Bebeng, and Krasak drainages. On 16 September there were seven lava avalanches reported on the SW flank affecting the Sat/Putih and Krasak drainages. The Alert Level remained at 3 (on a scale of 1-4), and the public was warned to stay 3-7 km away from the summit, based on location.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_263250</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>-7.5400 110.4460</georss:point>
+</item>
+
+<item>
+<title>Purace (Colombia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Servicio Geologico Colombiano (SGC) reported intensifying eruptive activity at Puracé during 10-15 September. Signals associated with fluid movement dominated the seismicity and were characterized as tremor-type signals located beneath Puracé volcano at depths less than 1 km. Seismic activity associated with rock fracturing (volcano-tectonic earthquakes) continued to be recorded, but a majority of signals were located in an area 10-22 km NE of Puracé at depths of 7-17 km. Some of these earthquakes were felt by residents, with the largest (M 3.1) recorded at 1022 on 10 September. Sulfur dioxide flux stayed above the average baseline levels and soil carbon dioxide concentrations rose throughout the reporting period. Slow ground deformation persisted in an area between the Puracé, Piocollo, and Curiquinga volcanoes. 
+  
+Ash plumes rose as high as 1.2 km above the summit and drifted NW during 10-13 September; the highest event occurred at 0859 on 13 September, according to several nearby communities, including Río Blanco. Two ash plumes were recorded on 14 and on 15 September drifting NW, but could not be visually confirmed due to cloud cover. Ashfall was reported in Cristales and Loma Linda on 10 September and in Hato Viejo, Hispala, 20 de Julio, and Coconuco on 13 September. The Alert Level remained at Orange (the second highest level on a four-color scale).
+&lt;/p&gt;
+&lt;p&gt;Source: Servicio Geológico Colombiano (SGC) &lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_351060</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>2.3095 -76.3948</georss:point>
+</item>
+
+<item>
+<title>Rincon de la Vieja (Costa Rica) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Observatorio Vulcanológico y Sismológico de Costa Rica-Universidad Nacional (OVSICORI-UNA) reported that a total of 67 small phreatic eruptions at Rincón de la Vieja were recorded daily by the seismic and infrasound networks during 6-16 September. One of the eruptive events at 1032 on 6 September generated a lahar; secondary lahars were recorded on 5 and 6 September after heavy rainfall. On 13 September the sulfur dioxide flux exceeded 6,000 tonnes per day. The Alert Level remained at 3 (Caution) and the Aviation Color Code remained Orange.&lt;/p&gt;
+&lt;p&gt;Source: Observatorio Vulcanologico y Sismologico de Costa Rica-Universidad Nacional (OVSICORI-UNA) &lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_345020</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>10.8314 -85.3364</georss:point>
+</item>
+
+<item>
+<title>Sabancaya (Peru) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Instituto Geofísico del Perú?s (IGP) Centro Vulcanológico Nacional (CENVUL) reported continuing eruptive activity at Sabancaya during 7-13 September. The seismic network detected 41 seismic events associated with the movement of magmatic fluids, along with earthquakes indicating internal rock fracturing; no volcanic explosions occurred during the period. Gas, steam, and ash emissions periodically rose as high as 500 m above the summit and drifted less than 10 km E and SE. Moderate sulfur dioxide (SO?) emissions averaged 753 tons per day, and 6 thermal anomalies (each 3 MW or less) associated with the lava dome were identified. The Alert Level remained at Orange (the third level on a four-color scale) and the public was warned to stay outside of a 12 km radius from the summit.&lt;/p&gt;
+&lt;p&gt;Source: Instituto Geofísico del Perú (IGP)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_354006</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>-15.7870 -71.8570</georss:point>
+</item>
+
+<item>
+<title>Semeru (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that activity continued at Semeru during 10-16 September, with daily eruptive events recorded by the seismic network. White-and-gray ash plumes rose 200-1,000 m above the summit and drifted in multiple directions on most days; no emissions were visible during 10-11 September. The Alert Level remained at 3 (the second highest level on a scale of 1-4) and the public was warned to stay at least 5 km away from the Jonggring Saloko Crater in all directions, 13 km from the summit on the SE flank along the Kobokan drainage, and 500 m from the banks of the Kobokan drainage as far as 17 km SE of the summit.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_263300</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>-8.1080 112.9220</georss:point>
+</item>
+
+<item>
+<title>Sheveluch (Russia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Kamchatkan Volcanic Eruption Response Team (KVERT) reported continuing lava effusion and explosive activity at the lava domes along the N crater floor of Young Sheveluch (on the SW flank of Old Sheveluch) during 9-15 September. A thermal anomaly was identified in satellite images on 11, 13, and 15 September; weather clouds occasionally obscured views. The Aviation Color Code remained at Orange (the second highest level on a four-color scale). Dates are based on UTC; specific events are in local time where noted.&lt;/p&gt;
+&lt;p&gt;Source: Kamchatkan Volcanic Eruption Response Team (KVERT)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_300270</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>56.6530 161.3600</georss:point>
+</item>
+
+<item>
+<title>Sinabung (Indonesia) - Report for 10 September-16 September 2026 - Continuing Eruptive Activity</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that activity at Sinabung was ongoing during 10-16 September. White plumes were visible during the week, rising as high as 600 m above the summit and drifting in multiple directions. The Alert Level remained at 3 (the second highest level on a scale of 1-4).&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_261080</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>3.1700 98.3920</georss:point>
+</item>
+
+<item>
+<title>Lewotobi (Indonesia) - Report for 10 September-16 September 2026 - Other Observations</title>
+<description>
+&lt;p&gt;The Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG) reported that the Alert Level was lowered to 2 (on a scale of 1-4) at Lewotobi Laki-Laki on 16 September, and the public was warned to stay 4 km away from the center of Laki-Laki.&lt;/p&gt;
+&lt;p&gt;Source: Pusat Vulkanologi dan Mitigasi Bencana Geologi (PVMBG, also known as CVGHM)&lt;/p&gt;
+</description>
+<link>https://volcano.si.edu/reports_weekly.cfm</link>
+<guid isPermaLink="true">https://volcano.si.edu/reports_weekly.cfm#vn_264180</guid>
+<pubDate>Thu, 17 Sep 2026 01:20:04 -0400</pubDate>
+<georss:point>-8.5420 122.7750</georss:point>
+</item>
+</channel></rss>
