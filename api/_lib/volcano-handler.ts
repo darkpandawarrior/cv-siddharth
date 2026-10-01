@@ -23,7 +23,7 @@ export function parseVolcanoes(xml: string): Volcano[] {
 export async function handleVolcanoes(request: Request): Promise<Response> {
   if (request.method !== "GET") return new Response(null, { status: 405 });
   const result = await proxyFeed("volcanoes", () => fetch("https://volcano.si.edu/news/WeeklyVolcanoRSS.xml", { signal: AbortSignal.timeout(8000) }), parseVolcanoes,
-    { minIntervalMs: 21600000, maxStaleMs: 21600000, maxBytes: 250000, cooldownMs: 21600000, maxCooldownMs: 86400000 });
-  if (!result.value || result.stale) return Response.json({ error: "Smithsonian weekly report unreachable" }, { status: 502, headers: { "cache-control": "no-store" } });
-  return Response.json({ volcanoes: result.value, fetchedAt: result.at, stale: result.stale, source: "Smithsonian GVP / USGS weekly report" }, { headers: { "cache-control": "public, max-age=0, s-maxage=21600" } });
+    { minIntervalMs: 21600000, maxStaleMs: 86400000, maxBytes: 250000, cooldownMs: 21600000, maxCooldownMs: 86400000 });
+  if (result.value === null) return Response.json({ error: "Smithsonian weekly report unreachable", reason: result.reason ?? "read" }, { status: 502, headers: { "cache-control": "no-store" } });
+  return Response.json({ volcanoes: result.value, fetchedAt: result.at, stale: result.stale, ageMs: result.ageMs, ...(result.reason ? { reason: result.reason } : {}), source: "Smithsonian GVP / USGS weekly report" }, { headers: { "cache-control": `public, max-age=0, s-maxage=${result.stale ? 30 : Math.max(1, Math.ceil((21600000 - (result.ageMs ?? 0)) / 1000))}` } });
 }

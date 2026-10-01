@@ -38,7 +38,7 @@ export async function handleSun(request: Request): Promise<Response> {
   }, (text) => {
     const parsed = JSON.parse(text) as { at: number };
     return { ...parseSun(text), at: parsed.at };
-  }, { minIntervalMs: 1800000, maxStaleMs: 1800000, maxBytes: 4096, cooldownMs: 1800000, maxCooldownMs: 3600000 });
-  if (!result.value || result.stale) return Response.json({ error: "Helioviewer solar image unreachable" }, { status: 502, headers: { "cache-control": "no-store" } });
-  return Response.json({ image: `https://api.helioviewer.org/v2/downloadScreenshot/?id=${result.value.id}`, observedAt: result.value.at, stale: result.stale, source: "Helioviewer / NASA SDO" }, { headers: { "cache-control": "public, max-age=0, s-maxage=1800" } });
+  }, { minIntervalMs: 1800000, maxStaleMs: 7200000, maxBytes: 4096, cooldownMs: 1800000, maxCooldownMs: 3600000 });
+  if (result.value === null) return Response.json({ error: "Helioviewer solar image unreachable" }, { status: 502, headers: { "cache-control": "no-store" } });
+  return Response.json({ image: `https://api.helioviewer.org/v2/downloadScreenshot/?id=${result.value.id}`, observedAt: result.value.at, stale: result.stale, ageMs: result.ageMs, source: "Helioviewer / NASA SDO" }, { headers: { "cache-control": `public, max-age=0, s-maxage=${result.stale ? 30 : Math.max(1, Math.ceil((1800000 - (result.ageMs ?? 0)) / 1000))}` } });
 }

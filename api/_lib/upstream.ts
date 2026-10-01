@@ -145,7 +145,13 @@ export function governed<T>(
       applyCooldown(state, opt, null);
       throw err;
     }
-    const value = parse(text);
+    let value: T;
+    try {
+      value = parse(text);
+    } catch (err) {
+      applyCooldown(state, opt, null);
+      throw err;
+    }
     state.cooldownMs = 0; // a clean read resets the backoff
     const entry: CacheEntry<T> = { value, at: Date.now() };
     state.lastGood = entry;
