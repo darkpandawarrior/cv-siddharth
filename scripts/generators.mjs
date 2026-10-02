@@ -162,7 +162,7 @@ export const GENERATORS = [
     inputs: ["src/data/anthology.ts", "src/data/archiveText.ts"], outputs: ["public/sitemap.xml"], stages: { refresh: 11 } },
   { id: "system-prompt", script: "gen-system-prompt.mjs", npmName: "gen:system-prompt", kind: "local",
     inputs: ["src/data/writing.ts", "src/data/chess.ts"],
-    outputs: ["api/_lib/system-prompt.ts", "api/_lib/jd-prompt.ts"], stages: { build: 9, refresh: 17 } },
+    outputs: ["api/_lib/system-prompt.ts", "api/_lib/jd-prompt.ts", "public/llms.txt", "public/llms-full.txt"], stages: { build: 9, refresh: 17 } },
   // Same now-restamping shape as sitemap above (`generatedAt: new
   // Date().toISOString()` unconditionally), plus a real undeclared input:
   // it dynamically imports src/data/timeline.ts for month/lane data, so it
@@ -252,7 +252,7 @@ export const GENERATORS = [
     // itself is a re-export barrel post-arch-L15 — the prose these numbers
     // actually live in moved to profile/projects.ts and profile/openSource.ts.
     inputs: [],
-    outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
+    outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/data/profile/projectCards.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
   { id: "oss-stats", script: "gen-oss-stats.mjs", npmName: "gen:oss-stats", kind: "network",
     // Measures merged/open/closed PR counts via `gh pr list`, not the search
