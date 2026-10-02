@@ -332,7 +332,7 @@ function EarnedDepth({
   return (
     <div className="mx-auto max-w-5xl px-6 py-3 print:hidden" data-density={level}>
       <details open={level === "ANALYST"}>
-        <summary className="cursor-pointer text-xs font-semibold text-accent/80 transition hover:text-accent">{summary}</summary>
+        <summary className="cursor-pointer text-xs font-semibold text-accent underline-offset-2 hover:underline">{summary}</summary>
         <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted">
           Analyst view: {name} draws on {stackCount} stack entries and links to {resourceCount} outside source{resourceCount === 1 ? "" : "s"}
           {foundationClause}.
@@ -490,7 +490,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
               project read like the same block of text at a glance. */}
           <div className="project-studio-heading mt-8 grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
             <div>
-              <p className="rise-in text-xs font-semibold uppercase tracking-widest text-accent/70">// project</p>
+              <p className="rise-in text-xs font-semibold uppercase tracking-widest text-accent">// project</p>
               {/* Shared-element morph target: the home projects-grid card title of
                   the same `project-title-<slug>` name lifts into this hero heading
                   on card→detail navigation (View Transitions). rise-in stays for
@@ -980,7 +980,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
       {d?.extraLinks && d.extraLinks.length > 0 && (
         <section className="border-t border-line bg-surface">
           <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-8">
-            <span className="text-xs font-semibold uppercase tracking-widest text-accent/70">Explore more</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent">Explore more</span>
             {d.extraLinks.map((l) => (
               <a
                 key={l.url}

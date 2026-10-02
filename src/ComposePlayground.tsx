@@ -745,7 +745,10 @@ export default function ComposePlayground() {
       const natW = mockup.offsetWidth;
       const natH = mockup.offsetHeight;
       if (!natW || !natH) return;
-      const scale = Math.min(1, (pane.clientWidth - PAD) / natW, (pane.clientHeight - PAD) / natH);
+      // Only the side-by-side layout has a height to fit. Stacked below lg the page scrolls, and
+      // fitting the phone into half a screen shrank it to 22%, its buttons to 20x9px.
+      const fitH = window.matchMedia("(min-width: 1024px)").matches ? (pane.clientHeight - PAD) / natH : 1;
+      const scale = Math.min(1, (pane.clientWidth - PAD) / natW, fitH);
       setPreviewBox({ scale, w: natW * scale, h: natH * scale });
     };
     const ro = new ResizeObserver(recompute);
@@ -843,7 +846,7 @@ export default function ComposePlayground() {
   const lineCount = code.split("\n").length;
 
   return (
-    <div className="flex h-screen flex-col bg-void">
+    <div className="flex min-h-screen flex-col bg-void lg:h-screen">
       <header className="z-10 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           {/* See BlueprintRoom: rooms with hand-rolled chrome never picked up
@@ -978,10 +981,10 @@ export default function ComposePlayground() {
 
       </header>
 
-      <main id="main-content" tabIndex={-1} className="grid min-h-0 flex-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1">
+      <main id="main-content" tabIndex={-1} className="grid min-h-0 flex-1 lg:grid-cols-2">
         <h1 className="sr-only">The Compose Playground — write it, watch it recompose</h1>
         {/* Editor */}
-        <div className="relative flex min-h-0 flex-col border-b border-line lg:border-b-0 lg:border-r">
+        <div className="relative flex h-[60svh] min-h-0 flex-col border-b border-line lg:h-auto lg:border-b-0 lg:border-r">
           <div className="flex min-h-0 flex-1">
             <div
               ref={gutterRef}

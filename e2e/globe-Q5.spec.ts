@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+import { weeksAgoLabel } from "../src/world/globe/globeRows.ts";
+import { fleetStats, storeGeneratedAt } from "../src/data/store.ts";
 import type { Page } from "@playwright/test";
 
 /**
@@ -62,13 +64,14 @@ test("reach snapshot: install floor is en-IN grouped and says how old it is", as
 
   const panel = page.locator("[data-globe-panel]");
   await expect(panel).toBeVisible();
-  // data.md #1: en-IN lakh grouping, not en-US thousands grouping.
-  await expect(panel).toContainText("29,17,170 install floor across 88 live listings");
-  await expect(panel).not.toContainText("2,917,170");
-  // data.md #6: the snapshot names its own age, not just a bare date a
-  // visitor has to do math against (storeGeneratedAt is 2026-08-07; the
-  // fixed clock above is 2026-09-24, 48 days later = 6 full weeks).
-  await expect(panel).toContainText("(6 weeks ago)");
+  // data.md #1: en-IN lakh grouping, not en-US thousands grouping. Derived from store.ts, not
+  // literal: the floor moves with every store refresh, the grouping rule does not.
+  const floor = fleetStats.installFloor;
+  await expect(panel).toContainText(`${floor.toLocaleString("en-IN")} install floor across ${fleetStats.live} live listings`);
+  await expect(panel).not.toContainText(floor.toLocaleString("en-US"));
+  // data.md #6: the snapshot names its own age, not just a bare date a visitor has to do math
+  // against. weeksAgoLabel is the panel's own formatter, run against this test's fixed clock.
+  await expect(panel).toContainText(`(${weeksAgoLabel(storeGeneratedAt, new Date("2026-09-24T12:27:00+05:30"))})`);
 });
 
 test("quake Time row pairs the relative age with an absolute UTC clock reading", async ({ page }) => {

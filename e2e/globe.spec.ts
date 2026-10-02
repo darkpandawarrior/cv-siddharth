@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { PUNE_SELECTION_ID } from "../src/world/globe/puneSelection.ts";
+import { REACH_UPSTREAM_CLAIM } from "../src/world/globe/globeRows.ts";
+import { fleetStats } from "../src/data/store.ts";
 import type { Page } from "@playwright/test";
 
 /**
@@ -202,7 +204,8 @@ test("no WebGL: the fact list is visible with the reach sentences", async ({ pag
   await expect(page.locator("[data-globe-root] canvas")).toHaveCount(0);
   const panel = page.locator("[data-globe-panel]");
   await expect(panel).toBeVisible();
-  await expect(panel).toContainText("install floor across 88 live listings");
-  await expect(panel).toContainText("24 merged PRs in a repository starred 71k+ times");
+  // From the same constants the panel renders: the counts move with every data refresh.
+  await expect(panel).toContainText(`install floor across ${fleetStats.live} live listings`);
+  await expect(panel).toContainText(REACH_UPSTREAM_CLAIM);
   await expect(panel).toContainText("City markers:");
 });
