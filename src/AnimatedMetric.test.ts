@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AnimatedMetric, sparkPathFrom } from "./AnimatedMetric.tsx";
+import { AnimatedMetric, sparkPathFrom, parseMetricValue } from "./AnimatedMetric.tsx";
 
 /**
  * THE NUMBER HAS TO BE IN THE MARKUP.
@@ -56,5 +56,14 @@ describe("sparkPathFrom (real-trend mode)", () => {
   it("never divides by zero for a flat real series", () => {
     const d = sparkPathFrom([7, 7, 7]);
     expect(d).toBe("M2.0,20.0 L32.0,20.0 L62.0,20.0");
+  });
+});
+
+describe("parseMetricValue", () => {
+  it("reads a grouped number whole, not just its leading digit run", () => {
+    expect(parseMetricValue("9,694")).toEqual({ num: 9694, suffix: "" });
+    expect(parseMetricValue("29,17,170 installs")).toEqual({ num: 2917170, suffix: " installs" });
+    expect(parseMetricValue("4.8★")).toEqual({ num: 4.8, suffix: "★" });
+    expect(parseMetricValue("n/a")).toBeNull();
   });
 });
