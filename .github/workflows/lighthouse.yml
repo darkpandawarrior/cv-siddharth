@@ -56,6 +56,10 @@ jobs:
 
   lhci:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,8 +68,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run build
 
-      - name: Lighthouse
-        run: npx @lhci/cli autorun
+      # Every third URL of lighthouserc.json's list, three runs each (see its header).
+      - name: Lighthouse (shard ${{ matrix.shard }})
+        run: |
+          urls=$(node -p 'require("./lighthouserc.json").ci.collect.url.filter((_, i) => i % 3 === ${{ matrix.shard }}).map((u) => "--collect.url=" + u).join(" ")')
+          npx @lhci/cli autorun $urls
 
       # Summarises whatever .lighthouseci/ this run just produced into the
       # generated data file /ops reads (scripts/gen-lighthouse-summary.mjs).
@@ -80,6 +87,6 @@ jobs:
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: lighthouse-summary
+          name: lighthouse-summary-${{ matrix.shard }}
           path: src/data/generated/lighthouse.ts
           retention-days: 14

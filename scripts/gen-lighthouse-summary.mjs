@@ -7,7 +7,7 @@
  * Reads whatever `.lighthouseci/lhr-*.json` the just-completed `npx @lhci/cli
  * autorun` (.github/workflows/lighthouse.yml) left on disk — raw Lighthouse
  * Result JSON, one file per URL in lighthouserc.json's `ci.collect.url` list
- * (numberOfRuns: 1, so exactly one lhr per URL). That directory is
+ * (numberOfRuns: 3, so three lhr files per URL; readRuns keeps one). That directory is
  * .gitignore'd and only ever exists right after a real Lighthouse run, so a
  * checkout with no run yet (a fresh clone, `npm run build` alone) is not an
  * error: this generator degrades to "keep the committed figures", the same
@@ -62,9 +62,14 @@ function readRuns() {
   if (!existsSync(lhciDir)) return null;
   const files = readdirSync(lhciDir).filter((f) => /^lhr-\d+\.json$/.test(f));
   if (files.length === 0) return null;
-  return files
-    .map((f) => JSON.parse(readFileSync(join(lhciDir, f), "utf8")))
-    .map(summarise)
+  // numberOfRuns is 3, so each path has several rows. Keep the one LHCI itself
+  // treats as representative: the median by performance score.
+  const byPath = Map.groupBy(
+    files.map((f) => summarise(JSON.parse(readFileSync(join(lhciDir, f), "utf8")))),
+    (row) => row.path,
+  );
+  return [...byPath.values()]
+    .map((rows) => rows.sort((a, b) => (a.performanceScore ?? 0) - (b.performanceScore ?? 0))[(rows.length - 1) >> 1])
     .sort((a, b) => a.path.localeCompare(b.path));
 }
 
