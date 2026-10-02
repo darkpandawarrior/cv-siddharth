@@ -4,9 +4,12 @@ const GAUGE_R = 26;
 const GAUGE_CIRC = 2 * Math.PI * GAUGE_R;
 const DEFAULT_SPARK_D = "M2,20 L14,16 L26,18 L38,10 L50,12 L62,4";
 
-function parseMetricValue(raw: string): { num: number; suffix: string } | null {
-  const m = /^(\d+(?:\.\d+)?)(.*)$/.exec(raw.trim());
-  return m ? { num: parseFloat(m[1]), suffix: m[2] } : null;
+/** Leading number (grouping commas allowed, so "9,694" or "29,17,170" count
+ *  up from 0 to the whole value) plus whatever follows it. Exported for a
+ *  focused unit test. */
+export function parseMetricValue(raw: string): { num: number; suffix: string } | null {
+  const m = /^(\d[\d,]*(?:\.\d+)?)(.*)$/.exec(raw.trim());
+  return m ? { num: parseFloat(m[1].replaceAll(",", "")), suffix: m[2] } : null;
 }
 
 /** Draws a REAL trend line from a real series (chess rating over time, a
@@ -104,7 +107,9 @@ export function AnimatedMetric({
           const eased = 1 - (1 - t) ** 3;
           const current = parsed.num * eased;
           if (valueRef.current) {
-            valueRef.current.textContent = `${Number.isInteger(parsed.num) ? Math.round(current) : current.toFixed(1)}${parsed.suffix}`;
+            // The last frame lands on the exact authored string, grouping included.
+            valueRef.current.textContent = t >= 1 ? metric.value
+              : `${Number.isInteger(parsed.num) ? Math.round(current) : current.toFixed(1)}${parsed.suffix}`;
           }
           if (t < 1) requestAnimationFrame(tick);
         };
