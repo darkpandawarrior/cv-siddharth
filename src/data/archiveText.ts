@@ -212,4 +212,4 @@ export const printedPieces: PrintedPiece[] = [
 
 export const pieceBySlug = (slug: string) => printedPieces.find((p) => p.slug === slug);
 
-export const archiveTextGeneratedAt = "2026-10-01";
+export const archiveTextGeneratedAt = "2026-10-02";
