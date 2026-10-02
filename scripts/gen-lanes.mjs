@@ -34,12 +34,20 @@ const OUT = join(root, "src/data/lanes.ts");
  * timeline.ts has not moved. Git's own history of the one real input is the
  * deterministic answer to "as of when": it changes exactly when a commit
  * changes timeline.ts, and never otherwise.
+ *
+ * An uncommitted timeline.ts is the commit about to happen, so it is stamped
+ * today. refresh-media.yml rewrites timeline.ts, runs this, THEN commits; the
+ * last commit's date stamped yesterday, check-generated re-ran after the commit
+ * and got today, and lanes.ts, ops.ts and the twin's CvOpsData.kt all failed
+ * the refresh gate (runs 36992760925, 36999888599).
  */
 function timelineCommitDate() {
   try {
-    const date = execFileSync("git", ["log", "-1", "--format=%cs", "--", "src/data/timeline.ts"], {
-      cwd: root, env: gitEnv(), encoding: "utf8",
-    }).trim();
+    const opts = { cwd: root, env: gitEnv(), encoding: "utf8" };
+    if (execFileSync("git", ["status", "--porcelain", "--", "src/data/timeline.ts"], opts).trim()) {
+      return new Date().toISOString().slice(0, 10);
+    }
+    const date = execFileSync("git", ["log", "-1", "--format=%cs", "--", "src/data/timeline.ts"], opts).trim();
     return date || new Date().toISOString().slice(0, 10);
   } catch {
     return new Date().toISOString().slice(0, 10); // uncommitted checkout (e.g. a fresh clone mid-rebase)
