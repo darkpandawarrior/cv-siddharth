@@ -42,7 +42,11 @@ jobs:
             git checkout -q --orphan relay-volcanoes
           fi
           cp ../WeeklyVolcanoRSS.xml .
-          git add WeeklyVolcanoRSS.xml
+          # This branch is data, not the site. Without a vercel.json of its own, Vercel built it
+          # as a Vite app and emailed "Preview deployment failed" (vite build exited 127) on every
+          # report change. main's ignoreCommand cannot help: Vercel reads the deployed commit's tree.
+          printf '{"git":{"deploymentEnabled":false}}\n' > vercel.json
+          git add WeeklyVolcanoRSS.xml vercel.json
           if git diff --cached --quiet; then echo "report unchanged"; exit 0; fi
           git commit -q -m "chore(relay): Smithsonian weekly volcano report"
           git push -q origin relay-volcanoes
