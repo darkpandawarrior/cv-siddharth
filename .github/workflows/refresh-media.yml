@@ -356,6 +356,14 @@ jobs:
         if: steps.commit.outputs.committed == 'true' && inputs.dry_run != 'true'
         run: git reset --soft HEAD~1
 
+      # The rolling branch is rebuilt from main every run, so start it fresh. Moving an existing
+      # branch across main commits that changed a workflow file is refused for GITHUB_TOKEN
+      # ("without `workflows` permission", run 37010010862); creating it anew is not. Deleting the
+      # branch closes its open PR; the step below opens the replacement.
+      - name: Drop the previous rolling branch
+        if: steps.commit.outputs.committed == 'true' && inputs.dry_run != 'true'
+        run: git push origin --delete bot/data-refresh || true
+
       - name: Open or update the rolling data PR
         id: cpr
         if: steps.commit.outputs.committed == 'true' && inputs.dry_run != 'true'
