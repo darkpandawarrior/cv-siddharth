@@ -61,7 +61,10 @@ test("the 'How it's built' toggle is closed by default and opens a per-layer pan
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
   const panel = page.locator("[data-how-its-built]");
-  await expect(panel).toBeVisible({ timeout: 15_000 });
+  // A lazy chunk (Inspector.tsx's HowItsBuilt). On the CI runner the globe
+  // renders at about 1 fps and starves the main thread, so mounting it took
+  // most of this test's 1.1 min there (probe run 36995039858).
+  await expect(panel).toBeVisible({ timeout: 60_000 });
 
   // Real GLSL from the actual imported shader constants, not a paraphrase.
   await expect(panel).toContainText("uniform vec3 uSun");

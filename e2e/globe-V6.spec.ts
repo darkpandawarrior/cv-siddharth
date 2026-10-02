@@ -116,8 +116,13 @@ test("turning satellites on updates the scene summary exactly once", async ({ pa
 });
 
 test("60s idle with auto-rotate gives 0 MutationObserver hits on the live region", async ({ page }) => {
-  test.setTimeout(90_000);
+  test.setTimeout(180_000);
   await openGlobe(page);
+  // Desktop first load preselects Pune once (Globe.tsx). That is a selection
+  // change, so wait it out before the idle window. On the CI runner (about
+  // 1 fps under SwiftShader) it landed 12s after this point (probe run
+  // 36995039858), inside the window, and read as an idle write.
+  await expect(page.locator("[data-scene-summary-live]")).toHaveText(/^Now showing /, { timeout: 60_000 });
   // GlobeHud's own data-autorotate seam (e2e/globe.spec.ts's acceptance
   // line): confirms this run is actually exercising the idle/orbiting path,
   // not a reduced-motion or tier-3 branch where nothing would move anyway.
