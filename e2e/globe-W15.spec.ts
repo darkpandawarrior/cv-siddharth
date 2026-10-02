@@ -76,15 +76,18 @@ test("the live count reads 2, the same total the store and the future \"explorin
 // has genuinely come to rest, not just that autoRotate's own flag flipped
 // off (see the damping comment at the call site).
 //
-// The 20s budget (not 8s) is deliberate: OrbitControls' own dampingFactor
+// The 120s budget is deliberate: OrbitControls' own dampingFactor
 // (GlobeScene.tsx, 0.08) decays sphericalDelta a fixed FRACTION PER
 // update() CALL, not per real elapsed time -- so on this ten-lanes-sharing-
 // one-machine box, a slow tick means fewer update() calls per real second,
 // which means the SAME fixed per-call decay takes proportionally longer
 // in wall-clock time to settle. Measured isolated (no contention) this
 // resolves in 6 frames; under real gate load it needs real seconds of
-// headroom, not frames.
-async function waitForStableReticle(page: Page, timeoutMs = 20_000): Promise<{ x: number; y: number }> {
+// headroom, not frames. The CI runner (SwiftShader, no GPU) renders this
+// scene at about 0.75 fps: probe run 36995039858 saw 15 frames in 20s, the
+// reticle still sliding 924 -> 946 px one or two pixels a frame, so 20s ran
+// out mid-glide. 120s covers the ~60 frames the damping needs there.
+async function waitForStableReticle(page: Page, timeoutMs = 120_000): Promise<{ x: number; y: number }> {
   return page.evaluate(
     ({ timeoutMs: budgetMs }) =>
       new Promise<{ x: number; y: number }>((resolve, reject) => {
@@ -186,8 +189,9 @@ test("clicking a reticle flies the camera to look where that explorer looks", as
   // switching `view` away from "orbit" (CameraDirector.tsx's own focus-only
   // effect) -- flying, then landing, still in orbit, is exactly what a
   // successful flyTo(store.focus) looks like from the outside.
-  await expect.poll(async () => canvas.getAttribute("data-camera-flying"), { timeout: 5_000 }).toBe("true");
-  await expect.poll(async () => canvas.getAttribute("data-camera-flying"), { timeout: 5_000 }).toBe("false");
+  // 30s, not 5s: at the runner's ~0.75 fps the flight's frames arrive >1s apart.
+  await expect.poll(async () => canvas.getAttribute("data-camera-flying"), { timeout: 30_000 }).toBe("true");
+  await expect.poll(async () => canvas.getAttribute("data-camera-flying"), { timeout: 30_000 }).toBe("false");
   await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
 });
 
