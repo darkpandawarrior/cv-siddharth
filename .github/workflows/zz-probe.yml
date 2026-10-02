@@ -1,0 +1,27 @@
+# PROBE ONLY: lives on probe/* branches, never merged to main.
+name: zz-probe
+on:
+  push:
+    branches: ["probe/**"]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Probe
+        env:
+          PLAYWRIGHT_PREBUILT: "1"
+        run: npx playwright test e2e/zz-probe.spec.ts e2e/globe-V7.spec.ts e2e/globe-V6.spec.ts e2e/globe-W15.spec.ts --workers=1 --retries=0 --trace=on --reporter=list
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: probe
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 3
