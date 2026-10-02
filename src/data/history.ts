@@ -94,26 +94,26 @@ export const historyMonths: HistoryMonth[] = [
   },
   {
     "ym": "2026-10",
-    "commits": 6,
-    "insertions": 55117,
-    "deletions": 914,
-    "filesChanged": 681,
+    "commits": 18,
+    "insertions": 58011,
+    "deletions": 3063,
+    "filesChanged": 778,
     "subjects": [
       "feat(globe): the living earth, with real imagery, live feeds and places (#133)",
       "fix(globe): production polish for chrome, imagery, feeds and assets (#134)",
       "fix(globe): drop the dead chat lane beside the globe at 768-1279 (#135)",
       "fix(globe): read the volcano report through a GitHub Actions relay (#136)",
-      "fix(candidai): sync projectCards.ts in the stats generator",
-      "fix(net): honour Retry-After and widen chess fetch resilience"
+      "fix(ci): get main green (full-history checkout, placement rounding, chat env, a11y, stray e2e) (#129)",
+      "fix(refresh): repair the daily data refresh and land a full refresh (#138)"
     ],
     "cumulative": {
-      "commits": 1231,
-      "insertions": 309703,
-      "deletions": 51798
+      "commits": 1243,
+      "insertions": 312597,
+      "deletions": 53947
     }
   }
 ] as const;
-export const historyGeneratedAt = "2026-10-01";
+export const historyGeneratedAt = "2026-10-02";
 export const historyFrom = "2026-06";
 export const historyTo = "2026-10";
-export const totalCommits = 1231;
+export const totalCommits = 1243;
