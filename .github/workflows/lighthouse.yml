@@ -1,7 +1,19 @@
 name: Lighthouse CI
 on:
   push: { branches: [main] }
+  # Heavy (16 e2e shards + 3 lhci jobs), so a PR runs it only when it can change what the suite
+  # measures: the same exclusions as scripts/vercel-ignore.sh, minus e2e/ and this workflow. A
+  # docs-, workflow- or unit-test-only PR gets ci.yml's gate alone; main still runs everything.
   pull_request:
+    paths:
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/lighthouse.yml'
+      - '!docs/**'
+      - '!**/*.md'
+      - '!**/*.test.*'
+      - '!scripts/blender/**'
+      - '!state/**'
   # Manual calibration runs (arch-L13): re-measure lighthouserc.json's
   # thresholds against this same 2-core runner without waiting on a push.
   # skip_e2e exists only for that lane: a calibration dispatch gains nothing
