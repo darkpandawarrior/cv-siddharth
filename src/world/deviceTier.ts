@@ -15,7 +15,7 @@
  * and the only one that ALSO knows about §10's throttle tier, which neither
  * of them did.
  *
- * `computeTier` is the pure, testable core (a plain function of two already-
+ * `computeTier` is the pure, testable core (a plain function of three already-
  * measured inputs); `deviceTier()` is the real one-shot reader that takes
  * those measurements from the browser. Tiers are cumulative, not exclusive:
  * tier 3 (throttled) gets every tier-2 drop as well as its own — a throttled
@@ -43,12 +43,29 @@ const THROTTLE_BUDGET_MS = 180;
  *  in both directions. */
 const BENCH_ITERATIONS = 10_000_000;
 
-/** The core §10 test, as a pure function of two already-measured values —
- *  everything below this line is data, not a browser call, so it is
- *  directly unit-testable without stubbing `matchMedia`/`performance`. */
-export function computeTier(input: { phone: boolean; benchMs: number }): DeviceTier {
-  if (input.benchMs > THROTTLE_BUDGET_MS) return 3;
+/** The core §10 test, as a pure function of already-measured values.
+ *  Directly testable without stubbing browser APIs. */
+export function computeTier(input: { phone: boolean; benchMs: number; softwareRenderer: boolean }): DeviceTier {
+  if (input.softwareRenderer || input.benchMs > THROTTLE_BUDGET_MS) return 3;
   return input.phone ? 2 : 1;
+}
+
+/** Software WebGL needs the lowest graphics budget even on a fast CPU. */
+export function isSoftwareRenderer(renderer: string): boolean {
+  return /swiftshader|llvmpipe|softpipe|swrast|lavapipe|software|basic render driver|\bwarp\b/i.test(renderer);
+}
+
+function readSoftwareRenderer(): boolean {
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+  if (!gl) return false;
+  try {
+    const debug = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = gl.getParameter(debug?.UNMASKED_RENDERER_WEBGL ?? gl.RENDERER);
+    return typeof renderer === "string" && isSoftwareRenderer(renderer);
+  } finally {
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+  }
 }
 
 function isPhoneViewport(): boolean {
@@ -86,7 +103,7 @@ export function deviceTier(): DeviceTier {
     cached = 1; // SSR / a test environment with no browser — never the live path (Playground.tsx already gates the whole world behind hasWebGL())
     return cached;
   }
-  cached = computeTier({ phone: isPhoneViewport(), benchMs: benchmarkMs() });
+  cached = computeTier({ phone: isPhoneViewport(), benchMs: benchmarkMs(), softwareRenderer: readSoftwareRenderer() });
   return cached;
 }
 
