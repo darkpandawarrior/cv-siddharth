@@ -19,7 +19,7 @@ const SAMPLE_INTERVAL_MS = 250;
 const TIER_WHY: Record<1 | 2 | 3, string> = {
   1: "desktop viewport, load-time benchmark under budget",
   2: "phone viewport (≤ 820px)",
-  3: "load-time benchmark over budget, treated as throttled for the session",
+  3: "software WebGL or load-time benchmark over budget, lowest graphics budget for the session",
 };
 
 interface LevelCount {
