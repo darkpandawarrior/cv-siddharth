@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useLayoutEffect, useRef } from "react";
 import { ArrowLeft, Rows3 } from "lucide-react";
 import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
@@ -76,6 +77,13 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
 
 export default function Lanes() {
   const { goToSection } = useSectionNav();
+  const gridScroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const scroller = gridScroller.current;
+    if (window.innerWidth < 1000 && scroller && scroller.scrollWidth > scroller.clientWidth) {
+      scroller.scrollLeft = scroller.scrollWidth;
+    }
+  }, []);
   const years = [...new Set(laneMonths.map((m) => m.slice(0, 4)))];
 
   // reality-spec §6 /lanes row: the newest PUBLIC PUSH that lands after
@@ -134,6 +142,7 @@ export default function Lanes() {
         <h2 className="sr-only">The four lanes</h2>
         <Reveal>
           <div
+            ref={gridScroller}
             className="mt-10 overflow-x-auto pb-2"
             tabIndex={0}
             role="region"
