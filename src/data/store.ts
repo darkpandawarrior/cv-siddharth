@@ -5329,4 +5329,4 @@ export const storeGeneratedAt = "2026-10-01";
 /** When a --published-only run last re-verified every listing above against
  *  live Play. check-freshness.mjs reads max(storeGeneratedAt, storeVerifiedAt),
  *  the one stamp that is the run time by definition (G13's one exception). */
-export const storeVerifiedAt = "2026-10-02";
+export const storeVerifiedAt = "2026-10-03";
