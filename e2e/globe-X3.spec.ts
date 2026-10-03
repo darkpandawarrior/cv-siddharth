@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -5,6 +6,11 @@ import sharp from "sharp";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { offsetToSlider } from "../src/world/globe/timeMachine/rangeModel.ts";
 import type { Page, Locator } from "@playwright/test";
+
+// Exercise history replay and daily imagery compare on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 /**
  * WAVE 6 LANE X3 (time machine UI), end to end: the non-linear scrubber

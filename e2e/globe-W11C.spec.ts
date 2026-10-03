@@ -1,7 +1,9 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 import { briefingFixtures } from "./fixtures/briefing/live.ts";
 async function setup(page: Page, down = false, url = "/globe", iss = false) {
+  await forceDeviceTier(page, "viewport");
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.route("**/*", route => new URL(route.request().url()).hostname === "localhost" ? route.fallback() : route.fulfill({ status: 503, body: "Unavailable" }));
   await page.emulateMedia({ reducedMotion: "reduce" });

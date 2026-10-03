@@ -1,6 +1,12 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page, TestInfo } from "@playwright/test";
+
+// Exercise imagery loading and failure receipts on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 const day = readFileSync(new URL("./fixtures/gibs/gibs-day.jpg", import.meta.url));
 const tle = JSON.parse(readFileSync(new URL("./fixtures/tle.json", import.meta.url), "utf8"));

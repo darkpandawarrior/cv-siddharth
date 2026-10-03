@@ -1,6 +1,12 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import sharp from "sharp";
 import { readFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+
+// Exercise imagery mesh pixels on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 test.use({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 

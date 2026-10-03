@@ -1,5 +1,11 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+
+// Exercise cloud textures on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/gibs/${name}`, import.meta.url));
 

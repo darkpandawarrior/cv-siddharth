@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { computeTier, tierBudget, deviceTier, resetDeviceTierForTest } from "./deviceTier.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { computeTier, isSoftwareRenderer, tierBudget, deviceTier, resetDeviceTierForTest } from "./deviceTier.ts";
 
 // computeTier is the pure §10 test — asserted as relationships (a throttled
 // desktop still lands at tier 3; a fast phone lands at tier 2; a fast
@@ -7,19 +7,37 @@ import { computeTier, tierBudget, deviceTier, resetDeviceTierForTest } from "./d
 // never needs updating if THROTTLE_BUDGET_MS is ever retuned.
 describe("computeTier", () => {
   it("throttle dominates viewport — a slow desktop is still tier 3", () => {
-    expect(computeTier({ phone: false, benchMs: 500 })).toBe(3);
+    expect(computeTier({ phone: false, benchMs: 500, softwareRenderer: false })).toBe(3);
   });
 
   it("a slow phone is also tier 3, not tier 2 — the drops are cumulative", () => {
-    expect(computeTier({ phone: true, benchMs: 500 })).toBe(3);
+    expect(computeTier({ phone: true, benchMs: 500, softwareRenderer: false })).toBe(3);
   });
 
   it("a fast phone is tier 2", () => {
-    expect(computeTier({ phone: true, benchMs: 5 })).toBe(2);
+    expect(computeTier({ phone: true, benchMs: 5, softwareRenderer: false })).toBe(2);
   });
 
   it("a fast desktop is tier 1", () => {
-    expect(computeTier({ phone: false, benchMs: 5 })).toBe(1);
+    expect(computeTier({ phone: false, benchMs: 5, softwareRenderer: false })).toBe(1);
+  });
+});
+
+describe("isSoftwareRenderer", () => {
+  it.each([
+    "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero)), SwiftShader driver)",
+    "llvmpipe (LLVM 15.0.7, 256 bits)", "Microsoft Basic Render Driver",
+    "SOFTPIPE", "Mesa swrast", "lavapipe", "Software Rasterizer", "Microsoft WARP",
+  ])("recognises %s", (renderer) => {
+    expect(isSoftwareRenderer(renderer)).toBe(true);
+  });
+
+  it.each(["", "ANGLE (NVIDIA GeForce RTX 4070)", "Apple M3", "Mesa Intel(R) UHD Graphics", "AMD Radeon RX 6800"])("keeps %s on hardware budgets", (renderer) => {
+    expect(isSoftwareRenderer(renderer)).toBe(false);
+  });
+
+  it.each([false, true])("software rendering dominates a fast CPU (phone=%s)", (phone) => {
+    expect(computeTier({ phone, benchMs: 5, softwareRenderer: true })).toBe(3);
   });
 });
 
@@ -61,6 +79,37 @@ describe("tierBudget", () => {
 });
 
 describe("deviceTier()", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    resetDeviceTierForTest();
+  });
+
+  it.each([1, 2, 3] as const)("honours an explicit test tier %s before probing", (tier) => {
+    vi.stubGlobal("window", { __DEVICE_TIER_TEST__: tier });
+    resetDeviceTierForTest();
+    expect(deviceTier()).toBe(tier);
+    expect(deviceTier()).toBe(tier);
+  });
+
+  it.each([true, false])("reads the renderer once and releases the probe (debug extension=%s)", (debugAvailable) => {
+    const loseContext = vi.fn();
+    const getParameter = vi.fn(() => "SwiftShader");
+    const getExtension = vi.fn((name: string) => name === "WEBGL_debug_renderer_info"
+      ? debugAvailable ? { UNMASKED_RENDERER_WEBGL: 37446 } : null
+      : { loseContext });
+    const getContext = vi.fn(() => ({ RENDERER: 7937, getParameter, getExtension }));
+    const createElement = vi.fn(() => ({ getContext }));
+    vi.stubGlobal("document", { createElement });
+    vi.stubGlobal("window", { matchMedia: () => ({ matches: false }) });
+    vi.stubGlobal("performance", { now: () => 0 });
+    resetDeviceTierForTest();
+    expect(deviceTier()).toBe(3);
+    expect(deviceTier()).toBe(3);
+    expect(createElement).toHaveBeenCalledOnce();
+    expect(getParameter).toHaveBeenCalledExactlyOnceWith(debugAvailable ? 37446 : 7937);
+    expect(loseContext).toHaveBeenCalledOnce();
+  });
+
   it("memoises — a second call in the same session never re-probes", () => {
     resetDeviceTierForTest();
     const first = deviceTier();

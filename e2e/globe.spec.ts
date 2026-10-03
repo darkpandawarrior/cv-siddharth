@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +64,7 @@ function dayNightClips(box: Box, daySide: string): { day: Box; night: Box } {
 // motion freezes auto-rotate so the crop matches the probe's frame, and the
 // Pune card is hidden so only WebGL pixels are measured.
 test("the day hemisphere reads brighter than the night hemisphere at Pune dusk", async ({ page }, testInfo) => {
+  await forceDeviceTier(page, 1);
   test.slow(); // a real WebGL settle plus two screenshot crops
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -146,6 +148,7 @@ test("the HUD's markers toggle closes the Pune selection when it is showing", as
 });
 
 test("two mocked presences from two countries show two live dots and the right count", async ({ page }) => {
+  await forceDeviceTier(page, 1);
   await page.setViewportSize({ width: 1440, height: 900 });
   await withApiFixtures(page);
   await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
@@ -163,6 +166,7 @@ test("two mocked presences from two countries show two live dots and the right c
 });
 
 test("reduced motion freezes auto-rotate", async ({ page }) => {
+  await forceDeviceTier(page, 1);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await withApiFixtures(page);
   await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));

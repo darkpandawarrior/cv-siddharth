@@ -1,8 +1,10 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
 export async function openPinnedGlobe(page: Page, failed = false) {
+  await forceDeviceTier(page, "viewport");
   await page.addInitScript(() => localStorage.setItem("cv-siddharth:globe-intro-seen", "1"));
   await page.routeWebSocket("**/*", socket => socket.close());
   await page.emulateMedia({ reducedMotion: "reduce" });

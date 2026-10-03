@@ -1,8 +1,14 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { mkdirSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page, TestInfo } from "@playwright/test";
 import { GIBS_BASES, GIBS_OVERLAYS } from "../src/world/globe/layers/gibsCatalog.ts";
+
+// Exercise imagery status and feed failure copy on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 // Source audit reproductions: F1 dormant picker, F2 clipped health, F3 generic
 // empty copy, F4 inactive contrast, F5 tiny hierarchy, F6 missing ticks, F8 hidden health.

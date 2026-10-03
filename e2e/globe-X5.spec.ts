@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -216,6 +217,9 @@ test.describe(`seamless zoom into street level and back at ${width}px`, () => {
 }
 
 test.describe("cinematic first-visit intro", () => {
+  test.beforeEach(async ({ page }) => {
+    await forceDeviceTier(page, 1);
+  });
   // Opt back out of the suite-wide "already seen" storageState (playwright.config.ts):
   // this is the one describe block that actually tests the intro playing.
   test.use({ storageState: { cookies: [], origins: [] } });

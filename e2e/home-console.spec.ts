@@ -1,3 +1,4 @@
+import { FOUNDATION_APP_NODES } from "../src/data/foundationGraph.ts";
 import { test, expect } from "./lib/test.ts";
 
 // The Evidence Atlas, home-scenes-and-chrome lane: the homepage used to log
@@ -50,12 +51,11 @@ for (const viewport of [
 // isn't readable by Playwright (WebGL pixels, not DOM), so this reads the
 // flat twin FoundationGraph.tsx renders alongside it: real, always-present,
 // never aria-hidden text naming the same apps.
-test("the foundation graph's flat twin lists doori, gaddi, paymentslab-kmp and candidai", async ({ page }) => {
+test("the foundation graph's flat twin lists exactly the current foundation apps", async ({ page }) => {
   await page.goto("/#source", { waitUntil: "networkidle" });
   const twin = page.getByRole("list", { name: "Apps built on this foundation" });
   await expect(twin).toBeVisible();
-  const text = await twin.innerText();
-  for (const label of ["Doori", "Gaddi", "PaymentsLab-KMP", "Candidai"]) {
-    expect(text).toContain(label);
-  }
+  const labels = FOUNDATION_APP_NODES.map((node) => node.label);
+  expect(labels.length, "the foundation app list must not be empty").toBeGreaterThan(0);
+  await expect(twin.getByRole("listitem")).toHaveText(labels);
 });

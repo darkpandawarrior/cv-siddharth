@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -236,6 +237,7 @@ test.describe("reduced motion and low-tier rain rendering", () => {
    * literal reality-spec.md §7 R4 acceptance line.
    */
   test("reduced motion marks rain motion-reduced, with no rain mesh mounted", async ({ page }) => {
+    await forceDeviceTier(page, 1);
     await mockLiveRoutes(page, WEATHER_WET);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await gotoPlayground(page, NIGHT);
