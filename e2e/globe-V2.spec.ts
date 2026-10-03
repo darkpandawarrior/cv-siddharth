@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -147,6 +148,7 @@ async function meanRgb(buffer: Buffer): Promise<{ r: number; g: number; b: numbe
 }
 
 async function openGlobeAtNight(page: Page, nightRgb: { r: number; g: number; b: number }, viewport = { width: 1440, height: 900 }) {
+  await forceDeviceTier(page, 1);
   await page.setViewportSize(viewport);
   await page.emulateMedia({ reducedMotion: "reduce" }); // freeze auto-rotate so a crop matches the probe's frame (globe.spec.ts's own reasoning)
   await withApiFixtures(page);
@@ -270,7 +272,8 @@ test.describe("GlobePost: city-light bloom", () => {
     // is false on both counts — this is what "no composer at all" IS here.
     const canvas = page.locator("[data-globe-root] canvas").first();
     await expect(canvas).toBeVisible({ timeout: 30_000 });
-    await page.waitForTimeout(500);
+    await expect(page.locator("[data-earth-style]")).toHaveAttribute("data-earth-style", "dots");
+    await expect(page.locator("[data-autorotate]")).toHaveAttribute("data-autorotate", "off");
     await expect(page.locator("[data-globe-composer]")).toHaveCount(0);
   });
 });

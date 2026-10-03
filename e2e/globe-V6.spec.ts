@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -70,6 +71,7 @@ async function countMutations(page: Page, selector: string, run: () => Promise<v
 }
 
 test("the scene summary names the current GIBS base and its date", async ({ page }) => {
+  await forceDeviceTier(page, 1);
   await openGlobe(page);
   const summary = page.locator("[data-scene-summary]");
   // sr-only, never visible — but present and readable, which is the point.
@@ -116,6 +118,7 @@ test("turning satellites on updates the scene summary exactly once", async ({ pa
 });
 
 test("60s idle with auto-rotate gives 0 MutationObserver hits on the live region", async ({ page }) => {
+  await forceDeviceTier(page, 1);
   test.setTimeout(180_000);
   await openGlobe(page);
   // Desktop first load preselects Pune once (Globe.tsx). That is a selection

@@ -1,8 +1,14 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
+
+// Exercise exact quake counts and magnitude filtering on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, 1);
+});
 
 /**
  * LANE W12 ("Ask the globe"), e2e.

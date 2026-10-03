@@ -1,8 +1,14 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page, Route } from "@playwright/test";
+
+// Exercise subdaily and EOX tile requests on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 /**
  * LANE V1 (wave 7, "Lane 1: near-live geostationary imagery, then a sharp

@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,6 +7,11 @@ import type { Page } from "@playwright/test";
 import { fleet } from "../src/data/store.ts";
 import { buildAppRing } from "../src/world/globe/layers/reachApps.ts";
 import { PUNE } from "../src/lib/sky.ts";
+
+// Exercise tier 1 presence dots, CI ring and app-ring picking on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, 1);
+});
 
 /**
  * LANE Q4 (wave 9, P4): Pune marker-cluster declutter + imagery moire fix.

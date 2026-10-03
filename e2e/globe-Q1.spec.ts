@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -62,6 +63,7 @@ async function seedIntroSeen(page: Page) {
 }
 
 async function gotoLiveGlobe(page: Page, width: number, height: number) {
+  await forceDeviceTier(page, width <= 820 ? 2 : 1);
   await seedIntroSeen(page);
   await page.setViewportSize({ width, height });
   await withApiFixtures(page);
@@ -75,10 +77,7 @@ async function gotoLiveGlobe(page: Page, width: number, height: number) {
 }
 
 test("tier 2 (phone viewport): the bloom composer mounts SMAA, not just tier 1", async ({ page }) => {
-  // Phone viewport (deviceTier.ts's own PHONE_QUERY, max-width 820px) with
-  // no CPU throttle applied -> tier 2, the case render.md finding 1 was
-  // specifically about (tier 2 used to get NO antialiasing at all once this
-  // composer mounted).
+  // Tier 2 used to omit SMAA. Keep this branch explicit under software WebGL.
   await gotoLiveGlobe(page, 390, 844);
   const composer = page.locator("[data-globe-composer]");
   await expect(composer).toHaveAttribute("data-globe-composer", "bloom", { timeout: 30_000 });
@@ -93,6 +92,7 @@ test("tier 1 (desktop): the bloom composer still mounts SMAA", async ({ page }) 
 });
 
 test("TileLayer's first tile request never fires before the whole-globe day image is live", async ({ page }) => {
+  await forceDeviceTier(page, 1);
   // perf.md: TileLayer and EarthImagery used to race the same region at two
   // resolutions. With the fetch-race fix, TileLayer's own recompute (and so
   // its first fetch) is gated on `status.earth` being "live" or "failed" —

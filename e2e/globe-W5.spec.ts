@@ -1,8 +1,14 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
+
+// Exercise wind particles and tier 1 weather cluster on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, 1);
+});
 
 /**
  * LANE W5 (global wind + Pune weather), wave 3 — e2e. Fixed clock, every

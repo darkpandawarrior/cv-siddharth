@@ -1,8 +1,14 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
+
+// Exercise constellation figures, labels and planets on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, 1);
+});
 
 /**
  * LANE W4 (wave 3: constellations, planets, ISS visible passes), end to end.

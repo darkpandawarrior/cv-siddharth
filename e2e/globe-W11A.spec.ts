@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { test, expect, waitForHydration } from './lib/test.ts';
 import type { Page, Locator, TestInfo } from '@playwright/test';
 import { mkdir, copyFile } from 'node:fs/promises';
@@ -6,6 +7,7 @@ import { join } from 'node:path';
 test.use({ serviceWorkers: 'block' });
 
 async function open(page: Page, url = '/globe') {
+  await forceDeviceTier(page, "viewport");
   await page.addInitScript(() => localStorage.setItem('cv-siddharth:globe-intro-seen', '1'));
   await page.clock.setFixedTime(new Date('2026-09-30T12:00:00Z'));
   await page.route(/^https:\/\//, route => route.abort());

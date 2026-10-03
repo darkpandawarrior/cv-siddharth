@@ -1,6 +1,12 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
+
+// Exercise animated quake buffers before reduced motion on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, 1);
+});
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`fixtures/${name}.json`, import.meta.url), "utf8"));
 

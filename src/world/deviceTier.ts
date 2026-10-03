@@ -24,6 +24,13 @@
 
 export type DeviceTier = 1 | 2 | 3;
 
+declare global {
+  interface Window {
+    /** Set before app scripts only by tests that exercise a specific graphics tier. */
+    __DEVICE_TIER_TEST__?: DeviceTier;
+  }
+}
+
 const PHONE_QUERY = "(max-width: 820px)"; // §4/§10's own breakpoint, unchanged
 
 /** §10's own number: a load-time bake this slow means a throttled/low-end
@@ -101,6 +108,11 @@ export function deviceTier(): DeviceTier {
   if (cached !== null) return cached;
   if (typeof window === "undefined" || typeof performance === "undefined") {
     cached = 1; // SSR / a test environment with no browser — never the live path (Playground.tsx already gates the whole world behind hasWebGL())
+    return cached;
+  }
+  const testTier = window.__DEVICE_TIER_TEST__;
+  if (testTier === 1 || testTier === 2 || testTier === 3) {
+    cached = testTier;
     return cached;
   }
   cached = computeTier({ phone: isPhoneViewport(), benchMs: benchmarkMs(), softwareRenderer: readSoftwareRenderer() });

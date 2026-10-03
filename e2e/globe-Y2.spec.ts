@@ -1,7 +1,13 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page, Locator } from "@playwright/test";
 import { QUAKES_URL, EONET_URL, GDACS_URL, OVATION_URL, KP_URL, LAUNCHES_URL, nhcConeUrl, NHC_CONE_LAYER_IDS } from "../src/world/globe/layers/feedUrls.ts";
+
+// Exercise imagery and X-ray tile stats on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url));
 const json = (name: string) => JSON.parse(fixture(name).toString());

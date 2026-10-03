@@ -1,6 +1,12 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+
+// Exercise overlay WMTS requests and legends on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 for (const viewport of [{ width: 360, height: 740 }, { width: 390, height: 844 }, { width: 844, height: 390 }, { width: 1440, height: 900 }]) {
   for (const route of ["/globe", "/map"]) {

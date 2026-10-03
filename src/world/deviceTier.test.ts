@@ -84,6 +84,13 @@ describe("deviceTier()", () => {
     resetDeviceTierForTest();
   });
 
+  it.each([1, 2, 3] as const)("honours an explicit test tier %s before probing", (tier) => {
+    vi.stubGlobal("window", { __DEVICE_TIER_TEST__: tier });
+    resetDeviceTierForTest();
+    expect(deviceTier()).toBe(tier);
+    expect(deviceTier()).toBe(tier);
+  });
+
   it.each([true, false])("reads the renderer once and releases the probe (debug extension=%s)", (debugAvailable) => {
     const loseContext = vi.fn();
     const getParameter = vi.fn(() => "SwiftShader");

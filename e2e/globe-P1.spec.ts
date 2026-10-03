@@ -1,5 +1,11 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
+
+// Exercise storm imagery preset on its graphics branch.
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 /**
  * LANE P1 (wave 7 parked list, now unblocked): layer preset chips
