@@ -5,9 +5,9 @@ import { fileURLToPath } from "node:url";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
-// Exercise wind particles and tier 1 weather cluster on its graphics branch.
+// Exercise wind at both viewport tiers and the weather cluster on desktop.
 test.beforeEach(async ({ page }) => {
-  await forceDeviceTier(page, 1);
+  await forceDeviceTier(page, "viewport");
 });
 
 /**

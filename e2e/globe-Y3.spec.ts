@@ -3,9 +3,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
-// Exercise terrain DEM loading and app-ring picking on its graphics branch.
+// Exercise terrain DEM loading and app-ring picking at each viewport's tier.
 test.beforeEach(async ({ page }) => {
-  await forceDeviceTier(page, 1);
+  await forceDeviceTier(page, "viewport");
 });
 
 const fixture = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));

@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,6 +39,7 @@ const NEAR_QUAKE = { id: "near", properties: { mag: 5.5, place: "near Mumbai fix
 const FAR_QUAKE = { id: "far", properties: { mag: 6.1, place: "far NYC fixture", time: NOW.getTime(), url: "" }, geometry: { type: "Point", coordinates: [-74.006, 40.7128, 10] } };
 
 async function openGlobe(page: Page) {
+  await forceDeviceTier(page, "viewport");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.clock.setFixedTime(NOW);
   await page.addInitScript(() => { window.__W11_TEST__ = true; });
