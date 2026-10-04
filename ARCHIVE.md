@@ -23,14 +23,18 @@ flags a row whose `reviewBy` has passed. Removal then follows the row's
 ### world-v1
 
 The first drivable Night Survey world stays reachable at `/playground?world=v1`.
-`e2e/world-driving.spec.ts` exercises this entry point. Its corridor fallback,
-list view and Reality ledger remain covered by the other three v1 world specs.
-The file list comes from `ARCHIVED_V1_FILES` in `src/world/v2/carryOver.ts`.
+The five hidden entrances are the quiet URL; terminal commands `git checkout v1`
+and `cd ~/world/v1`; the exact palette query `night survey`; the Konami sequence
+inside the Sangam; and a two second upstream hold within four metres of the
+2017 source spring. `e2e/archive-v1.spec.ts` names and checks each entrance.
+Neither terminal command appears in help. The palette query `night` shows no
+archive entry. The spring is excluded from the landmark list, shared paths
+and tour stops.
 
-The planned archive date is 2026-10-04, with review on 2027-04-04. The phase-3
-ship gate must replace both dates and the markers if the actual deploy date
-changes. P4-00 receives this section and the registry row (handoff H13), then
-adds the other four hidden entry points and the archive plaque.
+The archive plaque carries 2026-10-04. Review is due on 2027-04-04.
+The file list comes from `ARCHIVED_V1_FILES` in `src/world/v2/carryOver.ts`.
+Shared modules in that manifest remain live and are never archived.
+The four v1 specs continue to use `/playground?world=v1`.
 
 Removal recipe:
 
@@ -41,3 +45,14 @@ Removal recipe:
    those files and update the carry-over manifest.
 4. Remove the four v1 specs and any archive entry-point specs added by P4-00.
 5. Remove the registry row, its markers and this section.
+
+6. Remove `src/world/v2/layers/ArchiveGate.tsx`,
+   `src/world/v2/hud/KonamiArchive.tsx`, `src/world/ArchivePlaque.tsx`,
+   `src/world/v2/archiveGate.ts` and its unit test.
+7. Remove only the marked source-spring arrival expressions and imports in
+   `src/world/v2/WorldV2.tsx` and `src/world/v2/Hodi.tsx`. Keep the ordinary
+   landmark arrival logic. Remove the hidden search target in the route.
+8. Remove the marked terminal and palette blocks and
+   `e2e/archive-v1.spec.ts`.
+
+`src/Playground.tsx` passes to SP-20 for its header block only (handoff H15).

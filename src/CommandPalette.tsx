@@ -280,6 +280,11 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+    if (q === "night survey") return [{
+      id: "archive-world-v1", label: "Night Survey (archived)", hint: "", icon: <Compass size={15} />,
+      run: () => { void navigate({ to: "/playground", search: { world: "v1" } }); },
+    }];
     const matches = q
       ? commands.filter((c) => `${c.label} ${c.keywords ?? ""}`.toLowerCase().includes(q))
       : commands;
@@ -289,7 +294,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     if (q || mru.length === 0) return matches;
     const rank = new Map(mru.map((id, i) => [id, i]));
     return [...matches].sort((a, b) => (rank.get(a.id) ?? mru.length) - (rank.get(b.id) ?? mru.length));
-  }, [commands, query, mru]);
+  }, [commands, query, mru, navigate]);
 
   // The highlight is an index into `filtered`, so a new query means a new list
   // and the highlight has to go back to its top. Adjusted during render against

@@ -21,6 +21,9 @@ import { ConceptFallback, CorridorPlate } from "./world/CorridorPlate.tsx";
 import { deviceTier } from "./world/deviceTier.ts";
 
 // Load either world only after the visitor chooses it.
+// ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+const ArchivePlaque = lazy(() => import("./world/ArchivePlaque.tsx"));
+// ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
 const World = lazy(() => import("./world/World.tsx"));
 const WorldV2 = lazy(() => import("./world/v2/WorldV2.tsx"));
 /**
@@ -219,6 +222,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
 
   return (
     <div
+      data-world={isV1 ? "v1" : undefined}
       className={`flex flex-col bg-void ${
         // print:h-auto print:overflow-visible: the world view's viewport-locked
         // box exists so the WebGL canvas never scrolls under a driving craft,
@@ -228,6 +232,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
         wantsWorld ? "h-screen overflow-hidden print:h-auto print:overflow-visible" : "min-h-screen"
       }`}
     >
+      {isV1 && <Suspense fallback={null}><ArchivePlaque /></Suspense>}
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <button

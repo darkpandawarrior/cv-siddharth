@@ -2,6 +2,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
 import { NODES } from "../data/storyMap.ts";
+import { SOURCE_SPRING_ID } from "../world/v2/archiveGate.ts";
 import Playground from "../Playground.tsx";
 
 // Share crawlers need the published host even when previews serve assets locally.
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>): PlaygroundSearch => ({
     // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
     world: search.world === "v1" ? "v1" : undefined,
-    at: typeof search.at === "string" && NODES.some((node) => node.id === search.at) ? search.at : undefined,
+    at: typeof search.at === "string" && (search.at === SOURCE_SPRING_ID || NODES.some((node) => node.id === search.at)) ? search.at : undefined,
   }),
   component: PlaygroundRoute,
 });
