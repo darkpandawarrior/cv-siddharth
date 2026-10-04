@@ -1,13 +1,8 @@
 /**
- * The Sangam hub (this lane's own task list, master-plan.md#M17/#M22/#M36/
- * #M56/#M67/#M68): assembles every phase-2 world-v2 piece — terrain, water,
- * sky, environment, post, the hodi, the growth grammar and its ledger —
- * behind ONE route, `/playground?world=v2` (preview only, `playground.tsx`
- * gates that). Phase-3/4 lanes extend this hub through `layers.ts`/
- * `kits.ts`'s glob registries, never by editing this file.
- *
- * `<Canvas>` is `aria-hidden`; `HudV2` (a DOM sibling, never a child) is the
- * whole accessible surface — the same split `World.tsx` (v1) already uses.
+ * Sangam at /playground. Playground keeps the v1 rollback, capability
+ * gates and concept fallback in the shared shell. Canvas is aria-hidden;
+ * HudV2 is its accessible DOM sibling. Later layers register through the
+ * canvas and HUD globs rather than changing this hub.
  */
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { Canvas } from "@react-three/fiber";
@@ -16,6 +11,7 @@ import { SkyDome } from "./SkyDome.tsx";
 import { Env } from "./Env.tsx";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
+import { LANDMARK_OPENS } from "./landmarkBindings.ts";
 import { Hodi } from "./Hodi.tsx";
 import { Post } from "./Post.tsx";
 import { GrammarInstances, GrammarInstancesDom } from "./GrammarInstances.tsx";
@@ -69,7 +65,8 @@ function previewAtToMinutes(d: Date): number {
   return (utcMinutes + IST_OFFSET_MIN) % 1440;
 }
 
-export default function WorldV2(): JSX.Element {
+export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
+  const arrival = Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0];
   const [previewMinutes, setPreviewMinutes] = useState<number | null>(null);
   const [highlightedRule, setHighlightedRule] = useState<string | null>(null);
   const [lastSeen, setLastSeen] = useState<LastSeen | null>(null);
@@ -128,18 +125,17 @@ export default function WorldV2(): JSX.Element {
   // neither valley.ts nor worldModel.ts owns yet (this lane owns neither) —
   // flagged for whichever lane gives GRAMMAR/spawn a real y = terrainHeight
   // (x, z) call, not patched here with a second, disagreeing height guess.
-  const spawn = useMemo(() => {
-    const daypart = nowModel?.now.sky.daypart ?? "day";
-    const sunAzDeg = nowModel?.raw.sky?.sun.azimuthDeg ?? 90;
-    return spawnPose(daypart, sunAzDeg);
-  }, [nowModel]);
+  const daypart = nowModel?.now.sky.daypart ?? "day";
+  const sunAzDeg = nowModel?.raw.sky?.sun.azimuthDeg ?? 90;
+  const spawn = useMemo(() => spawnPose(daypart, sunAzDeg), [daypart, sunAzDeg]);
+  const camera = useMemo(() => ({ position: spawn.pos, fov: 46, near: 0.3, far: 3000 }), [spawn.pos]);
 
   return (
     <div data-world="v2" className="absolute inset-0">
       <Canvas
         shadows={{ type: PCFSoftShadowMap }}
         dpr={[1, 2]}
-        camera={{ position: spawn.pos, fov: 46, near: 0.3, far: 3000 }}
+        camera={camera}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         aria-hidden="true"
       >
@@ -149,7 +145,7 @@ export default function WorldV2(): JSX.Element {
         <Env />
         <Terrain />
         <Water />
-        <Hodi spawnZ={spawn.pos[2]} />
+        {nowModel && <Hodi key={at ?? "spawn"} spawnZ={spawn.pos[2]} arrival={arrival} />}
         {wm && <GrammarInstances worldModel={wm} highlightedRule={highlightedRule} />}
         {CANVAS_LAYERS.map((layer) => (
           <layer.Component key={layer.id} />
@@ -171,7 +167,7 @@ export default function WorldV2(): JSX.Element {
           HudV2's own LandmarkList is already the accessible content this
           heads (a visually hidden list of real, Tab-reachable buttons); this
           just gives it — and the page — a name. */}
-      <h1 className="sr-only">Sangam — the growth model, drawn from real activity</h1>
+      <h1 className="sr-only">Sangam, the growth model drawn from real activity</h1>
 
       {sections && (
         <HudV2

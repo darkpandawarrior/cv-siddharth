@@ -1,7 +1,7 @@
 {
-  "$comment": "The site's own public echo of the claim-audit discipline it names in profile.ts and README.md. This is NOT the private audit database (that lives outside this repo, at AgentHarness/skills/claim-audit/claims.json, and is never committed here) — it is a small, hand-reviewed ledger of the numbers src/data/source/answers.ts cites, so a visitor (or a crawler) can see that 'quotable' also means 'checked', not just take it on faith. Every entry below interpolates its number from src/data/profile.ts rather than restating it — see answers.ts's own header for why.",
+  "$comment": "A public record of the evidence checks described in profile.ts and README.md. A private audit database outside this repo runs the checks. This reviewed ledger carries the numbers src/data/source/answers.ts cites, so visitors can see which claims were checked. Each entry follows src/data/profile.ts as its source.",
   "lastAudited": "2026-09-26",
-  "auditedWith": "node ~/Tools/DevTools/AgentHarness/skills/claim-audit/audit.mjs (private tooling; not part of this repo's CI)",
+  "auditedWith": "private tooling; not part of this repo CI",
   "claims": [
     { "claim": "50k+ monthly active users, 22k+ daily", "source": "profile.ts metrics[0]", "status": "verified" },
     { "claim": "GPS accuracy 50% -> 95% via predictive dead reckoning", "source": "profile.ts metrics[1]", "status": "verified" },

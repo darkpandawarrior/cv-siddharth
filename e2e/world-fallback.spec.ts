@@ -21,7 +21,7 @@ test.describe("the static corridor, for visitors who never see it move", () => {
   });
 
   test("a reduced-motion visitor gets the baked corridor, not a blank branch", async ({ page }) => {
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     // The list branch is what reduced-motion resolves to; the plate sits above
     // the room grid, which remains the navigation.
     const plate = page.locator('img[src*="corridor"]');
@@ -46,7 +46,7 @@ test.describe("the static corridor, for visitors who never see it move", () => {
 
   test("does not silently clip at 390px", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     await page.locator('img[src*="corridor"]').waitFor();
     const over = await page.evaluate(() => {
       const limit = document.documentElement.clientWidth;

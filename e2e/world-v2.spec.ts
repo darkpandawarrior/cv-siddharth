@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync, existsSync, rmSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { dirname, join } from "node:path";
@@ -13,6 +14,10 @@ import { landOf } from "../src/world/v2/worldModel.ts";
  * IST clock. Every /api/* WorldV2 (via useNowModel.ts) can reach is routed
  * here — nothing in this file hits a real network.
  */
+
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = (name: string): unknown => JSON.parse(readFileSync(join(ROOT, "e2e", "fixtures", name), "utf8"));
@@ -63,7 +68,7 @@ async function gotoWorldV2(page: Page): Promise<void> {
   // it visually sits on top of the Reality ledger (also centred) and would
   // intercept the ledger row hover/click below.
   await page.addInitScript(() => localStorage.setItem("playground:v2:onboarded", "1"));
-  await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+  await page.goto("/playground?world=v2", { waitUntil: "domcontentloaded" });
   await waitForHydration(page);
   // Scoped to WorldV2's own root: the site's global chrome (the anomaly
   // rail's 2D canvas, mounted on every route per playground-world.spec.ts's
@@ -72,7 +77,7 @@ async function gotoWorldV2(page: Page): Promise<void> {
   await expect(page.locator("[data-world='v2'] canvas")).toHaveCount(1, { timeout: 15_000 });
 }
 
-test.describe("WorldV2 hub (P2-19, preview only)", () => {
+test.describe("WorldV2 hub (Sangam)", () => {
   test("renders data-world='v2' and mounts exactly one WebGL canvas", async ({ page }) => {
     await gotoWorldV2(page);
     await expect(page.locator("[data-world='v2']")).toHaveCount(1);
@@ -139,7 +144,7 @@ test.describe("WorldV2 hub (P2-19, preview only)", () => {
     await page.clock.setFixedTime(new Date(NOON_IST));
     // Deliberately NOT gotoWorldV2 here — this test wants the truly first-run
     // state gotoWorldV2's own pre-dismiss (above) skips for every other test.
-    await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+    await page.goto("/playground?world=v2", { waitUntil: "domcontentloaded" });
     await waitForHydration(page);
     await expect(page.locator("[data-world='v2'] canvas")).toHaveCount(1, { timeout: 15_000 });
 
@@ -152,12 +157,12 @@ test.describe("WorldV2 hub (P2-19, preview only)", () => {
     expect(await page.evaluate(() => localStorage.getItem("playground:v2:onboarded"))).toBe("1");
 
     // Reload: a visitor who has already seen it doesn't see it again.
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
     await waitForHydration(page);
     await expect(page.getByRole("button", { name: "Got it" })).toHaveCount(0);
   });
 
-  test("a production build of the SAME route gates world=v2 back to v1 (data-world='v1')", async () => {
+  test("a production build keeps world=v1 reachable and defaults to v2", async () => {
     // A genuinely separate, scratch production build (VITE_VERCEL_ENV set),
     // never touching the shared preview `dist/` the rest of this file's
     // webServer serves from — that server keeps running unaffected by this
@@ -188,11 +193,18 @@ test.describe("WorldV2 hub (P2-19, preview only)", () => {
 
       const serverEntry = pathToFileURL(join(absOutDir, "server", "server.js")).href;
       const mod = (await import(serverEntry)) as { default: { fetch(req: Request): Promise<Response> } };
-      const response = await mod.default.fetch(new Request("http://localhost/playground?world=v2"));
+      const response = await mod.default.fetch(new Request("http://localhost/playground?world=v1"));
       const html = await response.text();
       expect(response.status).toBe(200);
       expect(html).toContain('data-world="v1"');
       expect(html).not.toContain('data-world="v2"');
+      const defaultResponse = await mod.default.fetch(new Request("http://localhost/playground"));
+      const defaultHtml = await defaultResponse.text();
+      expect(defaultResponse.status).toBe(200);
+      expect(defaultHtml).toContain('data-world="v2"');
+      expect(defaultHtml).not.toContain('data-world="v1"');
+      expect(defaultHtml).toContain("01-golden-spawn");
+
     } finally {
       rmSync(absOutDir, { recursive: true, force: true });
     }

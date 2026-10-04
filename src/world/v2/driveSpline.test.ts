@@ -127,3 +127,34 @@ describe("driveSpline: C1 autopilot stays on the spline", () => {
     expect(maxDistance).toBeGreaterThanOrEqual(0);
   });
 });
+
+
+describe("arrival mooring", () => {
+  it("every landmark entry resolves to a finite position and legal mooring", async () => {
+    const { landmarkPositions } = await import("./layers/LandmarksApps.tsx");
+    const { LANDMARK_OPENS } = await import("./landmarkBindings.ts");
+    const { mooredStateAt } = await import("./Hodi.tsx");
+    const positions = landmarkPositions();
+    for (const slug of Object.keys(LANDMARK_OPENS)) {
+      const target = positions[slug];
+      expect(target, slug).toBeDefined();
+      expect(target.every(Number.isFinite), slug).toBe(true);
+      const pose = mooredStateAt({ x: target[0], z: target[2] });
+      expect(isInsidePolygon(pose.x, pose.z), slug).toBe(true);
+    }
+  });
+
+  it("moors beside the landmark inside legal water without idle drift", async () => {
+    const { mooredStateAt } = await import("./Hodi.tsx");
+    const { districtAnchors, sangamBasin, riverX, riverWidthAtZ } = await import("./valley.ts");
+    const target = districtAnchors(["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template", "portfolio", "stutter", "sinc-p"])[0];
+    const pose = mooredStateAt(target);
+    const basin = sangamBasin();
+    const inRiver = Math.abs(pose.x - riverX(pose.z)) < riverWidthAtZ(pose.z) / 2;
+    const inBasin = Math.hypot(pose.x - basin.x, pose.z - basin.z) < basin.r;
+    expect(inRiver || inBasin).toBe(true);
+    expect(Math.hypot(pose.x - target.x, pose.z - target.z)).toBeLessThan(95);
+    expect(pose.speed).toBe(0);
+    expect(pose.autopilot).toBe(false);
+  });
+});

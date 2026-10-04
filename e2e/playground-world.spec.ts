@@ -1,5 +1,10 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { type Page } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 // The design doc's second constraint is the one this file exists to pin:
 // "Navigation must survive without WebGL. A hub whose only affordance is a
@@ -60,7 +65,7 @@ test.describe("playground world — no WebGL", () => {
     // reads as a swallowed click on whichever room the race happens to hit,
     // not consistently the first or last one. networkidle waits out that
     // second, chunk-loaded swap before the loop below ever clicks.
-    await page.goto("/playground", { waitUntil: "networkidle" });
+    await page.goto("/playground?world=v1", { waitUntil: "networkidle" });
     await waitForHydration(page);
 
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
@@ -82,7 +87,7 @@ test.describe("playground world — no WebGL", () => {
       // a stronger reachability check than the URL alone, since it fails if a
       // route resolves but renders the wrong (or an error) screen.
       await expect(page.locator("h1")).toContainText(new RegExp(room.label, "i"));
-      await page.goto("/playground", { waitUntil: "networkidle" });
+      await page.goto("/playground?world=v1", { waitUntil: "networkidle" });
       await waitForHydration(page);
     }
   });
@@ -95,7 +100,7 @@ test.describe("playground world — List view toggle", () => {
     // prove the choice survives a reload. Alone it is comfortable; in a full
     // run it exceeds the default budget. The cost is real, so it is declared.
     test.slow();
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
 
     // WebGL is available in this test environment (SwiftShader), so the
     // world mounts by default. Confirming that first means the assertions
@@ -143,7 +148,7 @@ test.describe("playground world — List view toggle", () => {
 
 test.describe("playground world — print", () => {
   test("print media hides the canvas and prints the room grid instead", async ({ page }) => {
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     // 20s, not the 5s default. This is a lazy chunk that pulls Rapier's
     // ~816kB WASM physics engine and then builds the scene; measured cold in
     // preview it reaches first canvas in ~5.2s, which sits right on the
@@ -170,4 +175,22 @@ test.describe("playground world — print", () => {
       await expect(page.getByRole("link", { name: new RegExp(room.label, "i") })).toBeVisible();
     }
   });
+});
+
+
+test("the wipe never intercepts a click during or after the switch at 390", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/playground?world=v1");
+  await waitForHydration(page);
+  const list = page.getByRole("button", { name: "List view" });
+  await expect(list).toBeVisible();
+  await list.click();
+  const wipe = page.locator("[data-spine='playground-wipe']");
+  await expect(wipe).toHaveCSS("pointer-events", "none");
+  await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
+  await expect(wipe).not.toHaveClass(/is-active/);
+  expect(await wipe.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === element;
+  })).toBe(false);
 });

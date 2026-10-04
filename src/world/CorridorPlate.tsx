@@ -1,48 +1,60 @@
 import type { JSX } from "react";
-import { ClientOnly } from "@tanstack/react-router";
+import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 import { corridorPlateMeta } from "./corridorPlate.ts";
 import { heavy } from "../lib/assetBase.ts";
 import LiveLitMapOverlay from "./LiveLitMapOverlay.tsx";
 
+import { useSky, useWeather } from "../lib/useSky.ts";
+import { pickConceptPlate } from "./v2/conceptPlates.ts";
+import { activeFestivalForm } from "./v2/live/nightSky.ts";
+import { ledger } from "./v2/ledger.ts";
+import { LANDMARK_OPENS } from "./v2/landmarkBindings.ts";
+import { landOf } from "./v2/worldModel.ts";
+import { riverRow, weatherRow } from "../lib/ledgerText.ts";
+import { landmarksFromFeatures } from "./v2/hud/LandmarkList.tsx";
+
+const FALLBACK_FEATURES = landOf(ledger);
+
 /**
- * NIGHT SURVEY §11 — THE STATIC FALLBACK, the DOM half.
+ * NIGHT SURVEY §11, THE STATIC FALLBACK, the DOM half.
  *
  * `heavy/p/world/corridor.png` (`scripts/gen-world-plate.mjs`'s own doc
  * comment explains what it honestly is and isn't) is the terrain; this
  * component is everything §11 asks to sit ON TOP of it "in the DOM": the 8
  * year rules and the 4 lane monograms, both driven by the same committed
- * `corridorPlateMeta` the generator wrote — so neither this file nor the
+ * `corridorPlateMeta` the generator wrote, so neither this file nor the
  * baked image can drift from the other's numbers.
  *
  * Rendered by `src/Playground.tsx`'s `!worldCapable` branch, above the room
- * grid rather than instead of it — the grid is still the navigation, this is
+ * grid rather than instead of it, the grid is still the navigation, this is
  * the terrain those visitors would otherwise never see. `e2e/world-fallback`
  * covers it, and note the trap recorded there: Playwright's
  * `test.use({ reducedMotion })` does not reach matchMedia, so a test written
  * with it passes while exercising the 3D branch instead of this one.
  *
- * Alt text names the four strands and the date range — description, not
+ * Alt text names the four strands and the date range, description, not
  * metaphor exposition (§11's own line, and this world's project law 1).
  *
  * §11's other named gap, closed: the shared lit-map overlay. Its own doc
  * comment used to end here because litMap.ts said "NOT wired to playhtml
- * yet" — there was nothing real to show. Now that it is (litMap.ts's
+ * yet", there was nothing real to show. Now that it is (litMap.ts's
  * `useLitMapRemoteSync`), `LiveLitMapOverlay.tsx` reads the SAME shared
  * channel (a driving tab's own live position, not the full accumulated
- * texture — see that file's "SHARED-STATE SEAM" comment for why only
+ * texture, see that file's "SHARED-STATE SEAM" comment for why only
  * sparse stamps are ever broadcast) and marks each live driver as a small
- * dot on the static image. Not literally "burned into the plate" — a
+ * dot on the static image. Not literally "burned into the plate", a
  * build-time PNG cannot embed a runtime value that doesn't exist yet at
  * build time, which is exactly the honesty problem gen-world-plate.mjs's
- * own comment named — but a genuinely live signal on the fallback, sourced
+ * own comment named, but a genuinely live signal on the fallback, sourced
  * from the real shared record, is what that gap was actually asking to
  * close. Wrapped in `<ClientOnly>` rather than rendered directly here,
  * because THIS component server-renders (see below) and `@playhtml/react`
- * does not survive that — see LiveLitMapOverlay.tsx's own doc comment.
+ * does not survive that, see LiveLitMapOverlay.tsx's own doc comment.
  * `<ClientOnly>` is what Start's compiler recognises to strip this subtree
- * from the SERVER compile entirely — a runtime-only hydration flag alone
+ * from the SERVER compile entirely, a runtime-only hydration flag alone
  * does not keep the bundler from resolving the import for SSR regardless.
  * The `<Hydrate when={load()} split>` inside it is what keeps the import
  * itself lazy (its own chunk, fetched once this boundary is reached) now
@@ -54,20 +66,20 @@ import LiveLitMapOverlay from "./LiveLitMapOverlay.tsx";
  * whole list branch, and the largest cohort there is someone whose browser
  * runs WebGL perfectly well and chose the list anyway. Telling that reader
  * their browser cannot do something it can is a false claim in the one string
- * a screen-reader user is given instead of the image — on a site whose whole
+ * a screen-reader user is given instead of the image, on a site whose whole
  * argument is that a claim has to stay true. The alt now describes what the
  * picture IS and leaves the reason to the branch that actually knows it.
  */
 export function CorridorPlate(): JSX.Element {
   const meta = corridorPlateMeta;
   const laneNames = meta.lanes.map((l) => l.label).join(", ");
-  const alt = `A terrain chart of four tracked strands of work — ${laneNames} — from ${meta.from} to ${meta.to}, baked as a static image from the same heightfield the drivable 3D version is built on.`;
+  const alt = `A terrain chart of four tracked strands of work, ${laneNames}, from ${meta.from} to ${meta.to}, baked as a static image from the same heightfield the drivable 3D version is built on.`;
 
   return (
     <div className="relative w-full overflow-hidden rounded-2xl border border-line bg-ink" style={{ aspectRatio: `${meta.width} / ${meta.height}` }}>
       <img src={heavy("/p/world/corridor.png")} alt={alt} className="absolute inset-0 h-full w-full object-cover" />
 
-      {/* The 8 year rules — one vertical line per real year boundary,
+      {/* The 8 year rules, one vertical line per real year boundary,
           at the exact fraction gen-world-plate.mjs computed off the same
           CITY.z0/MONTH_DEPTH the live ground shader's own year seams use. */}
       <svg
@@ -86,7 +98,7 @@ export function CorridorPlate(): JSX.Element {
             stroke="#e8efe9"
             strokeOpacity={0.55}
             // A hairline in image-fraction units would be invisible at a
-            // small render size and a solid bar at a large one —
+            // small render size and a solid bar at a large one,
             // vector-effect keeps it a constant ~1px regardless of how much
             // the SVG itself gets scaled by the aspect-ratio box above.
             strokeWidth={1}
@@ -95,10 +107,10 @@ export function CorridorPlate(): JSX.Element {
         ))}
       </svg>
 
-      {/* §11's live overlay — every other tab's most recent driving position
+      {/* §11's live overlay, every other tab's most recent driving position
           on the shared channel litMapSyncChannel.ts names, plotted as a
           small dot. No accumulated trail here (this fallback never
-          accumulates its own record — see this file's own doc comment on
+          accumulates its own record, see this file's own doc comment on
           why only sparse live positions are ever shared). Nothing renders
           here at all on the server, which is correct: the shared state it
           would show does not exist there either. */}
@@ -108,7 +120,7 @@ export function CorridorPlate(): JSX.Element {
         </Hydrate>
       </ClientOnly>
 
-      {/* Year numerals, one per rule — plain positioned text rather than
+      {/* Year numerals, one per rule, plain positioned text rather than
           SVG glyphs inside a 0..1 viewBox, so font size is a real CSS
           value at every viewport rather than a fraction that would need
           re-deriving per breakpoint. */}
@@ -134,6 +146,55 @@ export function CorridorPlate(): JSX.Element {
           {l.label}
         </span>
       ))}
+    </div>
+  );
+}
+
+
+/** The painting describes the scene; the model below carries its data. */
+export function ConceptFallback({ at }: { at?: string }): JSX.Element {
+  const sky = useSky();
+  const weather = useWeather();
+  // Both SSR and the first client render use the golden frame.
+  const plate = pickConceptPlate({
+    daypart: sky?.daypart ?? "day",
+    precipMmH: sky ? weather.weather?.precipMmH ?? null : null,
+    rain6hMm: sky ? weather.rain6hMm : null,
+    festival: sky ? activeFestivalForm(sky.now)?.slug ?? null : null,
+  });
+  const landmarks = landmarksFromFeatures(FALLBACK_FEATURES);
+
+  return (
+    <div data-world="v2" data-concept-fallback data-at={at} className="mt-4 space-y-6">
+      <figure>
+        <img src={plate.src} srcSet={plate.srcSet} sizes="(max-width: 768px) 100vw, 1152px" alt={plate.alt}
+          className="aspect-video w-full rounded-2xl object-cover" />
+        <figcaption className="mt-2 text-sm text-muted">{plate.caption}</figcaption>
+      </figure>
+      <section aria-label="Landmarks in this world">
+        <h2 className="font-display text-xl">Landmarks</h2>
+        <ul className="mt-2 flex flex-wrap gap-4">
+          {landmarks.map((landmark) => (
+            <li key={landmark.name}>
+              <Link to="/map" search={{ focus: LANDMARK_OPENS[landmark.name]?.target }} className="text-accent underline">
+                {landmark.name.replace(/[-_]/g, " ")}
+              </Link>
+              <ul className="mt-1 space-y-1 text-sm text-muted">
+                {landmark.facets.map((facet) => (
+                  <li key={facet.id}>
+                    {facet.label} <EvidenceChip file="ledger.ts" source="Landmark facets in the world ledger" cadence="undated" />
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section aria-label="Reality readings">
+        <h2 className="font-display text-xl">Reality</h2>
+        <p data-ledger-row="weather" className="mt-2 text-sm text-muted">{weatherRow(weather.weather)} <EvidenceChip file="weather" source="Open-Meteo" cadence="live" live={{ at: weather.weather?.at ?? null, ok: weather.state === "live" }} /></p>
+        <p data-ledger-row="river" className="mt-2 text-sm text-muted">{riverRow(weather.river)} <EvidenceChip file="river" source="GloFAS via Open-Meteo" cadence="modelled" stamp={weather.river?.date} /></p>
+      </section>
     </div>
   );
 }

@@ -41,7 +41,7 @@ async function gotoPlayground(page: Page, at: string): Promise<void> {
   // visitor ledger: the site's own documented persistence, not a test-only
   // seam.
   await page.addInitScript(() => localStorage.setItem("playground:onboarded", "1"));
-  await page.goto("/playground");
+  await page.goto("/playground?world=v1");
   await waitForHydration(page);
   // A reduced-motion visitor with no saved view preference lands on the
   // static corridor/list branch by default (e2e/world-fallback.spec.ts) —
@@ -98,6 +98,7 @@ const NIGHT_LUMA_TOLERANCE = 6;
 const DAY_NIGHT_MARGIN = 8;
 
 test.describe("the Night Survey baseline (M49)", () => {
+  test.beforeEach(async ({ page }) => forceDeviceTier(page, "viewport"));
   test("captures today's night luma at 03:15 with the overcast fixture", async ({ page }, testInfo) => {
     test.slow();
     await mockLiveRoutes(page, WEATHER_OVERCAST);
@@ -133,6 +134,7 @@ test.describe("the Night Survey baseline (M49)", () => {
 });
 
 test.describe("the Reality ledger", () => {
+  test.beforeEach(async ({ page }) => forceDeviceTier(page, "viewport"));
   async function openLedger(page: Page): Promise<void> {
     await page.getByRole("button", { name: "Reality" }).click();
     await expect(page.locator('[role="dialog"][aria-label="Reality ledger"]')).toBeVisible();
@@ -196,20 +198,27 @@ test.describe("the Reality ledger", () => {
 });
 
 test.describe("the You row (sessionRipple, in-memory)", () => {
+  test.beforeEach(async ({ page }) => forceDeviceTier(page, "viewport"));
   test("touching a project then navigating client-side to the world shows it in the ledger", async ({ page }) => {
     await mockLiveRoutes(page, WEATHER_OVERCAST);
     await page.clock.setFixedTime(new Date(NOON));
 
     await page.goto("/project/doori");
     await waitForHydration(page);
+    // The shared header can hydrate before the split project and its visit effect.
+    await page.waitForFunction(() => {
+      const project = document.querySelector(".project-detail");
+      return project && Object.keys(project).some((key) => key.startsWith("__react"));
+    });
+    await page.getByRole("heading", { name: "Doori", level: 1, exact: true }).click();
 
-    // Client-side, not page.goto: sessionRipple's `touched` list is a
-    // module-scope variable (src/lib/sessionRipple.ts's own doc comment),
-    // and a full navigation would reload the JS context and lose it — the
-    // acceptance line's own point. SiteFooter's registry-derived nav is the
-    // one link to /playground present on every route (SiteFooter.tsx).
-    await page.getByRole("link", { name: "The Playground" }).click();
-    await expect(page).toHaveURL(/\/playground$/);
+    // Client navigation preserves the module-scoped touched list. The
+    // public footer now opens v2, so the archive URL goes through history.
+    await page.evaluate(() => {
+      history.pushState({}, "", "/playground?world=v1");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await expect(page).toHaveURL(/\/playground\?world=v1$/);
     await waitForHydration(page);
     await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 
