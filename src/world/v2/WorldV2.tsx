@@ -5,7 +5,8 @@ import { captureDpr } from "./captureControl.ts";
  * HudV2 is its accessible DOM sibling. Later layers register through the
  * canvas and HUD globs rather than changing this hub.
  */
-import { useEffect, useMemo, useState, type JSX } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "react";
+import { subscribeReplay, getReplay, getServerReplay } from "./timelapse.ts";
 import { CaptureControl } from "./CaptureControl.tsx";
 import { Canvas } from "@react-three/fiber";
 import { PCFSoftShadowMap } from "three";
@@ -71,6 +72,7 @@ function previewAtToMinutes(d: Date): number {
 }
 
 export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
+  const replayAsOf = useSyncExternalStore(subscribeReplay, getReplay, getServerReplay);
   const arrival = Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0];
   const [heightmap, setHeightmap] = useState<Heightmap | null>(null);
   useEffect(() => {
@@ -103,8 +105,8 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
 
   const wm = useMemo(() => {
     if (!nowModel) return null;
-    return worldModel(ledger, nowModel.now, you);
-  }, [nowModel, you]);
+    return worldModel(ledger, nowModel.now, you, replayAsOf ?? undefined);
+  }, [nowModel, you, replayAsOf]);
 
   // Writes this visit's own snapshot back for NEXT time, once the model has
   // actually resolved — a write on every render would just restate "now"

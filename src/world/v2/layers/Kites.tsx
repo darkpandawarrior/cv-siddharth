@@ -23,7 +23,8 @@
  * real ones. Claim both forms in kits.ts the day a lane owns that file
  * again; nothing here needs to change for that fix to land.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { subscribeReplay, getReplay, getServerReplay } from "../timelapse.ts";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 import { Html } from "@react-three/drei";
@@ -70,11 +71,11 @@ function slugOf(feature: Feature): string {
   return feature.id.slice(`${feature.rule}:`.length).replace(/^\//, "");
 }
 
-export function buildKites(): KiteInstance[] {
+export function buildKites(asOf?: string): KiteInstance[] {
   const lessons = new Map(ledger.writing.lessons.map((l) => [l.slug, l]));
   const archive = new Map(ledger.writing.archive.map((a) => [a.slug, a]));
   const out: KiteInstance[] = [];
-  for (const f of landOf(ledger)) {
+  for (const f of landOf(ledger, asOf)) {
     if (f.rule !== "lesson-kite" && f.rule !== "archive-kite") continue;
     const kind: KiteKind = f.rule === "lesson-kite" ? "lesson" : "archive";
     const slug = slugOf(f);
@@ -220,7 +221,8 @@ export default function Kites() {
   const [opacity, setOpacity] = useState(0);
   useReveal(true, reducedMotion, setOpacity);
 
-  const all = useMemo(() => buildKites(), []);
+  const replayAsOf = useSyncExternalStore(subscribeReplay, getReplay, getServerReplay);
+  const all = useMemo(() => buildKites(replayAsOf ?? undefined), [replayAsOf]);
   const lessonKites = useMemo(() => all.filter((k) => k.kind === "lesson"), [all]);
   const archiveKites = useMemo(() => all.filter((k) => k.kind === "archive"), [all]);
 
