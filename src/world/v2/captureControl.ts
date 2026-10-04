@@ -1,3 +1,5 @@
+import { SCALE_FLOOR } from "./dynamicResolution.ts";
+
 export type FrameLoop = "always" | "demand" | "never";
 export interface CaptureApi {
   pause(): Promise<void>;
@@ -13,6 +15,11 @@ declare global {
     __WORLD_CAPTURE_TEST__?: boolean;
     __WORLD_CAPTURE__?: CaptureApi;
   }
+}
+
+/** Keep CSS and screenshot dimensions while reducing test-only GPU work. */
+export function captureDpr(host: CaptureHost): [number, number] {
+  return host.__WORLD_CAPTURE_TEST__ === true ? [SCALE_FLOOR, SCALE_FLOOR] : [1, 2];
 }
 
 /** Only Playwright opts in. A capture waits for two complete terrain frames. */

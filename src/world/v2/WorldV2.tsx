@@ -1,3 +1,4 @@
+import { captureDpr } from "./captureControl.ts";
 /**
  * Sangam at /playground. Playground keeps the v1 rollback, capability
  * gates and concept fallback in the shared shell. Canvas is aria-hidden;
@@ -133,7 +134,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
     <div data-world="v2" className="absolute inset-0">
       {heightmap && <TerrainSurface value={heightmap}><Canvas
         shadows={{ type: PCFSoftShadowMap }}
-        dpr={[1, 2]}
+        dpr={captureDpr(typeof window === "undefined" ? {} : window)}
         camera={camera}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         aria-hidden="true"

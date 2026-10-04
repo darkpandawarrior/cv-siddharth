@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { installCaptureControl, type CaptureHost, type FrameLoop } from "./captureControl.ts";
+import { captureDpr, installCaptureControl, type CaptureHost, type FrameLoop } from "./captureControl.ts";
 
 test("production installs no capture API and never changes the frame loop", () => {
   for (const host of [{}, { __WORLD_CAPTURE_TEST__: false }] as CaptureHost[]) {
@@ -8,6 +8,12 @@ test("production installs no capture API and never changes the frame loop", () =
     expect(host.__WORLD_CAPTURE__).toBeUndefined();
     expect(setMode).not.toHaveBeenCalled();
   }
+});
+
+test("render scale is off by default and production DPR stays [1,2]", () => {
+  expect(captureDpr({})).toEqual([1, 2]);
+  expect(captureDpr({ __WORLD_CAPTURE_TEST__: false })).toEqual([1, 2]);
+  expect(captureDpr({ __WORLD_CAPTURE_TEST__: true })).toEqual([0.72, 0.72]);
 });
 
 test.each(["always", "demand"] as const)("capture waits for terrain frames and restores %s", async (initial) => {

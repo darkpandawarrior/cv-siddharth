@@ -1,3 +1,4 @@
+import { enableWorldCapture } from "./lib/worldCapture.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync, existsSync, rmSync } from "node:fs";
 import { execSync } from "node:child_process";
@@ -100,6 +101,7 @@ test.describe("WorldV2 hub (Sangam)", () => {
   });
 
   test("hovering the PR-stone ledger row sets data-highlighted on its bound instances", async ({ page }) => {
+    await enableWorldCapture(page);
     await gotoWorldV2(page);
     const row = page.locator("[data-ledger-row='pr-stone']");
     // The ledger opens on the `R` key (LedgerPanel/HudV2's own toggle).
