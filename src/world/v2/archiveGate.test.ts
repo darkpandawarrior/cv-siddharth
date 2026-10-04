@@ -29,8 +29,8 @@ it("preserves all ordinary route search targets and rejects unknown targets", as
   const { NODES } = await import("../../data/storyMap.ts");
   const validate = Route.options.validateSearch;
   if (typeof validate !== "function") throw new Error("Expected route search validator");
-  for (const node of NODES) expect(validate({ at: node.id }).at).toBe(node.id);
-  expect(validate({ at: "source-spring" }).at).toBe("source-spring");
-  expect(validate({ at: "unknown-arrival" }).at).toBeUndefined();
-  expect(validate({ at: 42 }).at).toBeUndefined();
+  for (const node of NODES) expect(validate({ at: node.id })).toMatchObject({ at: node.id });
+  expect(validate({ at: "source-spring" })).toMatchObject({ at: "source-spring" });
+  expect(validate({ at: "unknown-arrival" })).toMatchObject({ at: undefined });
+  expect(validate({ at: 42 })).toMatchObject({ at: undefined });
 });
