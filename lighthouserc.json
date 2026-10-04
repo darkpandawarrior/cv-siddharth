@@ -114,7 +114,12 @@
         "http://localhost:4173/pulse",
         "http://localhost:4173/ink",
         "http://localhost:4173/excelsior",
-        "http://localhost:4173/loopdown"
+        "http://localhost:4173/loopdown",
+        "http://localhost:4173/lanes",
+        "http://localhost:4173/time-machine",
+        "http://localhost:4173/project/sinc-p",
+        "http://localhost:4173/read/deadline",
+        "http://localhost:4173/does-not-exist"
       ],
       "numberOfRuns": 3
     },

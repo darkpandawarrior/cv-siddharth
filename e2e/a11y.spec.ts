@@ -1,41 +1,12 @@
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { surfacePaths } from "../src/data/routes.ts";
+import { surfaces } from "../src/data/surfaces.ts";
+import { projects } from "../src/data/profile.ts";
 import { siteRooms } from "../src/data/surfaces.ts";
 
-// Phase C2: axe locks in the a11y pass instead of just documenting it.
-// Four routes cover every layout shape on the site — SSR content page (/),
-// print-mode page (/resume), SSR project detail with a gallery/lightbox
-// (/project/doori), and a CSR "room" with canvas + form controls (/lab).
-// 2026-07-29 audit: extended to the remaining CSR "rooms" (terminal, blueprint,
-// compose, forge, map, playground, loopdown) — the original four never scanned
-// any of these, so their ARIA/keyboard wiring shipped unverified like the chat
-// console did before the dedicated test below was added.
-/**
- * Every scannable route, derived rather than listed.
- *
- * This was a hand-kept array, and it had drifted exactly the way hand-kept
- * arrays do: /excelsior, /ink and /shipped were all live routes that nothing
- * ever scanned. Each one is a real page a recruiter can land on, and each was
- * shipping unverified — /ink in particular carries `--color-accent2` (#cf8f63)
- * on the ink-world ground, a pairing that had never been contrast-checked at
- * body weight.
- *
- * Taking the paths from the surfaces registry means adding a surface widens
- * this gate automatically, and `src/data/surfaces.test.ts` already fails the
- * build if a route file exists with no surface. So a new route cannot be
- * unscanned without two separate gates going red first.
- *
- * The two `$param` routes are not surfaces — they need a concrete param to
- * render — so they stay explicit, one representative each.
- */
-const ROUTES = [
-  "/",
-  "/read/deadline",
-  "/project/doori",
-  ...surfacePaths,
-];
+// Match the spine crawl, including every project and the 404.
+const ROUTES = [...new Set(["/", ...surfaces.map((s) => s.to), ...projects.map((p) => `/project/${p.slug}`), "/read/deadline", "/does-not-exist"])];
 
 /* The reveal animations on the card grids fade in from transparent, and axe
  * computes contrast from whatever colour an element happens to have at the
@@ -170,51 +141,60 @@ async function scanWithRetry(page: Page) {
 function expectClean(results: Awaited<ReturnType<AxeBuilder["analyze"]>>, label: string) {
   const bad = results.violations.filter((v) => v.impact !== "minor");
   const report = bad
-    .map((v) => `${label} — ${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
+    .map((v) => `${label}: ${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(" ")).join("\n  ")}`)
     .join("\n\n");
   expect(bad, report).toEqual([]);
 }
 
-/**
- * MOBILE. The suite only ever scanned Playwright's default 1280x720, and this
- * site hides text at breakpoints — `hidden sm:inline` on a label leaves an icon
- * button with no accessible name at all below 640px. The nav's "Ask my AI"
- * button shipped exactly that, on every route, and axe never saw it because axe
- * never looked at a phone. Lighthouse (which emulates a Moto G) found it in one
- * run against the live site.
- *
- * It ran over a hand-picked three routes ("/", "/hire", "/lab") against the
- * twenty-two the desktop loop covers, and that list drifted exactly the way the
- * old hand-kept ROUTES array did: /chess ships a mobile-only
- * scrollable-region-focusable violation that no chosen route could ever see.
- * So the two loops are one nested loop now — same body, one extra
- * setViewportSize — and adding a surface widens both widths at once.
- */
-const MOBILE = { width: 390, height: 844 };
 const VIEWPORTS = [
-  { name: "desktop", size: null },
-  { name: `${MOBILE.width}px`, size: MOBILE },
+  { name: "1440", size: { width: 1440, height: 900 } },
+  { name: "390", size: { width: 390, height: 844 } },
 ];
+
+async function prepareScan(page: Page, path: string) {
+  await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
+  // Exercise the documented unavailable state without depending on live APIs.
+  await page.route("**/api/**", (route) => route.fulfill({
+    status: 503, contentType: "application/json", body: JSON.stringify({ ok: false, error: "audit fixture unavailable" }),
+  }));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(path, { waitUntil: "domcontentloaded" });
+  await page.locator("main").first().waitFor({ state: "attached" });
+  await waitForHydration(page);
+  await page.addStyleTag({ content: SETTLE_ANIMATIONS });
+  await page.evaluate(() => document.fonts.ready);
+}
 
 for (const v of VIEWPORTS) {
   for (const path of ROUTES) {
-    test(`${path} has no axe violations (${v.name})`, async ({ page }) => {
-      if (v.size) await page.setViewportSize(v.size);
-      // page.emulateMedia, not test.use({ reducedMotion }) — world-fallback.spec.ts
-      // already found the context option silently fails to reach matchMedia
-      // here. Every WebGL room's reduced-motion branch (the one a screen
-      // reader and a motion-sensitive visitor both land on) was otherwise
-      // never the branch this sweep actually scanned.
-      await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto(path, { waitUntil: "domcontentloaded" });
-      await page.addStyleTag({ content: SETTLE_ANIMATIONS });
-      // Let the route's client render land before scanning it.
-      await page.waitForSelector("#main-content", { state: "attached" });
-      await page.waitForTimeout(1500);
-      expectClean(await scanWithRetry(page), `${path} (${v.name})`);
+    test(`${path} has no axe violations (${v.name})`, async ({ page }, testInfo) => {
+      await page.setViewportSize(v.size);
+      await prepareScan(page, path);
+      // Only DOM chrome is scanned; no canvas pixels or animation frames are awaited.
+      const results = await scanWithRetry(page);
+      await testInfo.attach("axe-audit", {
+        body: JSON.stringify({ route: path, viewport: v.name, violations: results.violations, incomplete: results.incomplete }),
+        contentType: "application/json",
+      });
+      expectClean(results, `${path} (${v.name})`);
     });
   }
 }
+
+// AXE_BREAK_IT=1 exposes the real failing verdict for the broker's negative run.
+test("break-it: an injected unlabelled button fails axe", async ({ page }) => {
+  await prepareScan(page, "/");
+  await page.evaluate(() => {
+    const button = document.createElement("button");
+    button.id = "axe-break-it";
+    button.style.cssText = "position:fixed;top:100px;left:100px;width:48px;height:48px;z-index:9999";
+    document.querySelector("main")!.append(button);
+  });
+  const results = await scanWithRetry(page);
+  expect(results.violations.some((v) => v.id === "button-name" && v.nodes.some((n) => n.target.includes("#axe-break-it")))).toBe(true);
+  if (process.env.AXE_BREAK_IT === "1") expectClean(results, "injected unlabelled button");
+  else expect(() => expectClean(results, "injected unlabelled button")).toThrow();
+});
 
 // The chat console is closed on load, so the loop above never sees it — its
 // combobox/listbox wiring (aria-expanded, aria-controls, aria-activedescendant,
