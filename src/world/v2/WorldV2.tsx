@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { Canvas } from "@react-three/fiber";
 import { PCFSoftShadowMap } from "three";
+import { skyLighting } from "./skyLighting.ts";
 import { SkyDome } from "./SkyDome.tsx";
 import { Env } from "./Env.tsx";
 import { Terrain } from "./Terrain.tsx";
@@ -120,6 +121,8 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
     return buildLedgerSections(wm.rows, nowModel.raw);
   }, [wm, nowModel]);
 
+  const lighting = useMemo(() => skyLighting(nowModel?.raw.sky ?? null), [nowModel?.raw.sky]);
+
   const daypart = nowModel?.now.sky.daypart ?? "day";
   const sunAzDeg = nowModel?.raw.sky?.sun.azimuthDeg ?? 90;
   const spawn = useMemo(() => spawnPose(daypart, sunAzDeg, heightmap ? (x, z) => terrainHeight(x, z, heightmap) : undefined), [daypart, sunAzDeg, heightmap]);
@@ -135,9 +138,9 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
         aria-hidden="true"
       >
         <ambientLight intensity={0.4} />
-        <directionalLight castShadow position={[40, 80, 40]} intensity={1.1} />
-        <SkyDome />
-        <Env />
+        <directionalLight castShadow position={[40, 80, 40]} intensity={lighting.intensity} color={[lighting.color.x, lighting.color.y, lighting.color.z]} />
+        <SkyDome uniforms={lighting.uniforms} />
+        <Env uniforms={lighting.uniforms} />
         <Terrain heightmap={heightmap} />
         <Water />
         {nowModel && <Hodi key={at ?? "spawn"} spawnZ={spawn.pos[2]} arrival={arrival} />}
