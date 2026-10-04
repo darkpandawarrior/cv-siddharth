@@ -2,24 +2,24 @@
 // Numbers are derived from each app repo's settings.gradle.kts + Room DB over
 // raw.githubusercontent, plus a local sibling-checkout scan for the KMP
 // substitution/adoption fields (candidai's repo is private and can only ever
-// be read locally — see the module docstring). candidai/portfolio's own
+// be read locally, see the module docstring). candidai/portfolio's own
 // composedModules/substitutedModules live in the separate kmpAdoption export
-// below, not on projectStats itself — see the module docstring for why.
+// below, not on projectStats itself, see the module docstring for why.
 // Run `npm run gen:stats` to refresh.
 export const projectStats = {
   "foundation": {
-    "modules": 43,
+    "modules": 46,
     "providerModules": 20,
     "conventionPlugins": 18
   },
   "doori": {
     "modules": 36,
-    "composedModules": 13,
+    "composedModules": 16,
     "features": 13,
     "cores": 12,
-    "dbVersion": 48,
-    "screenshots": 372,
-    "schemaVersion": 48,
+    "dbVersion": 49,
+    "screenshots": 376,
+    "schemaVersion": 49,
     "substitutedModules": [
       "location",
       "common",
@@ -28,7 +28,10 @@ export const projectStats = {
       "mvi-core",
       "result",
       "app-shell",
+      "app-shell-location-gms",
       "ai",
+      "ai-mlkit",
+      "designsystem-wallet-gms",
       "ai-testing",
       "security",
       "settings",
@@ -98,7 +101,7 @@ export const projectStats = {
     ]
   }
 } as const;
-export const projectStatsGeneratedAt = "2026-09-25";
+export const projectStatsGeneratedAt = "2026-10-04";
 export const kmpAdoption = {
   "candidai": {
     "composedModules": 9,

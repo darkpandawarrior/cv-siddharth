@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-03T12:25:27.538Z",
+  "generatedAt": "2026-10-04T13:12:51.700Z",
   "counts": {
     "year-strata": 8,
     "weir": 4,
@@ -11,7 +11,7 @@
     "firefly": 208,
     "deepmal-niche": 178,
     "benchmark": 53,
-    "site-courses": 24,
+    "site-courses": 25,
     "employer-marker": 2
   },
   "peaks": {
@@ -476,19 +476,19 @@
       "peakAt": "2026-10-02T14:55:38.610Z"
     },
     "river-width:2026-09": {
-      "current": 30.009440641140195,
-      "peak": 30.01081681883764,
-      "peakAt": "2026-10-01T09:42:03.178Z"
+      "current": 30.016312106974574,
+      "peak": 30.016312106974574,
+      "peakAt": "2026-10-04T13:12:51.700Z"
     },
     "river-width:2026-10": {
-      "current": 18.696254917011313,
-      "peak": 18.696254917011313,
-      "peakAt": "2026-10-03T12:25:27.538Z"
+      "current": 19.871992495083497,
+      "peak": 19.871992495083497,
+      "peakAt": "2026-10-04T13:12:51.700Z"
     },
     "district-bench:foundation": {
-      "current": 43,
-      "peak": 43,
-      "peakAt": "2026-09-25"
+      "current": 46,
+      "peak": 46,
+      "peakAt": "2026-10-04T13:12:51.700Z"
     },
     "district-bench:doori": {
       "current": 36,
@@ -556,9 +556,9 @@
       "peakAt": "2026-09-25"
     },
     "landmark-facet:bridge:deckLamps": {
-      "current": 43,
-      "peak": 43,
-      "peakAt": "2026-09-25"
+      "current": 46,
+      "peak": 46,
+      "peakAt": "2026-10-04T13:12:51.700Z"
     },
     "landmark-facet:doori:steps": {
       "current": 13,
