@@ -68,7 +68,7 @@ async function gotoWorldV2(page: Page): Promise<void> {
   // it visually sits on top of the Reality ledger (also centred) and would
   // intercept the ledger row hover/click below.
   await page.addInitScript(() => localStorage.setItem("playground:v2:onboarded", "1"));
-  await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+  await page.goto("/playground?world=v2", { waitUntil: "domcontentloaded" });
   await waitForHydration(page);
   // Scoped to WorldV2's own root: the site's global chrome (the anomaly
   // rail's 2D canvas, mounted on every route per playground-world.spec.ts's
@@ -144,7 +144,7 @@ test.describe("WorldV2 hub (Sangam)", () => {
     await page.clock.setFixedTime(new Date(NOON_IST));
     // Deliberately NOT gotoWorldV2 here — this test wants the truly first-run
     // state gotoWorldV2's own pre-dismiss (above) skips for every other test.
-    await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+    await page.goto("/playground?world=v2", { waitUntil: "domcontentloaded" });
     await waitForHydration(page);
     await expect(page.locator("[data-world='v2'] canvas")).toHaveCount(1, { timeout: 15_000 });
 
@@ -157,7 +157,7 @@ test.describe("WorldV2 hub (Sangam)", () => {
     expect(await page.evaluate(() => localStorage.getItem("playground:v2:onboarded"))).toBe("1");
 
     // Reload: a visitor who has already seen it doesn't see it again.
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
     await waitForHydration(page);
     await expect(page.getByRole("button", { name: "Got it" })).toHaveCount(0);
   });

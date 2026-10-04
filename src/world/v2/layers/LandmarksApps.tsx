@@ -64,14 +64,16 @@ export const layer = { id: "landmarks-apps", order: 30 };
 // scheme; the arc position below is honest layout, just not spec-exact.
 const DISTRICT_IDS = ["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template", "portfolio", "stutter", "sinc-p"] as const;
 
+export function landmarkPositions(): Readonly<Record<string, Vec3>> {
+  const basin = sangamBasin();
+  const anchors = districtAnchors([...DISTRICT_IDS], basin);
+  const byId: Record<string, Vec3> = { bridge: [basin.x, 0, basin.z - basin.r - 6] };
+  for (const a of anchors) byId[a.id] = [a.x, a.y, a.z];
+  return byId;
+}
+
 function useLandmarkPositions(): Readonly<Record<string, Vec3>> {
-  return useMemo(() => {
-    const basin = sangamBasin();
-    const anchors = districtAnchors([...DISTRICT_IDS], basin);
-    const byId: Record<string, Vec3> = { bridge: [basin.x, 0, basin.z - basin.r - 6] };
-    for (const a of anchors) byId[a.id] = [a.x, a.y, a.z];
-    return byId;
-  }, []);
+  return useMemo(landmarkPositions, []);
 }
 
 function openLink(navigate: ReturnType<typeof useNavigate>, link: DetailLink | undefined) {

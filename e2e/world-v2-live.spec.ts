@@ -53,7 +53,7 @@ async function gotoWorldV2(page: Page, at: string, opts: { weather?: unknown; si
   if (opts.reducedMotion) await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => localStorage.setItem("playground:v2:onboarded", "1"));
-  await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+  await page.goto("/playground?world=v2", { waitUntil: "domcontentloaded" });
   await waitForHydration(page);
   if (opts.reducedMotion) {
     const entry = page.getByRole("button", { name: "Enter the valley" });
@@ -212,7 +212,7 @@ test.describe("art direction — the ordering luma probe (M49)", () => {
     const nightLuma = await meanLuma(nightBuf);
 
     await page.clock.setFixedTime(new Date(NOON));
-    await page.reload({ waitUntil: "networkidle" });
+    await page.reload({ waitUntil: "domcontentloaded" });
     await waitForHydration(page);
     await expect(canvas(page)).toHaveCount(1, { timeout: 15_000 });
     await page.waitForTimeout(2000);

@@ -70,7 +70,7 @@ async function gotoWorldV2(page: Page, at: Date | string, weather: unknown = WEA
   await page.clock.setFixedTime(new Date(at));
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => localStorage.setItem("playground:v2:onboarded", "1"));
-  await page.goto("/playground?world=v2", { waitUntil: "networkidle" });
+  await page.goto("/playground?world=v2", { waitUntil: "domcontentloaded" });
   await waitForHydration(page);
   const canvasLocator = page.locator("[data-world='v2'] canvas");
   await expect(canvasLocator).toHaveCount(1, { timeout: 15_000 });

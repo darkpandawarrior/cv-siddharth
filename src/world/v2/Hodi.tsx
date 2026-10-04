@@ -10,6 +10,7 @@ import { spawnState, step, type HodiInput, type HodiState } from "./driveSpline.
 import { attachKeyboard, input } from "../input.ts";
 import { prefersReducedMotion } from "../reducedMotion.ts";
 import { useReducedMotion } from "../../SceneActivity.tsx";
+import { landmarkPositions } from "./layers/LandmarksApps.tsx";
 
 /**
  * THE HODI — world-v2-spec.md §4 "Route and camera". Drives `driveSpline.ts`
@@ -51,6 +52,7 @@ const ORBIT_SPRING_BACK_RATE = 4;
 
 const WATER_Y = 0;
 const DEFAULT_SPAWN_Z = valleyZ("2023-02"); // world-v2-spec §4's spawn-shot z
+const LANDMARK_POSITIONS = landmarkPositions();
 
 const HULL_LENGTH: number = hullProfile.length;
 const HULL_MAX_HALF_BEAM: number = Math.max(...hullProfile.samples.map(([, halfBeam]) => halfBeam));
@@ -75,7 +77,7 @@ export interface HodiProps {
    *  swell rather than a second, independent clock. */
   waveUniforms?: Partial<Record<WaterWaveUniformName, THREE.IUniform<number>>>;
   spawnZ?: number;
-  /** A known landmark scene object, resolved by WorldV2. */
+  /** A known landmark slug, resolved by WorldV2. */
   arrival?: string;
 }
 
@@ -118,13 +120,15 @@ export function mooredStateAt(landmark: { x: number; z: number }): HodiState {
 }
 
 export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps) {
-  const { camera, gl, scene } = useThree();
-  const mooring = useRef({ waiting: !!arrival, held: false, released: false });
-  const landmarkPosition = useRef(new THREE.Vector3());
+  const { camera, gl } = useThree();
+  const arrivalPosition = arrival ? LANDMARK_POSITIONS[arrival] : undefined;
+  const mooring = useRef({ held: !!arrivalPosition, released: false });
   useEffect(() => attachKeyboard(), []);
   const reducedMotionLive = useReducedMotion();
 
-  const hodiStateRef = useRef<HodiState>(spawnState(spawnZ ?? DEFAULT_SPAWN_Z));
+  const hodiStateRef = useRef<HodiState>(arrivalPosition
+    ? mooredStateAt({ x: arrivalPosition[0], z: arrivalPosition[2] })
+    : spawnState(spawnZ ?? DEFAULT_SPAWN_Z));
 
   const groupRef = useRef<THREE.Group>(null!);
   // The permanent ghost MotionPathControls "moves" while a human is driving
@@ -193,7 +197,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
     };
   }, [gl]);
 
-  const flyIn = useRef({ elapsed: 0, done: prefersReducedMotion() });
+  const flyIn = useRef({ elapsed: 0, done: !!arrivalPosition || prefersReducedMotion() });
   const camTarget = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
 
@@ -205,17 +209,6 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
     if (axes.steer !== 0 || axes.throttle !== 0) {
       mooring.current.released = true;
       mooring.current.held = false;
-      mooring.current.waiting = false;
-    }
-    if (mooring.current.waiting && arrival) {
-      const landmark = scene.getObjectByName(`landmark-${arrival}`);
-      if (landmark) {
-        landmark.getWorldPosition(landmarkPosition.current);
-        hodiStateRef.current = mooredStateAt(landmarkPosition.current);
-        mooring.current.waiting = false;
-        mooring.current.held = true;
-        flyIn.current.done = true;
-      }
     }
     const next = mooring.current.held ? hodiStateRef.current
       : step(hodiStateRef.current, axes, dt, { reducedMotion: reduced });
@@ -232,7 +225,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
     gl.domElement.dataset.hodiX = String(next.x);
     gl.domElement.dataset.hodiZ = String(next.z);
     gl.domElement.dataset.hodiMoored = String(mooring.current.held);
-    if (arrival && !mooring.current.waiting && !mooring.current.released) gl.domElement.dataset.hodiAt = arrival;
+    if (arrival && arrivalPosition && !mooring.current.released) gl.domElement.dataset.hodiAt = arrival;
     else delete gl.domElement.dataset.hodiAt;
     const lookAheadZ = clamp01((next.z - zStart) / zSpan + AUTOPILOT_FOCUS_LEAD);
     curve.getPointAt(lookAheadZ, focusObjectRef.current.position);

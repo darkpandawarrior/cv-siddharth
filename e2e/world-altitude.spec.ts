@@ -20,6 +20,10 @@ const NOON = "2026-09-24T12:27:00+05:30";
 const NIGHT = "2026-09-24T03:15:00+05:30";
 
 async function prepare(page: Page, time = NOON, wet = false) {
+  page.on("pageerror", (error) => console.error(`world-altitude page error: ${error.message}`));
+  page.on("console", (message) => {
+    if (message.type() === "error") console.error(`world-altitude console error: ${message.text().slice(0, 1200)}`);
+  });
   await page.clock.setFixedTime(new Date(time));
   await page.addInitScript(() => {
     localStorage.setItem("playground:v2:onboarded", "1");
@@ -75,6 +79,7 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   await prepare(page);
   await page.goto("/map?focus=doori");
   await waitForHydration(page);
+  await expect(page.locator("[data-focused='doori']")).toBeVisible();
   await page.screenshot({ path: `${LANE_DIR}/map-focus-doori.png`, fullPage: true });
   await page.locator("[data-altitude-stop='street']").click();
   await expect(page).toHaveURL(/\/playground\?at=doori$/);
