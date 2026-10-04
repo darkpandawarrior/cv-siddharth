@@ -85,6 +85,10 @@ function audit(page: Page) {
       for (const pseudo of [null, "::before", "::after"]) {
         const motion = pseudo ? getComputedStyle(el, pseudo) : style;
         if (pseudo && (motion.content === "none" || motion.content === "normal")) continue;
+        if (pseudo && motion.content !== '""' && motion.visibility === "visible" && Number(motion.opacity) > 0) {
+          textCount++;
+          if (!typeScale.some((allowed) => near(parseFloat(motion.fontSize), allowed))) fail("font-size", el, `${pseudo} ${motion.fontSize}: ${motion.content}`);
+        }
         const transitions = motion.transitionProperty.split(",").map((s) => s.trim());
         const animations = motion.animationName.split(",").map((s) => s.trim());
         for (const [kind, values, names] of [
