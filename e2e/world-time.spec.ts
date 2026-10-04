@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test, expect } from "./lib/test.ts";
+import type { Page } from "@playwright/test";
+import { skipSoftwareRenderer } from "./lib/gpu.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { ledger } from "../src/world/v2/ledger.ts";
 import { landOf } from "../src/world/v2/worldModel.ts";
@@ -21,8 +23,6 @@ const responses: Record<string, unknown> = {
 
 test.beforeEach(async ({ page }) => {
   await forceDeviceTier(page, 2);
-  await page.clock.install({ time: NOW });
-  await page.clock.pauseAt(new Date(NOW.getTime() + 1000));
   await page.clock.setFixedTime(NOW);
   await page.route("**/api/**", (route) => {
     const name = new URL(route.request().url()).pathname.slice("/api/".length);
@@ -31,8 +31,17 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("playground:v2:onboarded", "1"));
 });
 
-test("replays ledger records, pauses, changes speed and returns to now", async ({ page }) => {
+async function freezeReplayClock(page: Page): Promise<void> {
+  await expect(page.getByRole("button", { name: "Replay from 2017" })).toBeVisible();
+  await page.clock.setSystemTime(NOW);
+  await page.clock.pauseAt(new Date(NOW.getTime() + 1000));
+  await page.clock.setFixedTime(NOW);
+}
+
+test("replays ledger records, pauses, changes speed and returns to now", { tag: "@gpu" }, async ({ page }) => {
+  await skipSoftwareRenderer(page);
   await page.goto("/playground", { waitUntil: "domcontentloaded" });
+  await freezeReplayClock(page);
   await page.getByRole("button", { name: "Replay from 2017" }).click();
   const replay = page.getByRole("region", { name: "Replay ledger" });
   await replay.getByRole("slider", { name: "Replay month" }).fill(String(months.indexOf("2023-04")));
@@ -55,10 +64,12 @@ test("replays ledger records, pauses, changes speed and returns to now", async (
   await expect(replay.getByRole("button", { name: "Replay from 2017" })).toBeVisible();
 });
 
-test("reduced motion never auto-advances and arrow keys step one month", async ({ page }) => {
+test("reduced motion never auto-advances and arrow keys step one month", { tag: "@gpu" }, async ({ page }) => {
+  await skipSoftwareRenderer(page);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/playground", { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: /drive the 3D world instead/ }).click();
+  await page.getByRole("button", { name: "Enter the valley" }).click();
+  await freezeReplayClock(page);
   await page.getByRole("button", { name: "Replay from 2017" }).click();
   const replay = page.getByRole("region", { name: "Replay ledger" });
   const slider = replay.getByRole("slider", { name: "Replay month" });

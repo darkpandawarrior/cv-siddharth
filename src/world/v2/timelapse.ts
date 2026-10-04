@@ -52,3 +52,36 @@ export function stepReplay(asOf: string, direction: -1 | 1, end: string): string
 export function replayInterval(speed: ReplaySpeed): number {
   return 200 / speed;
 }
+
+export type ReplayState = { month: string | null; playing: boolean; speed: ReplaySpeed };
+export type ReplayAction =
+  | { type: "start" | "toggle" | "pause" | "tick" | "now" }
+  | { type: "seek"; month: string }
+  | { type: "speed"; speed: ReplaySpeed }
+  | { type: "key"; key: string };
+
+export function replayRunning(state: ReplayState, reducedMotion: boolean): boolean {
+  return state.playing && !reducedMotion && state.month !== null;
+}
+
+/** The same decisions drive the HUD and its headless verification. */
+export function replayTransition(state: ReplayState, action: ReplayAction, end: string, reducedMotion: boolean): ReplayState {
+  switch (action.type) {
+    case "start": return { ...state, month: REPLAY_START, playing: !reducedMotion };
+    case "now": return { ...state, month: null, playing: false };
+    case "pause": return { ...state, playing: false };
+    case "seek": return { ...state, month: action.month, playing: false };
+    case "speed": return { ...state, speed: action.speed };
+    case "toggle": return state.month === null || reducedMotion
+      ? { ...state, playing: false }
+      : { ...state, month: state.month === end ? REPLAY_START : state.month, playing: !state.playing };
+    case "key": return state.month !== null && ["ArrowLeft", "ArrowRight"].includes(action.key)
+      ? { ...state, month: stepReplay(state.month, action.key === "ArrowLeft" ? -1 : 1, end), playing: false }
+      : state;
+    case "tick": {
+      if (!replayRunning(state, reducedMotion) || state.month === end) return { ...state, playing: false };
+      const month = stepReplay(state.month!, 1, end);
+      return { ...state, month, playing: month !== end };
+    }
+  }
+}

@@ -5,7 +5,7 @@ import { GRAMMAR } from "./grammar.ts";
 import { landOf } from "./worldModel.ts";
 import { futureSlots } from "./futureSlots.ts";
 import { dateZ } from "../city.ts";
-import { getReplay, getServerReplay, setReplay, subscribeReplay, REPLAY_SPEEDS, replayInterval, replayMonths, stepReplay, timelapse } from "./timelapse.ts";
+import { getReplay, getServerReplay, setReplay, subscribeReplay, REPLAY_SPEEDS, replayInterval, replayMonths, stepReplay, timelapse, replayRunning, replayTransition, type ReplayState } from "./timelapse.ts";
 
 const now = new Date("2026-10-04T06:57:00Z");
 afterEach(() => setReplay(null));
@@ -81,5 +81,51 @@ describe("future peg contract", () => {
     source.writing.lessons.push({ title: "Fixture lesson", slug: "fixture-new", created: "2026-10-04", project: "fixture", links: {} });
     const feature = landOf(source).find((f) => f.id === "lesson-kite:/fixture-new")!;
     expect(Math.abs(feature.pos[2] - peg.z)).toBeLessThan(1e-9);
+  });
+});
+
+describe("HUD playback decisions", () => {
+  const end = "2026-10";
+  const paused: ReplayState = { month: "2023-04", playing: false, speed: 1 };
+
+  it("never auto-advances under reduced motion, including when motion changes during playback", () => {
+    const started = replayTransition({ ...paused, month: null }, { type: "start" }, end, true);
+    expect(started).toEqual({ month: "2017-01", playing: false, speed: 1 });
+    expect(replayTransition(paused, { type: "toggle" }, end, true)).toEqual(paused);
+    const playing = { ...paused, playing: true };
+    expect(replayRunning(playing, true)).toBe(false);
+    expect(replayTransition(playing, { type: "tick" }, end, true)).toEqual(paused);
+  });
+
+  it("steps exactly one month with either arrow under reduced motion and pauses playback", () => {
+    const right = replayTransition({ ...paused, playing: true }, { type: "key", key: "ArrowRight" }, end, true);
+    expect(right).toEqual({ ...paused, month: "2023-05" });
+    expect(replayTransition(right, { type: "key", key: "ArrowLeft" }, end, true)).toEqual(paused);
+    expect(replayTransition(paused, { type: "key", key: "Enter" }, end, true)).toEqual(paused);
+  });
+
+  it("advances a playing month and holds the month when paused or at the end", () => {
+    const playing = replayTransition(paused, { type: "toggle" }, end, false);
+    expect(replayRunning(playing, false)).toBe(true);
+    expect(replayTransition(playing, { type: "tick" }, end, false)).toEqual({ ...playing, month: "2023-05" });
+    const stopped = replayTransition(playing, { type: "pause" }, end, false);
+    expect(stopped).toEqual(paused);
+    expect(replayTransition(stopped, { type: "tick" }, end, false)).toEqual(paused);
+    expect(replayTransition({ ...playing, month: end }, { type: "tick" }, end, false)).toEqual({ ...paused, month: end });
+  });
+
+  it("changes speed without moving the selected month and seeks while pausing", () => {
+    const playing = { ...paused, playing: true };
+    for (const speed of REPLAY_SPEEDS) {
+      expect(replayTransition(playing, { type: "speed", speed }, end, false)).toEqual({ ...playing, speed });
+    }
+    expect(replayTransition(playing, { type: "seek", month: "2024-01" }, end, false)).toEqual({ ...paused, month: "2024-01" });
+  });
+
+  it("returns to now by clearing the month and stopping playback", () => {
+    const live = replayTransition({ ...paused, playing: true, speed: 4 }, { type: "now" }, end, false);
+    expect(live).toEqual({ month: null, playing: false, speed: 4 });
+    expect(replayRunning(live, false)).toBe(false);
+    expect(replayTransition(live, { type: "tick" }, end, false)).toEqual(live);
   });
 });
