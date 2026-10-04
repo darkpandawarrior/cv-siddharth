@@ -65,6 +65,7 @@ export const ARCHIVE: ArchiveEntry[] = [{
     "Remove the four v1 specs and the archive entry-point specs added by P4-00.",
     "Remove ArchiveGate.tsx, KonamiArchive.tsx, ArchivePlaque.tsx, archiveGate.ts and archiveGate.test.ts; remove the source-spring arrival expressions and imports in WorldV2.tsx and Hodi.tsx.",
     "Remove e2e/archive-v1.spec.ts and the terminal, palette and hidden source-spring search blocks.",
+    "Delete each file named in ARCHIVED_V1_FILES after the active-import check; retain every shared module listed in carryOver.ts.",
     "Remove this registry row, its markers and the ARCHIVE.md world-v1 section.",
   ],
   archivedAt: "2026-10-04",

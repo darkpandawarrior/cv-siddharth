@@ -1,9 +1,7 @@
 // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
-import { riverSpline } from "./valley.ts";
 
 export const SOURCE_SPRING_ID = "source-spring";
-export function sourceSpringPosition(): [number, number, number] {
-  const start = riverSpline()[0];
+export function sourceSpringPosition(start: { x: number; z: number }): [number, number, number] {
   return [start.x, 0, start.z];
 }
 

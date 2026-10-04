@@ -2,11 +2,12 @@
 import { useEffect } from "react";
 import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import { riverSpline } from "../valley.ts";
 import { input, isInteractiveTarget } from "../../input.ts";
 import { openArchive, shouldOpen, sourceSpringPosition, type ArchiveSample } from "../archiveGate.ts";
 
 export const layer = { id: "archive-gate", order: 75 };
-const spring = sourceSpringPosition();
+const spring = sourceSpringPosition(riverSpline()[0]);
 
 export default function ArchiveGate() {
   const { gl } = useThree();

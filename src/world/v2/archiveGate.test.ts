@@ -19,7 +19,7 @@ describe("archive spring", () => {
   });
   it("uses the spline start without publishing a landmark", () => {
     const start = riverSpline()[0];
-    expect(sourceSpringPosition()).toEqual([start.x, 0, start.z]);
+    expect(sourceSpringPosition(start)).toEqual([start.x, 0, start.z]);
     expect(LANDMARK_OPENS).not.toHaveProperty(SOURCE_SPRING_ID);
   });
 });

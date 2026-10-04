@@ -130,7 +130,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
   const heightAt = useTerrainHeight();
   const aboveGround = (p: THREE.Vector3) => { p.y = Math.max(p.y, heightAt(p.x, p.z) + CHASE_UP); };
   // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
-  const arrivalPosition = arrival === SOURCE_SPRING_ID ? sourceSpringPosition() : arrival ? LANDMARK_POSITIONS[arrival] : undefined;
+  const arrivalPosition = arrival === SOURCE_SPRING_ID ? sourceSpringPosition(riverSpline()[0]) : arrival ? LANDMARK_POSITIONS[arrival] : undefined;
   const mooring = useRef({ held: !!arrivalPosition, released: false });
   useEffect(() => attachKeyboard(), []);
   const reducedMotionLive = useReducedMotion();
