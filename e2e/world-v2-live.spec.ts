@@ -1,4 +1,5 @@
 import { forceDeviceTier } from "./lib/deviceTier.ts";
+import { skipSoftwareRenderer } from "./lib/gpu.ts";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { enableWorldCapture, worldScreenshot } from "./lib/worldCapture.ts";
@@ -200,7 +201,8 @@ test.describe("art direction — the ordering luma probe (M49)", () => {
     return sum / data.length;
   }
 
-  test("canvas mean luma at 03:15 < luma at 12:27 - 8/255, overcast fixture, preview build", async ({ page }, testInfo) => {
+  test("canvas mean luma at 03:15 < luma at 12:27 - 8/255, overcast fixture, preview build", { tag: "@gpu" }, async ({ page }, testInfo) => {
+    await skipSoftwareRenderer(page);
     test.slow();
     await enableWorldCapture(page);
     await gotoWorldV2(page, NIGHT);

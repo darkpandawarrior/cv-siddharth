@@ -4,6 +4,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import { districtAnchors } from "../src/world/v2/valley.ts";
 import { enableWorldCapture, worldScreenshot } from "./lib/worldCapture.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
+import { skipSoftwareRenderer } from "./lib/gpu.ts";
 
 const noWebGLTest = test.extend({
   browser: async ({ playwright }, run) => {
@@ -76,7 +77,8 @@ test("unknown arrival values fall back without throwing", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Landmarks in this world" })).toContainText("doori");
 });
 
-test("the map focus reaches STREET and returns to the same node", async ({ page }) => {
+test("the map focus reaches STREET and returns to the same node", { tag: "@gpu" }, async ({ page }) => {
+  await skipSoftwareRenderer(page);
   // Mooring uses the same Hodi code on both live world tiers.
   await forceDeviceTier(page, 2);
   await prepare(page);
@@ -114,7 +116,8 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
 
 for (const width of [1440, 390]) {
   for (const route of ["map", "arrival", "globe"] as const) {
-    test(`visual ${route} at ${width}`, async ({ page }) => {
+    test(`visual ${route} at ${width}`, { tag: route === "arrival" ? ["@gpu"] : [] }, async ({ page }) => {
+      if (route === "arrival") await skipSoftwareRenderer(page);
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       await forceDeviceTier(page, "viewport");
       await prepare(page);
@@ -173,7 +176,8 @@ for (const width of [1440, 390]) {
     await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
   });
   for (const state of [{ name: "day", time: NOON }, { name: "night", time: NIGHT }]) {
-    test(`preview ${state.name} at ${width}`, async ({ page }) => {
+    test(`preview ${state.name} at ${width}`, { tag: "@gpu" }, async ({ page }) => {
+      await skipSoftwareRenderer(page);
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       await forceDeviceTier(page, "viewport");
       await prepare(page, state.time);
