@@ -58,6 +58,9 @@ function scanMarkers(): Marker[] {
     }
     hits.push(...findMarkers(file, text));
   }
+  for (const file of new Set(ARCHIVE.flatMap((row) => row.touchpoints ?? []))) {
+    if (!hits.some((marker) => marker.file === file) && existsSync(join(root, file))) hits.push(...findMarkers(file, readFileSync(join(root, file), "utf8")));
+  }
   return hits;
 }
 
@@ -76,6 +79,7 @@ export function validate(
   archiveMdAnchors: Set<string>,
   fileExists: (path: string) => boolean = (p) => existsSync(join(root, p)),
   testExists: (path: string) => boolean = fileExists,
+  testText: (path: string) => string = (p) => readFileSync(join(root, p), "utf8"),
 ): string[] {
   const errors: string[] = [];
   const byId = new Map(archive.map((e) => [e.id, e]));
@@ -97,6 +101,13 @@ export function validate(
     const files = Array.isArray(row.files) ? row.files : [];
     for (const f of files) {
       if (!fileExists(f)) errors.push(`${row.id}: names missing file ${f}`);
+    }
+    for (const file of row.touchpoints ?? []) {
+      if (!markers.some((marker) => marker.id === row.id && marker.file === file)) errors.push(`${row.id}: missing marker in ${file}`);
+    }
+    for (const ep of row.entryPoints) {
+      if (!testExists(ep.test)) errors.push(`${row.id}: missing entry-point test ${ep.test}`);
+      else if (ep.testName && !testText(ep.test).includes(`test("${ep.testName}",`)) errors.push(`${row.id}: missing named test ${ep.testName}`);
     }
     for (const t of row.tests) {
       if (!testExists(t)) errors.push(`${row.id}: names missing test ${t}`);
@@ -120,7 +131,7 @@ export function validate(
 
 describe("archive registry (real scan)", () => {
   it(
-    "passes on the empty registry",
+    "passes on the current registry",
     () => {
       const markers = scanMarkers();
       const archiveMd = readFileSync(join(root, "ARCHIVE.md"), "utf8");
@@ -201,5 +212,28 @@ describe("archive registry (break-it fixtures)", () => {
   it("fails: ARCHIVE.md has an anchor with no matching row", () => {
     const errors = validate([], [], new Set(["orphan-anchor"]), exists);
     expect(errors.some((e) => e.includes("anchor orphan-anchor has no registry row"))).toBe(true);
+  });
+});
+
+describe("world-v1 removal guards", () => {
+  const row = ARCHIVE.find((entry) => entry.id === "world-v1")!;
+  const markers = row.touchpoints!.map((file) => ({ id: row.id, date: row.reviewBy, anchor: row.id, file }));
+  const anchors = new Set([row.id]);
+  it("fails if any touchpoint marker is removed, including the two shared hubs", () => {
+    for (const removed of row.touchpoints!) {
+      expect(validate([row], markers.filter((marker) => marker.file !== removed), anchors)).toContain(`${row.id}: missing marker in ${removed}`);
+    }
+  });
+  it("fails if any entry-point test is removed", () => {
+    for (const entry of row.entryPoints) {
+      const text = readFileSync(join(root, entry.test), "utf8").replace(`test("${entry.testName}",`, "removed(");
+      expect(validate([row], markers, anchors, undefined, undefined, () => text)).toContain(`${row.id}: missing named test ${entry.testName}`);
+    }
+  });
+  it("keeps ordinary arrival resolution and search validation intact", () => {
+    const world = readFileSync(join(root, "src/world/v2/WorldV2.tsx"), "utf8");
+    const route = readFileSync(join(root, "src/routes/playground.tsx"), "utf8");
+    expect(world).toContain('Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0]');
+    expect(route).toContain('NODES.some((node) => node.id === search.at)');
   });
 });

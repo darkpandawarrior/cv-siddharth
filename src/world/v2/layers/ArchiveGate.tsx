@@ -1,0 +1,34 @@
+// ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+import { useEffect } from "react";
+import { Html } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
+import { riverSpline } from "../valley.ts";
+import { input, isInteractiveTarget } from "../../input.ts";
+import { sourceSpringPosition, watchArchiveGate } from "../archiveGate.ts";
+
+export const layer = { id: "archive-gate", order: 75 };
+const spring = sourceSpringPosition(riverSpline()[0]);
+
+export default function ArchiveGate() {
+  const { gl } = useThree();
+  useEffect(() => {
+    const hold = watchArchiveGate(() => ({
+      distance: Math.hypot(Number(gl.domElement.dataset.hodiX) - spring[0], Number(gl.domElement.dataset.hodiZ) - spring[2]),
+      upstream: input.throttle < 0,
+    }));
+    // Record downstream intent and releases even between slow render frames.
+    const reset = (event: KeyboardEvent) => {
+      if (!isInteractiveTarget(event.target) && ["ArrowUp", "w", "W"].includes(event.key)) hold.reset();
+    };
+    const release = (event: KeyboardEvent) => {
+      if (["ArrowDown", "s", "S"].includes(event.key)) hold.reset();
+    };
+    window.addEventListener("keydown", reset);
+    window.addEventListener("keyup", release);
+    return () => { hold.stop(); window.removeEventListener("keydown", reset); window.removeEventListener("keyup", release); };
+  }, [gl]);
+  return <group name="source-spring" position={spring}>
+    <mesh position={[3, 0.6, 0]}><dodecahedronGeometry args={[0.8, 0]} /><meshStandardMaterial color="#9d9886" roughness={1} /></mesh>
+    <Html position={[3, 1.8, 0]} center><span className="pointer-events-none whitespace-nowrap rounded bg-card/90 px-2 py-1 text-xs text-muted">Before the beginning is the old map.</span></Html>
+  </group>;
+}

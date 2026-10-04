@@ -1541,6 +1541,12 @@ export function Terminal() {
       setHistCursor(null);
       if (!line) return;
 
+      // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+      if (line === "git checkout v1" || line === "cd ~/world/v1") {
+        void navigate({ to: "/playground", search: { world: "v1" } });
+        return;
+      }
+
       // A bare room name jumps there — `projects`, `resume`, `blueprint`, …
       const [name, ...args] = line.split(/\s+/);
       const lname = name.toLowerCase();
@@ -1564,7 +1570,7 @@ export function Terminal() {
         </span>,
       );
     },
-    [cmdMap, history, push, runBanner, setTheme, jump, suggestable],
+    [cmdMap, history, push, runBanner, setTheme, jump, suggestable, navigate],
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

@@ -1,3 +1,4 @@
+// ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
 import { test, expect } from "./lib/test.ts";
 
 /**

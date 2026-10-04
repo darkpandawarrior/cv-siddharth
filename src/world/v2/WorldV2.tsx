@@ -16,6 +16,7 @@ import { SkyDome } from "./SkyDome.tsx";
 import { Env } from "./Env.tsx";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
+import { SOURCE_SPRING_ID } from "./archiveGate.ts";
 import { LANDMARK_OPENS } from "./landmarkBindings.ts";
 import { Hodi } from "./Hodi.tsx";
 import { Post } from "./Post.tsx";
@@ -74,7 +75,8 @@ function previewAtToMinutes(d: Date): number {
 
 export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
   const replayAsOf = useSyncExternalStore(subscribeReplay, getReplay, getServerReplay);
-  const arrival = Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0];
+  // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+  const arrival = at === SOURCE_SPRING_ID ? SOURCE_SPRING_ID : Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0];
   const [heightmap, setHeightmap] = useState<Heightmap | null>(null);
   useEffect(() => {
     let active = true;
