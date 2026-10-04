@@ -176,6 +176,10 @@ export const GENERATORS = [
   // so two runs over the same tree are byte-identical. Local, refresh only.
   { id: "world-payload", script: "world-v2/gen-world-payload.mjs", npmName: "gen:world-payload", kind: "local",
     inputs: [], outputs: ["heavy/world/payload.json"], stages: { refresh: 20 } },
+  // README only: refresh writes the table, check rejects committed drift.
+  // Builds consume the committed docs without rewriting them.
+  { id: "world-carry-over", script: "world-v2/gen-carry-over.mjs", npmName: "gen:world-carry-over", kind: "local",
+    inputs: ["src/world/v2/carryOver.ts"], outputs: ["README.md"], stages: { refresh: 30, check: 10 } },
   // refresh added by the freshness-pipelines lane: repo-stats only reads the
   // Compose twin (../cv-siddharth-kmp), which refresh-media.yml already
   // checks out for check:generated — it had no refresh entry purely because
