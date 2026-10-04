@@ -95,7 +95,7 @@ function buildRawLedger() {
     systemGraph: { generatedAt: "2026-06-30", nodes: [], edges: [] },
     writing: {
       lessons: [
-        { title: "Lesson One", slug: "lesson-one", created: "2026-05-01", project: "fixture", links: {}, reactions: 40 },
+        { title: "Lesson One", slug: "lesson-one", created: "2026-05-01", project: "fixture", links: {}, engagement: { devto: { reactions: 40, comments: 2 } } },
         { title: "Lesson Two", slug: "lesson-two", created: "2026-06-01", project: "fixture", links: {} },
         { title: "Lesson Three", slug: "lesson-three", created: "2026-06-15", project: "fixture", links: {} },
       ],

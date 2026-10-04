@@ -137,18 +137,21 @@ attribute vec3 aAux;
 varying vec4 vSplat;
 varying vec3 vAux;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
 ${shader.vertexShader}`.replace(
       "#include <begin_vertex>",
       `#include <begin_vertex>
 vSplat = aSplat;
 vAux = aAux;
-vWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;`,
+vWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+vWorldNormal = normalize(mat3(modelMatrix) * normal);`,
     );
 
     shader.fragmentShader = `
 varying vec4 vSplat;
 varying vec3 vAux;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
 uniform float uGrassWet;
 uniform float uStrataFreq;
 uniform float uStrataJitter;
@@ -178,7 +181,7 @@ diffuseColor.rgb *= mix(0.72, 1.0, vAux.y);
 diffuseColor.rgb *= 1.0 - vAux.z * vSplat.x * 0.12 * nsHash(vWorldPos.xz * 3.0 + vAux.z);
 
 // T2 — smoothstep(28deg, 36deg) replaces the old hard slope-angle branch.
-float nsSlopeDeg = degrees(acos(clamp(normal.y, -1.0, 1.0)));
+float nsSlopeDeg = degrees(acos(clamp(normalize(vWorldNormal).y, -1.0, 1.0)));
 float nsRockWeight = smoothstep(${SLOPE_BAND_LO_DEG.toFixed(1)}, ${SLOPE_BAND_HI_DEG.toFixed(1)}, nsSlopeDeg);
 
 // LOD — macro detail fades out between LOD_NEAR_M and LOD_MID_M; past

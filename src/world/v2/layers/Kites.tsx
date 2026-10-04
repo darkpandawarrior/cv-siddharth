@@ -70,7 +70,7 @@ function slugOf(feature: Feature): string {
   return feature.id.slice(`${feature.rule}:`.length).replace(/^\//, "");
 }
 
-function buildKites(): KiteInstance[] {
+export function buildKites(): KiteInstance[] {
   const lessons = new Map(ledger.writing.lessons.map((l) => [l.slug, l]));
   const archive = new Map(ledger.writing.archive.map((a) => [a.slug, a]));
   const out: KiteInstance[] = [];
@@ -191,8 +191,7 @@ function KiteGroup({
 /** One merged `LineSegments`, a tether from the water (y=0) up to every
  *  kite's own altitude, at its (x, z). Static: the sway above is a few tens
  *  of centimetres, not worth rebuilding a buffer over every frame for. */
-function Tethers({ kites, color }: { kites: readonly KiteInstance[]; color: string }) {
-  const geometry = useMemo(() => {
+export function buildTetherGeometry(kites: readonly KiteInstance[]): THREE.BufferGeometry {
     const positions = new Float32Array(kites.length * 6);
     kites.forEach((k, i) => {
       positions.set([k.x, 0, k.z, k.x, k.y, k.z], i * 6);
@@ -200,7 +199,10 @@ function Tethers({ kites, color }: { kites: readonly KiteInstance[]; color: stri
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     return geo;
-  }, [kites]);
+}
+
+function Tethers({ kites, color }: { kites: readonly KiteInstance[]; color: string }) {
+  const geometry = useMemo(() => buildTetherGeometry(kites), [kites]);
   useEffect(() => () => geometry.dispose(), [geometry]);
   if (kites.length === 0) return null;
   return (

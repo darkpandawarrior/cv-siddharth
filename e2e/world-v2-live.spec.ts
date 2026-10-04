@@ -1,6 +1,8 @@
 import { forceDeviceTier } from "./lib/deviceTier.ts";
+import { skipSoftwareRenderer } from "./lib/gpu.ts";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { enableWorldCapture, worldScreenshot } from "./lib/worldCapture.ts";
 import sharp from "sharp";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
@@ -199,8 +201,10 @@ test.describe("art direction — the ordering luma probe (M49)", () => {
     return sum / data.length;
   }
 
-  test("canvas mean luma at 03:15 < luma at 12:27 - 8/255, overcast fixture, preview build", async ({ page }, testInfo) => {
+  test("canvas mean luma at 03:15 < luma at 12:27 - 8/255, overcast fixture, preview build", { tag: "@gpu" }, async ({ page }, testInfo) => {
+    await skipSoftwareRenderer(page);
     test.slow();
+    await enableWorldCapture(page);
     await gotoWorldV2(page, NIGHT);
     // Let the live-binding effect apply the night sky/key-light write and the
     // scene settle a couple of frames before sampling.
@@ -208,7 +212,7 @@ test.describe("art direction — the ordering luma probe (M49)", () => {
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     const nightBox = await canvas(page).boundingBox();
     if (!nightBox) throw new Error("world-v2 canvas has no bounding box");
-    const nightBuf = await page.screenshot({ clip: nightBox, path: testInfo.outputPath("world-v2-night.png") });
+    const nightBuf = await worldScreenshot(page, { clip: nightBox, path: testInfo.outputPath("world-v2-night.png") });
     const nightLuma = await meanLuma(nightBuf);
 
     await page.clock.setFixedTime(new Date(NOON));
@@ -219,7 +223,7 @@ test.describe("art direction — the ordering luma probe (M49)", () => {
     await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     const noonBox = await canvas(page).boundingBox();
     if (!noonBox) throw new Error("world-v2 canvas has no bounding box");
-    const noonBuf = await page.screenshot({ clip: noonBox, path: testInfo.outputPath("world-v2-noon.png") });
+    const noonBuf = await worldScreenshot(page, { clip: noonBox, path: testInfo.outputPath("world-v2-noon.png") });
     const noonLuma = await meanLuma(noonBuf);
 
     await testInfo.attach("luma", { body: JSON.stringify({ nightLuma, noonLuma }), contentType: "application/json" });

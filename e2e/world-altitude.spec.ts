@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { districtAnchors } from "../src/world/v2/valley.ts";
+import { enableWorldCapture, worldScreenshot } from "./lib/worldCapture.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
+import { skipSoftwareRenderer } from "./lib/gpu.ts";
 
 const noWebGLTest = test.extend({
   browser: async ({ playwright }, run) => {
@@ -12,7 +14,7 @@ const noWebGLTest = test.extend({
   },
 });
 
-const LANE_DIR = process.env.P3_07_CAPTURE_DIR ?? "/tmp/agent-lanes/P3-07";
+const LANE_DIR = process.env.P3_07_CAPTURE_DIR ?? "/tmp/agent-lanes/P3-fix";
 const fixture = (name: string): unknown => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
 const CLEAR = fixture("weather-2026-09-24.json");
 const WET = fixture("weather-wet-2026-09-24.json");
@@ -24,6 +26,7 @@ async function prepare(page: Page, time = NOON, wet = false) {
   page.on("console", (message) => {
     if (message.type() === "error") console.error(`world-altitude console error: ${message.location().url} ${message.text().slice(0, 1200)}`);
   });
+  await enableWorldCapture(page);
   await page.clock.setFixedTime(new Date(time));
   await page.addInitScript(() => {
     localStorage.setItem("playground:v2:onboarded", "1");
@@ -74,8 +77,10 @@ test("unknown arrival values fall back without throwing", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Landmarks in this world" })).toContainText("doori");
 });
 
-test("the map focus reaches STREET and returns to the same node", async ({ page }) => {
-  await forceDeviceTier(page, "viewport");
+test("the map focus reaches STREET and returns to the same node", { tag: "@gpu" }, async ({ page }) => {
+  await skipSoftwareRenderer(page);
+  // Mooring uses the same Hodi code on both live world tiers.
+  await forceDeviceTier(page, 2);
   await prepare(page);
   await page.goto("/map?focus=doori");
   await waitForHydration(page);
@@ -83,6 +88,8 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   await page.locator("[data-altitude-stop='street']").click();
   await expect(page).toHaveURL(/\/playground\?at=doori$/);
   const hull = page.locator("canvas[data-hodi-at='doori']");
+  // Hodi writes this arrival signal from its first rendered frame.
+  await hull.waitFor();
   await expect(hull).toBeVisible();
   await expect(hull).toHaveAttribute("data-hodi-moored", "true");
   const pose = async () => hull.evaluate((canvas) => ({
@@ -109,7 +116,8 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
 
 for (const width of [1440, 390]) {
   for (const route of ["map", "arrival", "globe"] as const) {
-    test(`visual ${route} at ${width}`, async ({ page }) => {
+    test(`visual ${route} at ${width}`, { tag: route === "arrival" ? ["@gpu"] : [] }, async ({ page }) => {
+      if (route === "arrival") await skipSoftwareRenderer(page);
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       await forceDeviceTier(page, "viewport");
       await prepare(page);
@@ -126,7 +134,7 @@ for (const width of [1440, 390]) {
         }
       }
       const name = route === "map" ? "map-focus-doori" : route === "arrival" ? "playground-at-doori" : "globe";
-      await page.screenshot({ path: `${LANE_DIR}/${name}-${width}.png`, fullPage: true });
+      await worldScreenshot(page, { path: `${LANE_DIR}/${name}-${width}.png`, fullPage: true });
     });
   }
   for (const state of [
@@ -149,7 +157,7 @@ for (const width of [1440, 390]) {
       await expect(image).toBeVisible();
       await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
       await expect(page.locator("[data-ledger-row='weather']")).toContainText("°C");
-      await page.screenshot({ path: `${LANE_DIR}/fallback-${state.name}-${width}.png`, fullPage: true });
+      await worldScreenshot(page, { path: `${LANE_DIR}/fallback-${state.name}-${width}.png`, fullPage: true });
       expect(hydration).toEqual([]);
     });
   }
@@ -163,12 +171,13 @@ for (const width of [1440, 390]) {
     await expect(page.locator("[data-concept-fallback]")).toBeVisible();
     await expect(page.locator(".playground-canvas canvas")).toHaveCount(0);
     await expect(page.locator("[data-ledger-row='weather']")).toContainText("°C");
-    await page.screenshot({ path: `${LANE_DIR}/reduced-motion-${width}.png`, fullPage: true });
+    await worldScreenshot(page, { path: `${LANE_DIR}/reduced-motion-${width}.png`, fullPage: true });
     await page.getByRole("button", { name: "Enter the valley" }).click();
     await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
   });
   for (const state of [{ name: "day", time: NOON }, { name: "night", time: NIGHT }]) {
-    test(`preview ${state.name} at ${width}`, async ({ page }) => {
+    test(`preview ${state.name} at ${width}`, { tag: "@gpu" }, async ({ page }) => {
+      await skipSoftwareRenderer(page);
       await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       await forceDeviceTier(page, "viewport");
       await prepare(page, state.time);
@@ -176,7 +185,7 @@ for (const width of [1440, 390]) {
       await waitForHydration(page);
       await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
       await page.waitForTimeout(4000);
-      await page.screenshot({ path: `${LANE_DIR}/preview-${state.name}-${width}.png`, fullPage: true });
+      await worldScreenshot(page, { path: `${LANE_DIR}/preview-${state.name}-${width}.png`, fullPage: true });
     });
   }
 }

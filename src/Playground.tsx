@@ -18,10 +18,10 @@ import {
 } from "./play/DeferredPlayRoom.tsx";
 
 import { ConceptFallback, CorridorPlate } from "./world/CorridorPlate.tsx";
-import World from "./world/World.tsx";
 import { deviceTier } from "./world/deviceTier.ts";
 
-// Keep the valley in its own client chunk.
+// Load either world only after the visitor chooses it.
+const World = lazy(() => import("./world/World.tsx"));
 const WorldV2 = lazy(() => import("./world/v2/WorldV2.tsx"));
 /**
  * The Playground, one full-screen hub for every interactive world on the site.
@@ -281,7 +281,9 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
             <ClientOnly fallback={worldLoadingFallback}>
               <WorldBoundary onError={handleWorldError}>
                 <Hydrate when={load()} split fallback={worldLoadingFallback}>
-                  {isV1 ? <World onShowList={showList} /> : <Suspense fallback={worldLoadingFallback}><WorldV2 at={at} /></Suspense>}
+                  <Suspense fallback={worldLoadingFallback}>
+                    {isV1 ? <World onShowList={showList} /> : <WorldV2 at={at} />}
+                  </Suspense>
                 </Hydrate>
               </WorldBoundary>
             </ClientOnly>

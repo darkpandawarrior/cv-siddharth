@@ -131,7 +131,7 @@ describe("driveSpline: C1 autopilot stays on the spline", () => {
 
 describe("arrival mooring", () => {
   it("every landmark entry resolves to a finite position and legal mooring", async () => {
-    const { landmarkPositions } = await import("./layers/LandmarksApps.tsx");
+    const { landmarkPositions } = await import("./landmarkPositions.ts");
     const { LANDMARK_OPENS } = await import("./landmarkBindings.ts");
     const { mooredStateAt } = await import("./Hodi.tsx");
     const positions = landmarkPositions();

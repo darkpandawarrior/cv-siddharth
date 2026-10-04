@@ -29,7 +29,14 @@ export const test = base.extend({
   // Named `run`, not Playwright's usual `use`: the react-hooks lint rule reads
   // a bare use() call as a React hook and fails the build. The name is ours to
   // pick, so pick one that does not collide.
-  page: async ({ page }, run) => {
+  page: async ({ page }, run, testInfo) => {
+    const worldSpec = /(?:world-[^/]+|playground-world)\.spec\.ts$/.test(testInfo.file);
+    const geometryMessages: string[] = [];
+    if (worldSpec) {
+      page.on("console", (message) => {
+        if (/\bNaN\b|THREE\.WebGLProgram: Shader Error/.test(message.text())) geometryMessages.push(message.text());
+      });
+    }
     await page.addInitScript((key: string) => {
       const real = window.localStorage;
       const deny = (k: string) => {
@@ -50,6 +57,7 @@ export const test = base.extend({
       });
     }, VISITOR_KEY);
     await run(page);
+    if (worldSpec) expect(geometryMessages, "World geometry and shaders must render without errors").toEqual([]);
   },
 });
 

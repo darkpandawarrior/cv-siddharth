@@ -8,6 +8,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { gzipSync } from "node:zlib";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
+import { compactClientManifest } from "./scripts/vite/compactManifest.ts";
 import { allRoutes } from "./src/data/routes.ts";
 
 loadEnv({ path: ".env.local" });
@@ -499,6 +500,7 @@ export default defineConfig(async () => ({
     viteReact(),
     await babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
+    compactClientManifest(),
     // Registered last but its /api/chat middleware is still installed as a
     // Vite "pre" middleware (configureServer doesn't return a post-hook),
     // so it runs ahead of Start's own catch-all SSR handler — same ordering

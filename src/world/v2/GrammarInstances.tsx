@@ -24,6 +24,8 @@
  */
 import { useMemo, type ReactNode } from "react";
 import { Instance, Instances } from "@react-three/drei";
+import { groundPosition } from "./terrainHeight.ts";
+import { useTerrainHeight } from "./terrainSurface.tsx";
 import { isKitted } from "./kits.ts";
 import { worldPalette } from "../palette.ts";
 import type { Feature, WorldModel } from "./worldModel.ts";
@@ -79,6 +81,7 @@ function ShapeGroup({
   palette: ReturnType<typeof worldPalette>;
   highlightedRule: string | null;
 }) {
+  const heightAt = useTerrainHeight();
   return (
     <Instances limit={Math.max(1, features.length)} range={features.length}>
       {geometry}
@@ -86,7 +89,7 @@ function ShapeGroup({
       {features.map((f) => {
         const highlighted = f.rule === highlightedRule;
         const scale = scaleFor(f.scalar) * (highlighted ? 1.15 : 1);
-        return <Instance key={f.id} position={f.pos} scale={scale} color={palette[STATE_COLOR[f.state]]} />;
+        return <Instance key={f.id} position={groundPosition(f.pos, heightAt)} scale={scale} color={palette[STATE_COLOR[f.state]]} />;
       })}
     </Instances>
   );

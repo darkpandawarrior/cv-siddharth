@@ -377,16 +377,10 @@ const G6_PR_STONE: GrowthRule<StoneRow> = {
 // ─────────────────────────────────────────────────────────────────────────
 // G7 lesson-kite — writing.lessons, altitude per M21
 // ─────────────────────────────────────────────────────────────────────────
-// M21: altitude reads a build-time engagement figure when present, under
-// either of the two field names the two amending specs used
-// (`reactions` — living-ledger §3.3's own table — or `engagement.devto`,
-// M21's phrasing). Neither exists on `Lesson` yet (P1-07b's job); reading
-// both defensively means this rule self-corrects the day either lands,
-// with zero further changes here (D5).
-type LessonWithEngagement = Lesson & { reactions?: number; engagement?: { devto?: number } };
-function lessonReactions(lesson: Lesson): number | null {
-  const withEngagement = lesson as LessonWithEngagement;
-  return withEngagement.reactions ?? withEngagement.engagement?.devto ?? null;
+// M21: build-time engagement has the same shape and altitude formula as signals.devto.
+function lessonEngagement(lesson: Lesson): number | null {
+  const devto = lesson.engagement?.devto;
+  return devto ? devto.reactions + devto.comments : null;
 }
 const KITE_FLOOR_M = 18;
 
@@ -407,21 +401,21 @@ const G7_LESSON_KITE: GrowthRule<Lesson> = {
   placementSeed: (r) => `/${r.slug}`,
   dateOf: (r) => r.created || null,
   featureOf: (r) => {
-    const reactions = lessonReactions(r);
-    const altitude = reactions !== null ? 10 + reactions / 20 : KITE_FLOOR_M;
+    const reactions = lessonEngagement(r);
+    const altitude = reactions !== null ? Math.min(60, KITE_FLOOR_M + 6 * Math.log2(1 + reactions)) : KITE_FLOOR_M;
     return {
       scalar: altitude,
-      label: reactions !== null ? `${r.title} (${reactions} reactions)` : `${r.title} (not on dev.to yet)`,
+      label: reactions !== null ? `${r.title} (${reactions} reactions and comments, as of the writing snapshot)` : `${r.title} (not on dev.to yet)`,
     };
   },
   countOf: (rs) => rs.length,
-  unmeasured: (r) => lessonReactions(r) === null,
+  unmeasured: (r) => lessonEngagement(r) === null,
   nextSlot: () => ({ label: "Next lesson flies from this mast" }),
   scale: { cap10x: 60, mechanism: "kites past 60 batch into tethered clusters, one LineSegments per cluster" },
   ledgerRow: (rs) => ({
     id: "lesson-kite",
     section: "LAND",
-    label: `Kites: ${rs.length} lessons, ${rs.filter((r) => lessonReactions(r) !== null).length} measurable`,
+    label: `Kites: ${rs.length} lessons, ${rs.filter((r) => lessonEngagement(r) !== null).length} measurable`,
     cadence: "generated",
     sourceFile: "writing.ts",
     binds: rs.map((r) => `lesson-kite:${r.slug}`),

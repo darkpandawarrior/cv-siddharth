@@ -62,7 +62,7 @@ export function LedgerPanel({ open, sections, sinceSentence, onHoverRow, preview
       role="dialog"
       aria-label="Reality ledger"
       data-world-ledger
-      className="pointer-events-auto flex w-full max-w-md flex-col gap-2 rounded-2xl border border-line bg-card/95 p-4 backdrop-blur"
+      className="pointer-events-auto flex max-h-[calc(100dvh-8rem)] w-full max-w-md flex-col gap-2 overflow-y-auto rounded-2xl border border-line bg-card/95 p-4 backdrop-blur"
     >
       {sinceSentence && <p className="font-mono text-xs text-accent">{sinceSentence}</p>}
 

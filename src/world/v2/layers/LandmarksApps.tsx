@@ -20,7 +20,8 @@ import { worldModel } from "../worldModel.ts";
 import type { DetailLink, You } from "../worldModel.ts";
 import { useNowModel } from "../useNowModel.ts";
 import { useReveal } from "../reveal.ts";
-import { sangamBasin, districtAnchors } from "../valley.ts";
+import { landmarkPositions } from "../landmarkPositions.ts";
+import { useTerrainHeight } from "../terrainSurface.tsx";
 import { touch, useTouched } from "../../../lib/sessionRipple.ts";
 import { prefersReducedMotion } from "../../reducedMotion.ts";
 import {
@@ -48,33 +49,9 @@ import {
   SincPBaoriKit,
   StutterSamratYantraKit,
   TemplateGomukhKit,
-  type Vec3,
 } from "../kits/architecture.ts";
 
 export const layer = { id: "landmarks-apps", order: 30 };
-
-// world-v2-spec.md #2.1: the districts sit on the basin's own amphitheatre
-// arc. Placing all eight non-bridge landmarks through ONE `districtAnchors`
-// call spreads them evenly with no overlap; only doori/gaddi/paymentslab-kmp/
-// candidai/kmp-app-template are real `includeBuild` tributary sources
-// (valley.ts's own `tributarySourceIds`) - portfolio/stutter/sinc-p have no
-// stream of their own here, so their exact west-terrace PROJECT_DATE
-// placement (world-v2-spec's ASCII layout) is a visual-polish item this
-// lane leaves for a follow-up rather than re-deriving a second anchor
-// scheme; the arc position below is honest layout, just not spec-exact.
-const DISTRICT_IDS = ["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template", "portfolio", "stutter", "sinc-p"] as const;
-
-export function landmarkPositions(): Readonly<Record<string, Vec3>> {
-  const basin = sangamBasin();
-  const anchors = districtAnchors([...DISTRICT_IDS], basin);
-  const byId: Record<string, Vec3> = { bridge: [basin.x, 0, basin.z - basin.r - 6] };
-  for (const a of anchors) byId[a.id] = [a.x, a.y, a.z];
-  return byId;
-}
-
-function useLandmarkPositions(): Readonly<Record<string, Vec3>> {
-  return useMemo(landmarkPositions, []);
-}
 
 function openLink(navigate: ReturnType<typeof useNavigate>, link: DetailLink | undefined) {
   if (!link) return;
@@ -99,7 +76,8 @@ function useCanvasDataAttrs(attrs: Readonly<Record<string, string>>): void {
 
 export default function LandmarksApps() {
   const navigate = useNavigate();
-  const positions = useLandmarkPositions();
+  const heightAt = useTerrainHeight();
+  const positions = landmarkPositions(heightAt);
   const reducedMotion = prefersReducedMotion();
   const touched = useTouched();
   const nowModel = useNowModel(null);
