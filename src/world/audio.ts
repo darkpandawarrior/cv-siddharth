@@ -259,7 +259,7 @@ export type AmbientState = {
   waterPosition: AudioPoint;
 };
 
-/** Quiet at the 7-day minimum, three times louder at its maximum.
+/** Quiet at the 7-day minimum, four times louder at its maximum.
  * Missing or invalid measurements stay silent; a flat range uses the floor. */
 export function waterBedGain(dischargeM3s: number | null, range7d: readonly [number, number] | null): number {
   if (dischargeM3s == null || !range7d) return 0;
