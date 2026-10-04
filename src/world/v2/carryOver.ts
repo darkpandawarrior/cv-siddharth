@@ -16,7 +16,7 @@
  * across `src/world/v2` for every top-level `src/world/*` module. A file a
  * v2 module imports (even a type-only import) is load-bearing and can never
  * appear in `ARCHIVED_V1_FILES`: `city.ts`, `cityData.ts`, `deviceTier.ts`,
- * `reducedMotion.ts`, `palette.ts`, `input.ts`, `gps.ts`, `artifacts.ts`,
+ * `reducedMotion.ts`, `palette.ts`, `input.ts`, `gps.ts`, `artifacts.ts`, `audio.ts`,
  * `explored.ts`, `Ghosts.tsx`, `Rain.tsx`, `realityRows.ts`,
  * `litMapSyncChannel.ts`, `progress.ts` and `AltitudeRail.tsx` are shared
  * infrastructure the v1 world and v2 world both stand on, so they are never
@@ -185,7 +185,6 @@ export function carryOverViolations(
 export const ARCHIVED_V1_FILES: readonly string[] = [
   "src/world/altitude.ts",
   "src/world/Artifacts.tsx",
-  "src/world/audio.ts",
   "src/world/autopilot.ts",
   "src/world/Corpus.tsx",
   "src/world/corpusData.ts",
