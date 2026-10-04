@@ -100,7 +100,11 @@ test("v1 chunk loads only after a hidden entrance", async ({ page }) => {
   await page.goto("/terminal");
   await waitForHydration(page);
   expect(requests.filter((url) => v1Chunk.test(url))).toEqual([]);
-  await world(page);
+  const v2Response = page.waitForResponse((response) => /\/WorldV2-[^/]+\.js(?:\?|$)/.test(response.url()) && response.ok());
+  await page.goto("/playground");
+  await waitForHydration(page);
+  await expect(page.locator('[data-world="v2"]')).toBeVisible();
+  await v2Response;
   expect(requests.filter((url) => v1Chunk.test(url))).toEqual([]);
   await expect(page.locator('a[href*="world=v1"]')).toHaveCount(0);
   await page.goto("/playground?world=v1");
