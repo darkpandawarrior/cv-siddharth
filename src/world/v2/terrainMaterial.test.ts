@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { ShaderLib } from "three";
 import {
   buildTerrainMaterial,
   LOD_NEAR_M,
@@ -10,23 +11,12 @@ import {
   STRATA_JITTER,
 } from "./terrainMaterial.ts";
 
-/** A minimal stand-in for the `WebGLProgramParametersWithUniforms` object
- *  three.js hands `onBeforeCompile` — just enough of the real
- *  `MeshStandardMaterial` template's `#include` markers for this material's
- *  own `.replace()` calls to actually fire, so the assertions below are
- *  reading the REAL patched output, not a string this test made up. */
+/** Patch Three's actual standard template, including its normal chunk order. */
 function mockShader() {
   return {
     uniforms: {} as Record<string, { value: unknown }>,
-    vertexShader: "void main() {\n#include <begin_vertex>\n}",
-    fragmentShader: [
-      "void main() {",
-      "#include <map_fragment>",
-      "#include <roughnessmap_fragment>",
-      "#include <metalnessmap_fragment>",
-      "#include <emissivemap_fragment>",
-      "}",
-    ].join("\n"),
+    vertexShader: ShaderLib.standard.vertexShader,
+    fragmentShader: ShaderLib.standard.fragmentShader,
   };
 }
 
@@ -98,6 +88,10 @@ describe("terrainMaterial.ts", () => {
       expect(shader.vertexShader).toContain("aSplat");
       expect(shader.vertexShader).toContain("aAux");
       expect(shader.fragmentShader).toContain("vSplat");
+      // Slope is measured against world up, before the view normal exists.
+      expect(shader.vertexShader).toContain("vWorldNormal = normalize(mat3(modelMatrix) * normal)");
+      expect(shader.fragmentShader).toContain("acos(clamp(normalize(vWorldNormal).y");
+      expect(shader.fragmentShader).not.toMatch(/\bnormal\.y/);
     }
   });
 });
