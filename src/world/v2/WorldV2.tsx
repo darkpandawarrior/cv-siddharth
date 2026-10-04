@@ -5,6 +5,7 @@
  * canvas and HUD globs rather than changing this hub.
  */
 import { useEffect, useMemo, useState, type JSX } from "react";
+import { CaptureControl } from "./CaptureControl.tsx";
 import { Canvas } from "@react-three/fiber";
 import { PCFSoftShadowMap } from "three";
 import { skyLighting } from "./skyLighting.ts";
@@ -137,6 +138,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         aria-hidden="true"
       >
+        <CaptureControl />
         <ambientLight intensity={0.4} />
         <directionalLight castShadow position={[40, 80, 40]} intensity={lighting.intensity} color={[lighting.color.x, lighting.color.y, lighting.color.z]} />
         <SkyDome uniforms={lighting.uniforms} />

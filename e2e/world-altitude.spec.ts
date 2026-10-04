@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { districtAnchors } from "../src/world/v2/valley.ts";
+import { enableWorldCapture, worldScreenshot } from "./lib/worldCapture.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
 
 const noWebGLTest = test.extend({
@@ -12,7 +13,7 @@ const noWebGLTest = test.extend({
   },
 });
 
-const LANE_DIR = process.env.P3_07_CAPTURE_DIR ?? "/tmp/agent-lanes/P3-07";
+const LANE_DIR = process.env.P3_07_CAPTURE_DIR ?? "/tmp/agent-lanes/P3-fix";
 const fixture = (name: string): unknown => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
 const CLEAR = fixture("weather-2026-09-24.json");
 const WET = fixture("weather-wet-2026-09-24.json");
@@ -24,6 +25,7 @@ async function prepare(page: Page, time = NOON, wet = false) {
   page.on("console", (message) => {
     if (message.type() === "error") console.error(`world-altitude console error: ${message.location().url} ${message.text().slice(0, 1200)}`);
   });
+  await enableWorldCapture(page);
   await page.clock.setFixedTime(new Date(time));
   await page.addInitScript(() => {
     localStorage.setItem("playground:v2:onboarded", "1");
@@ -129,7 +131,7 @@ for (const width of [1440, 390]) {
         }
       }
       const name = route === "map" ? "map-focus-doori" : route === "arrival" ? "playground-at-doori" : "globe";
-      await page.screenshot({ path: `${LANE_DIR}/${name}-${width}.png`, fullPage: true });
+      await worldScreenshot(page, { path: `${LANE_DIR}/${name}-${width}.png`, fullPage: true });
     });
   }
   for (const state of [
@@ -152,7 +154,7 @@ for (const width of [1440, 390]) {
       await expect(image).toBeVisible();
       await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
       await expect(page.locator("[data-ledger-row='weather']")).toContainText("°C");
-      await page.screenshot({ path: `${LANE_DIR}/fallback-${state.name}-${width}.png`, fullPage: true });
+      await worldScreenshot(page, { path: `${LANE_DIR}/fallback-${state.name}-${width}.png`, fullPage: true });
       expect(hydration).toEqual([]);
     });
   }
@@ -166,7 +168,7 @@ for (const width of [1440, 390]) {
     await expect(page.locator("[data-concept-fallback]")).toBeVisible();
     await expect(page.locator(".playground-canvas canvas")).toHaveCount(0);
     await expect(page.locator("[data-ledger-row='weather']")).toContainText("°C");
-    await page.screenshot({ path: `${LANE_DIR}/reduced-motion-${width}.png`, fullPage: true });
+    await worldScreenshot(page, { path: `${LANE_DIR}/reduced-motion-${width}.png`, fullPage: true });
     await page.getByRole("button", { name: "Enter the valley" }).click();
     await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
   });
@@ -179,7 +181,7 @@ for (const width of [1440, 390]) {
       await waitForHydration(page);
       await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
       await page.waitForTimeout(4000);
-      await page.screenshot({ path: `${LANE_DIR}/preview-${state.name}-${width}.png`, fullPage: true });
+      await worldScreenshot(page, { path: `${LANE_DIR}/preview-${state.name}-${width}.png`, fullPage: true });
     });
   }
 }

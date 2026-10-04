@@ -166,6 +166,7 @@ export function Terrain({ heightmap }: { heightmap: Heightmap }): JSX.Element | 
   const [assets, setAssets] = useState<TerrainAssets | null>(null);
   const mounted = useRef(true);
   const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
 
   useEffect(() => {
     mounted.current = true;
@@ -194,6 +195,7 @@ export function Terrain({ heightmap }: { heightmap: Heightmap }): JSX.Element | 
   useFrame(() => {
     if (!assets) return;
     assets.materialHandle.uCamPos.value.copy(camera.position);
+    if (window.__WORLD_CAPTURE_TEST__ === true) gl.domElement.setAttribute("data-terrain-ready", "true");
   });
 
   if (!assets) return null;
