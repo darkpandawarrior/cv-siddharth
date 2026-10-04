@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { MotionPathControls, useMotion } from "@react-three/drei";
@@ -12,6 +12,7 @@ import { prefersReducedMotion } from "../reducedMotion.ts";
 import { useReducedMotion } from "../../SceneActivity.tsx";
 import { useTerrainHeight } from "./terrainSurface.tsx";
 import { landmarkPositions } from "./landmarkPositions.ts";
+import { getTourStop, subscribeTour } from "./tour.ts";
 
 /**
  * THE HODI — world-v2-spec.md §4 "Route and camera". Drives `driveSpline.ts`
@@ -121,6 +122,7 @@ export function mooredStateAt(landmark: { x: number; z: number }): HodiState {
 }
 
 export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps) {
+  const tourStop = useSyncExternalStore(subscribeTour, getTourStop, () => null);
   const { camera, gl } = useThree();
   const heightAt = useTerrainHeight();
   const aboveGround = (p: THREE.Vector3) => { p.y = Math.max(p.y, heightAt(p.x, p.z) + CHASE_UP); };
@@ -208,6 +210,11 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
   }, [gl]);
 
   const flyIn = useRef({ elapsed: 0, done: !!arrivalPosition || prefersReducedMotion() });
+  useEffect(() => {
+    if (!tourStop) return;
+    hodiStateRef.current = mooredStateAt({ x: tourStop.position[0], z: tourStop.position[2] });
+    flyIn.current.done = true;
+  }, [tourStop]);
   const camTarget = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
 
@@ -222,7 +229,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
       mooring.current.released = true;
       mooring.current.held = false;
     }
-    const next = mooring.current.held ? hodiStateRef.current
+    const next = tourStop || mooring.current.held ? hodiStateRef.current
       : step(hodiStateRef.current, axes, dt, { reducedMotion: reduced });
     hodiStateRef.current = next;
     motionObjectRef.current = next.autopilot ? groupRef.current : ghostRef.current;
@@ -292,7 +299,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
       boatPos.y + CHASE_UP + Math.sin(pitch) * CHASE_BACK,
       boatPos.z - Math.cos(yaw) * backXZ,
     );
-    const easeT = 1 - Math.exp(-CAMERA_EASE_RATE * cameraDelta);
+    const easeT = tourStop ? 1 : 1 - Math.exp(-CAMERA_EASE_RATE * cameraDelta);
     aboveGround(camTarget.current);
     camera.position.lerp(camTarget.current, easeT);
     aboveGround(camera.position);
