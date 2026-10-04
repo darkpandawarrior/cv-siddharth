@@ -232,7 +232,6 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
         wantsWorld ? "h-screen overflow-hidden print:h-auto print:overflow-visible" : "min-h-screen"
       }`}
     >
-      {isV1 && <Suspense fallback={null}><ArchivePlaque /></Suspense>}
       <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <button
@@ -265,6 +264,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
           </div>
         </nav>
       </header>
+      {isV1 && <Suspense fallback={null}><ArchivePlaque /></Suspense>}
 
       {/* The cover never participates in hit testing. */}
       <div
