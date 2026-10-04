@@ -14,7 +14,9 @@
  * hover wiring elsewhere — three.js meshes carry no attributes of their
  * own (`GrammarInstances.tsx`'s doc comment says the same).
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { subscribeReplay, getReplay, getServerReplay } from "../timelapse.ts";
+import { landOf } from "../worldModel.ts";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, Instance, Instances } from "@react-three/drei";
 import type { LightProbe } from "three";
@@ -113,7 +115,29 @@ export default function LandmarksRecords() {
   const palette = worldPalette();
   const reducedMotion = prefersReducedMotion();
   const heightAt = useTerrainHeight();
-  const rawBindings = useMemo(() => recordBindings(ledger), []);
+  const replayAsOf = useSyncExternalStore(subscribeReplay, getReplay, getServerReplay);
+  const liveBindings = useMemo(() => recordBindings(ledger), []);
+  const rawBindings = useMemo(() => {
+    if (replayAsOf === null) return liveBindings;
+    const ids = new Set(landOf(ledger, replayAsOf).map((feature) => feature.id));
+    const niches = liveBindings.deepmal.niches.filter((niche) => ids.has(niche.id));
+    const stones = liveBindings.steppingStones.stones.filter((stone) => ids.has(stone.id));
+    const cairns = liveBindings.steppingStones.cairns.filter((cairn) => ids.has(`pr-stone:${cairn.org}:cairn`));
+    const countsByOrg: Record<string, number> = {};
+    for (const stone of stones) countsByOrg[stone.org] = (countsByOrg[stone.org] ?? 0) + 1;
+    for (const cairn of cairns) countsByOrg[cairn.org] = (countsByOrg[cairn.org] ?? 0) + cairn.count;
+    const archiveEras = new Set(ledger.writing.archive.filter((piece) => ids.has(`archive-kite:${piece.slug}`)).map((piece) => piece.era ?? "undated"));
+    return {
+      ...liveBindings,
+      deepmal: { ...liveBindings.deepmal, niches, lit: niches.filter((niche) => niche.lit).length, total: niches.length },
+      steppingStones: { ...liveBindings.steppingStones, stones, cairns, countsByOrg, submerged: [], submergedCount: 0 },
+      weirs: liveBindings.weirs.filter((weir) => ids.has(`weir:${weir.company}`)),
+      employerGhats: liveBindings.employerGhats.filter((ghat) => ids.has(`weir:${ghat.company}`)),
+      heroStones: [],
+      oldTown: liveBindings.oldTown.filter((house) => archiveEras.has(house.eraKey)),
+      benchmarks: liveBindings.benchmarks.filter((benchmark) => ids.has(benchmark.id)),
+    };
+  }, [liveBindings, replayAsOf]);
   const bindings = useMemo(() => {
     const placed = <T extends { pos: readonly number[] }>(items: readonly T[]) => items.map((item) => ({ ...item, pos: groundPosition(item.pos, heightAt) }));
     return {
