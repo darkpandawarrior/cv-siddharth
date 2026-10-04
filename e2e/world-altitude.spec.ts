@@ -75,7 +75,8 @@ test("unknown arrival values fall back without throwing", async ({ page }) => {
 });
 
 test("the map focus reaches STREET and returns to the same node", async ({ page }) => {
-  await forceDeviceTier(page, "viewport");
+  // Mooring uses the same Hodi code on both live world tiers.
+  await forceDeviceTier(page, 2);
   await prepare(page);
   await page.goto("/map?focus=doori");
   await waitForHydration(page);
