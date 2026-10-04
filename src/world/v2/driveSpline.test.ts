@@ -127,3 +127,20 @@ describe("driveSpline: C1 autopilot stays on the spline", () => {
     expect(maxDistance).toBeGreaterThanOrEqual(0);
   });
 });
+
+
+describe("arrival mooring", () => {
+  it("moors beside the landmark inside legal water without idle drift", async () => {
+    const { mooredStateAt } = await import("./Hodi.tsx");
+    const { districtAnchors, sangamBasin, riverX, riverWidthAtZ } = await import("./valley.ts");
+    const target = districtAnchors(["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template", "portfolio", "stutter", "sinc-p"])[0];
+    const pose = mooredStateAt(target);
+    const basin = sangamBasin();
+    const inRiver = Math.abs(pose.x - riverX(pose.z)) < riverWidthAtZ(pose.z) / 2;
+    const inBasin = Math.hypot(pose.x - basin.x, pose.z - basin.z) < basin.r;
+    expect(inRiver || inBasin).toBe(true);
+    expect(Math.hypot(pose.x - target.x, pose.z - target.z)).toBeLessThan(95);
+    expect(pose.speed).toBe(0);
+    expect(pose.autopilot).toBe(false);
+  });
+});

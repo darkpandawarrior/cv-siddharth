@@ -5,9 +5,9 @@ import { MotionPathControls, useMotion } from "@react-three/drei";
 import hullProfile from "./hullProfile.json" with { type: "json" };
 import { applyWaterline } from "./waterline.glsl.ts";
 import type { WaterUniforms, WaterWaveUniformName } from "./waterShader.glsl.ts";
-import { riverSpline, valleyZ } from "./valley.ts";
+import { riverSpline, riverX, riverWidthAtZ, sangamBasin, BOUNDS, valleyZ } from "./valley.ts";
 import { spawnState, step, type HodiInput, type HodiState } from "./driveSpline.ts";
-import { input } from "../input.ts";
+import { attachKeyboard, input } from "../input.ts";
 import { prefersReducedMotion } from "../reducedMotion.ts";
 import { useReducedMotion } from "../../SceneActivity.tsx";
 
@@ -75,6 +75,8 @@ export interface HodiProps {
    *  swell rather than a second, independent clock. */
   waveUniforms?: Partial<Record<WaterWaveUniformName, THREE.IUniform<number>>>;
   spawnZ?: number;
+  /** A known landmark scene object, resolved by WorldV2. */
+  arrival?: string;
 }
 
 /** Pushes the live driveSpline progress into MotionPathControls' own motion
@@ -98,8 +100,28 @@ function AutopilotProgressDriver({
   return null;
 }
 
-export function Hodi({ waterUniforms, waveUniforms, spawnZ }: HodiProps) {
-  const { camera, gl } = useThree();
+/** Nearest legal water beside the rendered landmark, facing its bank. */
+export function mooredStateAt(landmark: { x: number; z: number }): HodiState {
+  const basin = sangamBasin();
+  const dx = landmark.x - basin.x;
+  const dz = landmark.z - basin.z;
+  const distance = Math.hypot(dx, dz);
+  const fraction = Math.min(1, (basin.r - 2) / Math.max(distance, 1));
+  const basinPose = { x: basin.x + dx * fraction, z: basin.z + dz * fraction };
+  const z = Math.max(BOUNDS.zMin, Math.min(BOUNDS.zMax, landmark.z));
+  const centre = riverX(z);
+  const half = Math.max(0, riverWidthAtZ(z) / 2 - 2);
+  const riverPose = { x: Math.max(centre - half, Math.min(centre + half, landmark.x)), z };
+  const near = (pose: { x: number; z: number }) => Math.hypot(landmark.x - pose.x, landmark.z - pose.z);
+  const pose = near(basinPose) < near(riverPose) ? basinPose : riverPose;
+  return { ...spawnState(pose.z), ...pose, heading: Math.atan2(landmark.x - pose.x, landmark.z - pose.z) };
+}
+
+export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps) {
+  const { camera, gl, scene } = useThree();
+  const mooring = useRef({ waiting: !!arrival, held: false, released: false });
+  const landmarkPosition = useRef(new THREE.Vector3());
+  useEffect(() => attachKeyboard(), []);
   const reducedMotionLive = useReducedMotion();
 
   const hodiStateRef = useRef<HodiState>(spawnState(spawnZ ?? DEFAULT_SPAWN_Z));
@@ -180,7 +202,23 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ }: HodiProps) {
     const reduced = reducedMotionLive;
 
     const axes: HodiInput = { steer: input.steer, throttle: input.throttle };
-    const next = step(hodiStateRef.current, axes, dt, { reducedMotion: reduced });
+    if (axes.steer !== 0 || axes.throttle !== 0) {
+      mooring.current.released = true;
+      mooring.current.held = false;
+      mooring.current.waiting = false;
+    }
+    if (mooring.current.waiting && arrival) {
+      const landmark = scene.getObjectByName(`landmark-${arrival}`);
+      if (landmark) {
+        landmark.getWorldPosition(landmarkPosition.current);
+        hodiStateRef.current = mooredStateAt(landmarkPosition.current);
+        mooring.current.waiting = false;
+        mooring.current.held = true;
+        flyIn.current.done = true;
+      }
+    }
+    const next = mooring.current.held ? hodiStateRef.current
+      : step(hodiStateRef.current, axes, dt, { reducedMotion: reduced });
     hodiStateRef.current = next;
     motionObjectRef.current = next.autopilot ? groupRef.current : ghostRef.current;
 
@@ -190,6 +228,12 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ }: HodiProps) {
       groupRef.current.position.set(next.x, WATER_Y, next.z);
       groupRef.current.rotation.y = next.heading;
     }
+    // Read-only telemetry comes from the hull's real drive state.
+    gl.domElement.dataset.hodiX = String(next.x);
+    gl.domElement.dataset.hodiZ = String(next.z);
+    gl.domElement.dataset.hodiMoored = String(mooring.current.held);
+    if (arrival && !mooring.current.waiting && !mooring.current.released) gl.domElement.dataset.hodiAt = arrival;
+    else delete gl.domElement.dataset.hodiAt;
     const lookAheadZ = clamp01((next.z - zStart) / zSpan + AUTOPILOT_FOCUS_LEAD);
     curve.getPointAt(lookAheadZ, focusObjectRef.current.position);
     // focusObjectRef is never mounted into the scene graph (it exists only

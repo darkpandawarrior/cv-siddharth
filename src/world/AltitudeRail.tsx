@@ -27,13 +27,17 @@ const STOPS: { altitude: Altitude; label: string }[] = [
  * neither mount duplicates it.
  */
 export function AltitudeRail() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const location = useRouterState({ select: (s) => s.location });
+  const pathname = location.pathname;
+  const search = location.search as { focus?: unknown; at?: unknown };
+  const candidate = pathname.startsWith("/playground") ? search.at : search.focus;
+  const slug = typeof candidate === "string" ? candidate : undefined;
   const navigate = useNavigate();
   const here = altitudeFor(pathname);
 
   function go(target: Altitude) {
     if (target === here) return;
-    const to = focusHandoffUrl(here, target);
+    const to = focusHandoffUrl(here, target, slug);
     navigateWithViewTransition(() => navigate({ to }), prefersReducedMotion());
   }
 
@@ -47,7 +51,7 @@ export function AltitudeRail() {
         return (
           <Link
             key={stop.altitude}
-            to={focusHandoffUrl(here, stop.altitude)}
+            to={focusHandoffUrl(here, stop.altitude, slug)}
             onClick={(e) => {
               e.preventDefault();
               go(stop.altitude);

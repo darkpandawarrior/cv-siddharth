@@ -33,6 +33,21 @@ export type ArchiveEntry = {
   reviewBy: string;
 };
 
-// The world-v1 row arrives with P3-07 (world-v1 archived behind five hidden
-// entry points per M70); this lane ships the type and the empty registry.
-export const ARCHIVE: ArchiveEntry[] = [];
+// Planned phase-3 deploy date. The ship gate replaces it if deployment slips.
+export const ARCHIVE: ArchiveEntry[] = [{
+  id: "world-v1",
+  what: "The first drivable Night Survey world",
+  whyKept: "Production rollback and a record of the first world",
+  entryPoints: [{ kind: "url", how: "/playground?world=v1", test: "e2e/world-driving.spec.ts" }],
+  files: { from: "carryOver:archived" },
+  tests: ["e2e/world-driving.spec.ts", "e2e/world-fallback.spec.ts", "e2e/playground-world.spec.ts", "e2e/world-reality.spec.ts"],
+  removal: [
+    "Remove the world=v1 validation in src/routes/playground.tsx and the v1 branches/imports in src/Playground.tsx.",
+    "Remove every entry point added by P4-00 and its archive plaque.",
+    "Remove ARCHIVED_V1_FILES from src/world/v2/carryOver.ts after confirming no active module imports them.",
+    "Remove the four v1 specs and the archive entry-point specs added by P4-00.",
+    "Remove this registry row, its markers and the ARCHIVE.md world-v1 section.",
+  ],
+  archivedAt: "2026-10-04",
+  reviewBy: "2027-04-04",
+}];

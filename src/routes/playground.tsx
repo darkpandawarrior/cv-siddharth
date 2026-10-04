@@ -1,67 +1,42 @@
-import { lazy } from "react";
-import { createFileRoute, getRouteApi, ClientOnly } from "@tanstack/react-router";
-import { Hydrate } from "@tanstack/react-start";
-import { load } from "@tanstack/react-start/hydration";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { roomHead } from "../lib/routeHead.ts";
 import { CursorAura } from "../CursorAura.tsx";
+import { NODES } from "../data/storyMap.ts";
 import Playground from "../Playground.tsx";
 
-type PlaygroundSearch = { world?: "v2" };
-
-// M56/M67 — the world-v2 hub is preview-only: it renders on every branch
-// deploy and local dev, but a PRODUCTION build of `/playground?world=v2`
-// falls back to the unchanged v1 world (this lane's own acceptance line).
-// `import.meta.env.VITE_VERCEL_ENV` is a build-time constant Vite inlines,
-// so this branch is identical on the server and the client — no hydration
-// mismatch from checking it here rather than a runtime request header.
-const WORLD_V2_ALLOWED = import.meta.env.VITE_VERCEL_ENV !== "production";
-
-const worldV2LoadingFallback = (
-  <div className="flex h-full items-center justify-center font-mono text-sm text-muted">loading the world…</div>
-);
-
-// Lazy: nothing outside this branch pays for WorldV2's own three.js/drei/
-// postprocessing chunk, and it never even reaches the SERVER compile
-// (`<ClientOnly>` strips it there, the same pattern `Playground.tsx` uses
-// for v1's own `World.tsx`) — see this lane's own acceptance line on the
-// WorldV2 chunk staying separate from the v1 Playground chunk.
-const WorldV2 = lazy(() => import("../world/v2/WorldV2.tsx"));
+// Share crawlers need the published host even when previews serve assets locally.
+const SHARE_IMAGE = "https://darkpandawarrior.github.io/cv/world/concept/01-golden-spawn-og.jpg";
+type PlaygroundSearch = { world?: "v1"; at?: string };
 
 export const Route = createFileRoute("/playground")({
-  head: () => roomHead("/playground"),
+  head: () => {
+    const head = roomHead("/playground");
+    return {
+      ...head,
+      meta: [
+        ...(head.meta ?? []),
+        { property: "og:image", content: SHARE_IMAGE },
+        { property: "og:image:alt", content: "Concept painting of the Sangam valley at golden hour" },
+        { name: "twitter:image", content: SHARE_IMAGE },
+      ],
+    };
+  },
   validateSearch: (search: Record<string, unknown>): PlaygroundSearch => ({
-    world: search.world === "v2" ? "v2" : undefined,
+    // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+    world: search.world === "v1" ? "v1" : undefined,
+    at: typeof search.at === "string" && NODES.some((node) => node.id === search.at) ? search.at : undefined,
   }),
-  /*
-   * This route server-renders, unlike the other WebGL rooms — see below for
-   * why that is unaffected by the world=v2 branch this lane adds.
-   */
   component: PlaygroundRoute,
 });
 
-// getRouteApi: see src/routes/map.tsx's comment.
 const route = getRouteApi("/playground");
 
 function PlaygroundRoute() {
-  const { world } = route.useSearch();
-  const showV2 = world === "v2" && WORLD_V2_ALLOWED;
-
-  if (showV2) {
-    return (
-      <div className="relative h-screen w-screen overflow-hidden">
-        <ClientOnly fallback={worldV2LoadingFallback}>
-          <Hydrate when={load()} split fallback={worldV2LoadingFallback}>
-            <WorldV2 />
-          </Hydrate>
-        </ClientOnly>
-      </div>
-    );
-  }
-
+  const { world, at } = route.useSearch();
   return (
-    <div data-world="v1">
+    <div data-world={world}>
       <CursorAura />
-      <Playground />
+      <Playground world={world} at={at} />
     </div>
   );
 }

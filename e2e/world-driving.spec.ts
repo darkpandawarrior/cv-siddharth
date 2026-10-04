@@ -1,6 +1,11 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { test, expect, devices } from "@playwright/test";
 import { waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  await forceDeviceTier(page, "viewport");
+});
 
 /**
  * Does the world actually drive?
@@ -38,7 +43,7 @@ async function posed(page: Page): Promise<{ x: number; z: number; rot: number } 
 }
 
 async function enterWorld(page: Page): Promise<void> {
-  await page.goto("/playground");
+  await page.goto("/playground?world=v1");
   await waitForHydration(page);
   await page.waitForSelector("canvas", { timeout: 30_000 });
   // The first frames place the car and settle the camera; sampling a pose

@@ -16,6 +16,7 @@ import { SkyDome } from "./SkyDome.tsx";
 import { Env } from "./Env.tsx";
 import { Terrain } from "./Terrain.tsx";
 import { Water } from "./Water.tsx";
+import { LANDMARK_OPENS } from "./landmarkBindings.ts";
 import { Hodi } from "./Hodi.tsx";
 import { Post } from "./Post.tsx";
 import { GrammarInstances, GrammarInstancesDom } from "./GrammarInstances.tsx";
@@ -69,7 +70,8 @@ function previewAtToMinutes(d: Date): number {
   return (utcMinutes + IST_OFFSET_MIN) % 1440;
 }
 
-export default function WorldV2(): JSX.Element {
+export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
+  const arrival = Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0];
   const [previewMinutes, setPreviewMinutes] = useState<number | null>(null);
   const [highlightedRule, setHighlightedRule] = useState<string | null>(null);
   const [lastSeen, setLastSeen] = useState<LastSeen | null>(null);
@@ -149,7 +151,7 @@ export default function WorldV2(): JSX.Element {
         <Env />
         <Terrain />
         <Water />
-        <Hodi spawnZ={spawn.pos[2]} />
+        {nowModel && <Hodi key={at ?? "spawn"} spawnZ={spawn.pos[2]} arrival={arrival} />}
         {wm && <GrammarInstances worldModel={wm} highlightedRule={highlightedRule} />}
         {CANVAS_LAYERS.map((layer) => (
           <layer.Component key={layer.id} />

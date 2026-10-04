@@ -1,4 +1,4 @@
-import { Component, lazy, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -17,31 +17,21 @@ import {
   DeferredGuestWall,
 } from "./play/DeferredPlayRoom.tsx";
 
-import { CorridorPlate } from "./world/CorridorPlate.tsx";
+import { ConceptFallback, CorridorPlate } from "./world/CorridorPlate.tsx";
 import World from "./world/World.tsx";
 import { deviceTier } from "./world/deviceTier.ts";
-import { useNow, useSky, useWeather } from "./lib/useSky.ts";
-import { pickConceptPlate } from "./world/v2/conceptPlates.ts";
-import { activeFestivalForm } from "./world/v2/live/nightSky.ts";
 
-// world-v2-spec.md#10 step 8 / master-plan.md#M36 (P3-07): the swap happens
-// HERE, not by forking this hub — WorldV2 replaces v1's `World` inside the
-// exact same header/transition/WorldBoundary/fallback shell this file
-// already built for v1, so every one of those behaviours (the wipe, the
-// list<->world toggle, the error boundary, the print branch) applies to
-// both worlds instead of being rebuilt for the new one. Lazy for the same
-// reason `World` is never imported eagerly here: nothing outside `/playground`
-// should pay for either world's three.js weight.
+// Keep the valley in its own client chunk.
 const WorldV2 = lazy(() => import("./world/v2/WorldV2.tsx"));
 /**
- * The Playground — one full-screen hub for every interactive world on the site.
+ * The Playground, one full-screen hub for every interactive world on the site.
  * These used to be scattered down the scroll and behind hotkeys; gathering them
  * behind one door makes the point explicit: this portfolio is a running program,
  * and each room is a small proof of the engineering the CV describes.
  *
  * Since the playground-world work, this hub has two bodies sharing one header:
- * a drivable 3D world (src/world/, lazy — nothing else on the site imports it)
- * and RoomGrid, the original card grid. The grid is never a lesser fallback —
+ * a drivable 3D world (src/world/, lazy, nothing else on the site imports it)
+ * and RoomGrid, the original card grid. The grid is never a lesser fallback,
  * it's the always-reachable list view: a locked-down laptop or someone who'd
  * rather just click gets it as the visible page (wantsWorld false, byte-for-
  * byte the same UI that shipped before the world existed); a screen-reader
@@ -49,27 +39,27 @@ const WorldV2 = lazy(() => import("./world/v2/WorldV2.tsx"));
  * (aria-hidden) world, sr-only until @media print or an AT makes it visible.
  *
  * Each room is its own route, rendered one at a time so only one canvas / WebGL
- * context is ever live. This hub keeps its OWN header rather than RoomFrame's —
+ * context is ever live. This hub keeps its OWN header rather than RoomFrame's,
  * RoomFrame's first control links back here, which from here is a link to
  * itself. (This comment used to claim it shared RoomFrame's chrome. It never
  * did, and that drift is why the palette was missing from this page.)
  */
 
 // Split (via the Hydrate boundary below) so nothing outside /playground pays
-// for three.js/Rapier — see src/world/World.tsx for what actually lives in
+// for three.js/Rapier, see src/world/World.tsx for what actually lives in
 // this chunk.
 
-/** If the world throws — a lost WebGL context, a driver quirk the raycast
- *  vehicle controller trips on — land on the same grid a visitor without
+/** If the world throws, a lost WebGL context, a driver quirk the raycast
+ *  vehicle controller trips on, land on the same grid a visitor without
  *  WebGL already gets, rather than a dead screen. It does that by telling
  *  PlaygroundInner (via onError) rather than rendering a fallback in place:
  *  rendering RoomGrid here used to leave it trapped inside
  *  main.playground-world, which is still sitting under the page root's
- *  h-screen overflow-hidden (wantsWorld doesn't know the world died) — eight
+ *  h-screen overflow-hidden (wantsWorld doesn't know the world died), eight
  *  cards in a viewport-height box with the lower rows unreachable and the
  *  whole thing display:none under print. Bailing all the way out to
  *  PlaygroundInner's ordinary list branch instead gives a genuinely normal,
- *  scrollable page — the same one a no-WebGL visitor gets. */
+ *  scrollable page, the same one a no-WebGL visitor gets. */
 class WorldBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
@@ -79,7 +69,7 @@ class WorldBoundary extends Component<{ children: ReactNode; onError: () => void
     this.props.onError();
   }
   render() {
-    // Nothing to render once tripped — onError flips PlaygroundInner's
+    // Nothing to render once tripped, onError flips PlaygroundInner's
     // wantsWorld to false in the same tick, which unmounts this whole
     // subtree in favour of the list branch. This is never on screen for
     // more than a frame.
@@ -92,7 +82,7 @@ const worldLoadingFallback = <div className="flex h-full items-center justify-ce
 const VIEW_KEY = "playground:view";
 
 // localStorage throws in private-mode Safari (see AnomalyRail.tsx's
-// hasSweptBefore/markSwept for the same guard) — losing the remembered view
+// hasSweptBefore/markSwept for the same guard), losing the remembered view
 // is a minor annoyance, never worth crashing the hub over.
 function loadViewPref(): "world" | "list" | null {
   try {
@@ -106,29 +96,19 @@ function saveViewPref(view: "world" | "list"): void {
   try {
     localStorage.setItem(VIEW_KEY, view);
   } catch {
-    // best-effort only — worst case the choice doesn't survive a reload
+    // best-effort only, worst case the choice doesn't survive a reload
   }
 }
 
 export interface PlaygroundProps {
-  /** `?world=v1` (routes/playground.tsx's own validateSearch) — the
-   *  production rollback to the unchanged v1 world (master-plan.md#M36,
-   *  #M51 superseded by #M70). Anything else, including undefined, is the
-   *  v2 default this lane ships.
-   *  // ponytail: archive(world-v1) until 2027-03-28; removal recipe in ARCHIVE.md#world-v1 */
   world?: "v1";
-  /** `?at=<slug>` — living-ledger-spec.md#6.2's focus hand-off, validated
-   *  against the same registry `/map?focus=` uses (routes/playground.tsx).
-   *  Threaded through as `data-at` for now; see this component's own
-   *  `ConceptFallback`/world-mount comment for the acceptance gap this
-   *  leaves (WorldV2.tsx/Hodi.tsx are owned by a different, already-merged
-   *  lane and do not read it, so the hodi is not actually moored in 3D). */
+  /** Validated against the same node registry as /map?focus=. */
   at?: string;
 }
 
 export default function Playground({ world, at }: PlaygroundProps = {}) {
-  // Everything shared on this page — presence, the tile counts, the sandbox and
-  // the wall — reads from this one room. The pulse provider itself now
+  // Everything shared on this page, presence, the tile counts, the sandbox and
+  // the wall, reads from this one room. The pulse provider itself now
   // mounts once in __root.tsx (every room bumps the entry counter on mount,
   // not only this page), so this page just reads it like anywhere else.
   return (
@@ -140,56 +120,44 @@ export default function Playground({ world, at }: PlaygroundProps = {}) {
 
 function PlaygroundInner({ world, at }: PlaygroundProps) {
   const { goToSection } = useSectionNav();
-  // master-plan.md#M36: v2 is the default everywhere (including production);
-  // ?world=v1 is the one escape hatch back to the byte-for-byte unchanged v1
-  // hub below, kept reachable until P4-00 archives it (M51, superseded by
-  // M70 — archived behind hidden entry points, never deleted).
+  // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
   const isV1 = world === "v1";
 
   // Both start false and resolve after mount. hasWebGL() reads real browser
   // capability, not something to guess at during the render that also has to
-  // run before the DOM exists — deciding here rather than inline keeps the
+  // run before the DOM exists, deciding here rather than inline keeps the
   // first paint deterministic instead of racing a capability check.
   //
   // worldCapable is WebGL support alone now, not reduced-motion too: it used
   // to gate BOTH the default landing view AND the "drive the 3D world
   // instead" button/showWorld(), so a reduced-motion visitor with a working
-  // GPU could never reach the world even by explicit choice — the world's
+  // GPU could never reach the world even by explicit choice, the world's
   // own reduced-motion handling (SceneActivity.tsx's demand frameloop,
   // Rain.tsx's rainMode() returning "motion-reduced" with no rain mesh)
   // existed for a visitor this gate never let in. The default LANDING view
   // still respects reduced motion (e2e/world-fallback.spec.ts: "the list
-  // branch is what reduced-motion resolves to") — that's forcedList's
-  // initial value below, not worldCapable — so `wantsWorld` starts false
+  // branch is what reduced-motion resolves to"), that's forcedList's
+  // initial value below, not worldCapable, so `wantsWorld` starts false
   // for that visitor and flips true only once they click through, same as
   // any other visitor's explicit choice (e2e/world-reality.spec.ts:
   // "reduced motion marks rain motion-reduced, with no rain mesh mounted").
   const [forcedList, setForcedList] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [worldCapable, setWorldCapable] = useState(false);
-  // Set by WorldBoundary's onError when the world throws after mounting —
+  // Set by WorldBoundary's onError when the world throws after mounting,
   // see WorldBoundary's own comment for why this lives up here rather than
   // being handled as a fallback render inside the boundary itself.
   const [worldFailed, setWorldFailed] = useState(false);
   useEffect(() => {
     const saved = loadViewPref();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setForcedList(saved ? saved === "list" : reducedMotion);
+    setForcedList(isV1 ? (saved ? saved === "list" : reducedMotion) : reducedMotion);
     const webgl = hasWebGL();
     if (isV1) {
-      // Unchanged v1 gate (e2e/world-fallback.spec.ts, e2e/world-driving.spec.ts
-      // pin this exact behaviour under ?world=v1) — WebGL alone.
       setWorldCapable(webgl);
       return;
     }
-    // v2's own gate (conceptPlates.ts's own doc comment: "reduced motion
-    // before opt-in, saveData, no WebGL and Tier-3 (P3-07's consumers)") —
-    // the throttled tier and a saveData visitor land on the concept
-    // painting rather than a degraded live render, same
-    // navigator.connection.saveData idiom every other WebGL decoration on
-    // this site already gates on (AmbientBackground.tsx and siblings).
-    // ponytail: navigator.connection is unstandardised (no DOM lib type), so this
-    // is an inline cast rather than a shared hook for one flag.
+    // Save-data and tier 3 visitors keep the painting and the data list.
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     setWorldCapable(webgl && !saveData && deviceTier() !== 3);
   }, [isV1]);
@@ -205,7 +173,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
    * Switching views is a WIPE, not a cut.
    *
    * The two views are the same eight rooms in different clothes, and swapping
-   * them instantly read as a page break — the world vanished, a list appeared,
+   * them instantly read as a page break, the world vanished, a list appeared,
    * and nothing connected the two. A brief cover holds the screen while the
    * heavy side mounts or tears down, which also hides the one genuinely ugly
    * frame in the transition: a WebGL context being created or disposed.
@@ -239,7 +207,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
     runTransition(() => {
     setForcedList(false);
     // Also clears a prior crash: worldCapable stays true even after
-    // WorldBoundary trips (the browser can still run WebGL — something in
+    // WorldBoundary trips (the browser can still run WebGL, something in
     // the scene just threw), so without this the "drive the 3D world
     // instead" button below would render, but wantsWorld could never go
     // true again and the button would silently do nothing.
@@ -252,7 +220,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
     <div
       className={`flex flex-col bg-void ${
         // print:h-auto print:overflow-visible: the world view's viewport-locked
-        // box exists so the WebGL canvas never scrolls under a driving craft —
+        // box exists so the WebGL canvas never scrolls under a driving craft,
         // it has no reason to exist on paper, and left in place under print it
         // would clip the room grid (see the sr-only wrapper below) to one
         // screen's worth of content instead of letting it paginate normally.
@@ -273,10 +241,10 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
               palette/badge/Ask buttons off their own row. */}
           <span className="kicker flex min-w-0 items-center gap-2">
             <LayoutGrid size={13} className="shrink-0 text-accent" />
-            <span className="truncate">The Playground — every interactive room, one door</span>
+            <span className="truncate">{isV1 ? "The Playground, every interactive room, one door" : "Sangam"}</span>
           </span>
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* The hub keeps its own header rather than RoomFrame's — RoomFrame
+            {/* The hub keeps its own header rather than RoomFrame's, RoomFrame
                 links back to the Playground, which from the Playground is a
                 link to itself. But it was also missing the palette, so the one
                 page whose whole job is "every room, one door" was the one page
@@ -292,117 +260,90 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
         </nav>
       </header>
 
-      {/* The transition cover. Sits above both views, fades in over the
-          outgoing one and out over the incoming one, so a switch reads as a
-          wipe rather than as the page breaking. aria-hidden: it is pure
-          decoration and a screen reader has already been told about both
-          views.
-
-          F20(b) / src/spine/registry.ts's own `playground-wipe` row (debt
-          "P1-01a", "already pointer-events:none ... the <div> lacks
-          data-spine and SP-00 does not own src/Playground.tsx"): SP-00
-          couldn't reach this file, this lane can. `.playground-wipe` in
-          src/index.css sets `pointer-events: none` unconditionally — the
-          `.is-active` variant only adds opacity, never re-enables hit
-          testing — and `runTransition` above always clears `transitioning`
-          260ms after it sets it, so the overlay never outlives its own
-          fade. e2e/playground-world.spec.ts's own "the wipe never
-          intercepts a click, mid-transition or after" proves both halves at
-          390px; the debt row is a handoff for the orchestrator to clear
-          once that test is green on the phase branch (registry.ts is
-          reconciled there, not edited per-lane — master-plan.md G2). */}
+      {/* The cover never participates in hit testing. */}
       <div
         aria-hidden="true"
         data-spine="playground-wipe"
         className={`playground-wipe${transitioning ? " is-active" : ""}`}
+        style={{ pointerEvents: "none" }}
       />
 
       {wantsWorld ? (
         <main id="main-content" tabIndex={-1} className="playground-world relative min-h-0 flex-1">
           {/* playground-canvas (not playground-world) is what @media print
-              hides (src/index.css) — a WebGL canvas is a black rectangle on
+              hides (src/index.css), a WebGL canvas is a black rectangle on
               paper. RoomGrid below is the alternative, not a lie about a grid
               "underneath": it's rendered right here, every time the world is,
               just visually hidden. */}
           <div className="playground-canvas absolute inset-0" data-at={at}>
-            {/* wantsWorld is only ever true after hydration (see its own
-                comment above), so this branch never actually renders during
-                SSR — but a `useState`-gated ternary is not a compile-time
-                constant, so the bundler still resolves `World`/`WorldV2`
-                (three.js, Rapier) for the server. `<ClientOnly>` is what makes
-                that reference disappear from the SERVER compile itself:
-                Start's compiler strips its children there before the SSR
-                bundle is built. `wantsWorld` is already known true by the
-                time this branch is reached, so `<Hydrate when={load()}
-                split>` just keeps whichever world in its own chunk on the
-                client — there is no further defer to express here.
-
-                master-plan.md#M36 (P3-07): WorldV2 by default, v1 only under
-                ?world=v1 — see this file's own `isV1`/`PlaygroundProps`
-                comment. `data-at` above is `?at=<slug>`'s real, validated
-                value (routes/playground.tsx), but WorldV2.tsx and Hodi.tsx
-                (the only places holding the boat's spawn state) belong to a
-                different, already-merged lane and are not in this lane's
-                `owns` — mooring the hodi there in 3D needs a change to one of
-                those files, which G2 (ownership) forbids here. This is the
-                honest signal this lane CAN ship: the slug really did survive
-                the URL/route/prop chain, visible on the DOM. */}
+            {/* ClientOnly keeps both scenes out of the server bundle. */}
             <ClientOnly fallback={worldLoadingFallback}>
               <WorldBoundary onError={handleWorldError}>
                 <Hydrate when={load()} split fallback={worldLoadingFallback}>
-                  {isV1 ? <World onShowList={showList} /> : <WorldV2 />}
+                  {isV1 ? <World onShowList={showList} /> : <Suspense fallback={worldLoadingFallback}><WorldV2 at={at} /></Suspense>}
                 </Hydrate>
               </WorldBoundary>
             </ClientOnly>
           </div>
           {/* sr-only in world view (Canvas above is aria-hidden, so this is
-              the entire accessible room list a screen-reader user gets —
+              the entire accessible room list a screen-reader user gets,
               same room links the HUD's List button switches a sighted visitor
               to) and print:not-sr-only so it's what actually prints once
               playground-canvas above is hidden. Without this, world view was
               either a blank printed page (nothing survived the print rule)
               or, for a screen-reader user, a hub with a header and a List
-              button but zero room links — the ternary this replaced rendered
+              button but zero room links, the ternary this replaced rendered
               RoomGrid *instead of* the world, never alongside it.
 
               v1 only: WorldV2 already ships its own accessible surface (a
               real <h1> plus HudV2's always-mounted LandmarkList, P2-19's own
-              task) — stacking this v1-shaped "8 rooms" block underneath it
+              task), stacking this v1-shaped "8 rooms" block underneath it
               would be a second, conflicting <h1> and a list of the wrong
               nouns (rooms, not landmarks) for a page a screen reader or a
               printer would otherwise read as one coherent document. */}
           {isV1 && (
           <div className="sr-only print:not-sr-only">
-            {/* World view had no <h1> at all — the visible one lives in the
+            {/* World view had no <h1> at all, the visible one lives in the
                 list-view branch below, and this is the branch that renders by
                 default. The canvas above is aria-hidden, so the page announced
                 itself with no heading of any level to a screen reader and
                 shipped an h1-less document to crawlers. sr-only rather than
                 visible: the world is full-bleed chrome with nowhere to put a
                 title, which is exactly why RoomFrame does the same thing. */}
-            <h1>The Playground — every interactive room, one street</h1>
+            <h1>The Playground, every interactive room, one street</h1>
             <RoomGrid previews={false} />
           </div>
+          )}
+        </main>
+      ) : !isV1 ? (
+        <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-6xl flex-1 px-6">
+          <h1 className="font-display text-hero font-bold tracking-tight">Sangam</h1>
+          <ConceptFallback at={at} />
+          {worldCapable && (
+            <button type="button" onClick={showWorld} className="ctrl mt-4 rounded-full border border-line px-4 py-2">
+              Enter the valley
+            </button>
+          )}
         </main>
       ) : (
         <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-6xl flex-1 px-6">
           <p className="section-eyebrow mb-2">// the playground</p>
           <h1 className="font-display text-hero font-bold tracking-tight">This site is a live demo</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-zinc-400">
-            Not a PDF with a pulse — a running program. {countWord(ROOMS.length)} interactive rooms, each a
+            Not a PDF with a pulse, a running program. {countWord(ROOMS.length)} interactive rooms, each a
             small proof of the engineering the rest of the site describes. Pick one and poke it. If you only have
             two minutes, start here.
           </p>
           {/* The corridor, as a picture, for the visitors who land here by
               default rather than see it move: no WebGL, or reduced-motion
               with no saved preference yet (forcedList's own comment above)
-              — either can still reach the real world through the "drive it
+             , either can still reach the real world through the "drive it
               instead" button below, now that worldCapable no longer blocks
               it for the reduced-motion half of that group. It is baked at
               build time
               by scripts/gen-world-plate.mjs from the SAME heightfield the
               drivable terrain uses, so it cannot drift from the world it
-              stands in for — the work ramp toward 2026, the 2020-12 chess
+              stands in for, the work ramp toward 2026, the 2020-12 chess
               spike, writing thinning out, open source flat then flooding.
               It sits ABOVE the room grid rather than replacing it: the grid
               is the navigation and always was. Without this the branch was a
@@ -412,7 +353,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
               NO CONDITION, deliberately. This was `!worldCapable`, which asked
               the wrong question: a visitor whose browser can run the world but
               who chose the list anyway (or whose world just crashed) got no
-              plate at all — the majority cohort on this branch, and the one
+              plate at all, the majority cohort on this branch, and the one
               most likely to wonder what they opted out of. This whole branch
               is the `!wantsWorld` case by construction (see the ternary above),
               so `!wantsWorld && …` here would be a condition that is always
@@ -427,7 +368,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
               <Activity size={12} /> see what everyone else has been touching →
             </Link>
             {worldCapable && (
-              // The grid's half of the List/World toggle — the world's half
+              // The grid's half of the List/World toggle, the world's half
               // is the HUD's List button (src/world/Hud.tsx), which calls
               // showList the other way. Only offered when this browser could
               // actually run the world; otherwise there's nothing to return to.
@@ -443,8 +384,8 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
 
           <DeferredVisitorPlaque />
 
-          {/* ponytail: the spec's visit-chip flash — a one-shot highlight when
-              a card's counter ticks — is deliberately not built. It would be
+          {/* ponytail: the spec's visit-chip flash, a one-shot highlight when
+              a card's counter ticks, is deliberately not built. It would be
               the only motion this redesign ADDS, on a page that already has the
               card entrance keyframe and a reduced-motion branch guarding it,
               and the chip it would animate is below the fold on every card but
@@ -453,7 +394,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
           <RoomGrid />
 
           {/* The two shared toys under one heading, because the thing they
-              have in common is not "toy" — it is that what you do in them
+              have in common is not "toy", it is that what you do in them
               outlives your visit. They shipped as two unrelated sections and
               read as a scrap drawer at the bottom of the page.
 
@@ -467,13 +408,13 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
               inner sections carry their own `mt-16`, which was the right gap
               when they were top-level siblings and is a 64px hole between this
               heading and the first thing it heads. The second section keeps its
-              full gap — it is still separating two things. */}
+              full gap, it is still separating two things. */}
           <section aria-labelledby="extras-h" className="mt-16 [&>section:first-of-type]:mt-8">
             <h2 id="extras-h" className="font-display text-lg font-bold tracking-tight">
               What you leave behind
             </h2>
-            {/* Not .kicker. That is a label style — 11px mono, uppercased,
-                0.1em tracked — and it is right for the four-word band notes
+            {/* Not .kicker. That is a label style, 11px mono, uppercased,
+                0.1em tracked, and it is right for the four-word band notes
                 above ("REAL PROGRAMS, IN THE PAGE"). This is two sentences,
                 and it rendered as two full lines of letterspaced caps. */}
             <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-400">
