@@ -144,7 +144,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
         <SkyDome uniforms={lighting.uniforms} />
         <Env uniforms={lighting.uniforms} />
         <Terrain heightmap={heightmap} />
-        <Water />
+        <Water skyUniforms={lighting.uniforms} />
         {nowModel && <Hodi key={at ?? "spawn"} spawnZ={spawn.pos[2]} arrival={arrival} />}
         {wm && <GrammarInstances worldModel={wm} highlightedRule={highlightedRule} />}
         {CANVAS_LAYERS.map((layer) => (

@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Reflector } from "three/addons/objects/Reflector.js";
+import { shareSkyUniforms } from "./skyLighting.ts";
+import type { SkyUniformName } from "./skyChunk.glsl.ts";
 import { Caustics } from "@react-three/drei";
 import hullProfile from "./hullProfile.json" with { type: "json" };
 import { createWaterShader, type WaterUniforms, type WaterWaveUniformName } from "./waterShader.glsl.ts";
@@ -57,6 +59,7 @@ const CAUSTICS_RESOLUTION_DEFAULT = 1024;
 const CAUSTICS_RESOLUTION_LOW_VRAM = 512;
 
 export interface WaterProps {
+  skyUniforms?: Record<SkyUniformName, THREE.IUniform>;
   /** Overridden once P2-05's terrain lane publishes the real heightmap/flow
    *  textures; a flat-plane fallback otherwise (waterShader.glsl.ts's
    *  `createFallbackTexture`). */
@@ -76,7 +79,7 @@ function disposeReflector(reflector: Reflector): void {
   (reflector.material as THREE.Material).dispose();
 }
 
-export function Water({ heightMap, flowMap, waveUniforms, lowVram = false }: WaterProps) {
+export function Water({ heightMap, flowMap, waveUniforms, skyUniforms, lowVram = false }: WaterProps) {
   const tier = deviceTier();
 
   const reflector = useMemo(() => {
@@ -99,6 +102,7 @@ export function Water({ heightMap, flowMap, waveUniforms, lowVram = false }: Wat
       textureHeight: Math.max(1, Math.round(height * dpr * resScale)),
       shader,
     });
+    if (skyUniforms) shareSkyUniforms(r.material as THREE.ShaderMaterial, skyUniforms);
     r.rotation.x = -Math.PI / 2;
     r.position.set(0, WATER_Y, BOUNDS.zMin + WATER_EXTENT / 2);
     return r;
@@ -106,6 +110,9 @@ export function Water({ heightMap, flowMap, waveUniforms, lowVram = false }: Wat
   }, [tier]);
 
   useEffect(() => disposeReflector(reflector), [reflector]);
+  useEffect(() => {
+    if (skyUniforms) shareSkyUniforms(reflector.material as THREE.ShaderMaterial, skyUniforms);
+  }, [reflector, skyUniforms]);
 
   useFrame(({ camera }, delta) => {
     const uniforms = (reflector.material as THREE.ShaderMaterial).uniforms as unknown as WaterUniforms;

@@ -1,4 +1,4 @@
-import { Vector3 } from "three";
+import { Vector3, type ShaderMaterial } from "three";
 import type { SkyState } from "../../lib/sky.ts";
 import { createSkyUniforms } from "./skyChunk.glsl.ts";
 import { sunBinding, cloudCoverUniform, cloudShadeMultiplier } from "./live/liveBinding.ts";
@@ -15,4 +15,9 @@ export function skyLighting(sky: SkyState | null) {
   uniforms.uCloudCover.value = cloudCoverUniform(sky.weather?.cloudPct ?? null);
   uniforms.uCloudShade.value.multiplyScalar(cloudShadeMultiplier(sky.weather?.code ?? null));
   return { uniforms, intensity: binding.sunI, color: new Vector3(...binding.sky.uSunCol) };
+}
+
+/** Reflector clones its input uniforms; bind the live objects after creation. */
+export function shareSkyUniforms(material: ShaderMaterial, uniforms: ReturnType<typeof createSkyUniforms>): void {
+  Object.assign(material.uniforms, uniforms);
 }
