@@ -79,6 +79,9 @@ jobs:
       - name: Unit tests
         if: ${{ !cancelled() }}
         run: npm run test
+      - name: World models have geometry and volume
+        if: ${{ !cancelled() }}
+        run: npm run probe:world-models
 
       # A committed generated artifact that disagrees with its generator compiles
       # perfectly right up until someone regenerates it. That is not theoretical

@@ -488,6 +488,14 @@ const surfaceMap = WALL_GROUPS.map((g) => {
   return `### ${g.label}: ${g.note}\n\n${items}`;
 }).join("\n\n");
 
+// The condensed crawler map follows the Sangam swap. The full profile and
+// assistant outputs retain their existing content in this wiring change.
+const playgroundSurface = surfaces.find((surface) => surface.to === "/playground");
+const llmsSurfaceMap = surfaceMap.replace(
+  `- [${playgroundSurface.label}](${SITE}/playground): ${playgroundSurface.blurb}`,
+  `- [The Sangam](${SITE}/playground): A river valley explored by boat, with project landmarks at ghats and writing above the banks. The GPS lens draws raw and filtered wakes; the reality ledger records data sources and availability. Reduced motion, save data, tier 3 devices and WebGL failures have a concept painting and room list. The earlier street world remains available at /playground?world=v1.`,
+);
+
 /** The projects with a real write-up, each at its own route. */
 const caseStudyLinks = projects
   .filter((p) => p.detail)
@@ -572,7 +580,7 @@ ${caseStudyHeadlines}
 
 - [Home](${SITE}/): the headline numbers, the case studies, experience, skills, writing, a 3D storyboard of how it all connects, and contact.
 
-${surfaceMap}
+${llmsSurfaceMap}
 
 ## Projects, each with its own page
 

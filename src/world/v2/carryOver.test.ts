@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { ARCHIVED_V1_FILES, CARRY_OVER, carryOverViolations, type CarryOverEntry } from "./carryOver.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,26 @@ const REQUIRED_V1_IDS = [
 ];
 
 describe("carryOver: the real manifest", () => {
+  it("README table rows equal the manifest entries and their four-way status", () => {
+    const readme = readFileSync(join(REPO_ROOT, "README.md"), "utf8");
+    const table = readme.split("<!-- AUTOGEN:WORLD-CARRY-OVER:START -->")[1]
+      ?.split("<!-- AUTOGEN:WORLD-CARRY-OVER:END -->")[0];
+    expect(table, "README has a generated carry-over table").toBeDefined();
+    const rows = table!.split("\n").filter((line) => line.startsWith("| `"))
+      .map((line) => line.split("|").slice(1, 6).map((cell) => cell.trim()));
+    expect(rows).toEqual(CARRY_OVER.map((entry) => [
+      `\`${entry.id}\``,
+      entry.status === "ported" ? "yes" : "",
+      entry.status === "degraded" ? "yes" : "",
+      entry.status === "dropped" ? "yes" : "",
+      "",
+    ]));
+    // Checks evidence cells and formatting too, without rewriting the README.
+    expect(() => execFileSync(process.execPath, [
+      join(REPO_ROOT, "scripts/world-v2/gen-carry-over.mjs"), "--check",
+    ])).not.toThrow();
+  });
+
   it("has no violations (every required id present, every entry well-formed)", () => {
     expect(carryOverViolations(CARRY_OVER, REQUIRED_V1_IDS)).toEqual([]);
   });
