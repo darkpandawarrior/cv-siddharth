@@ -1,4 +1,4 @@
-import { Component, useCallback, useEffect, useState, type ReactNode } from "react";
+import { Component, lazy, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, ClientOnly } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
@@ -19,6 +19,20 @@ import {
 
 import { CorridorPlate } from "./world/CorridorPlate.tsx";
 import World from "./world/World.tsx";
+import { deviceTier } from "./world/deviceTier.ts";
+import { useNow, useSky, useWeather } from "./lib/useSky.ts";
+import { pickConceptPlate } from "./world/v2/conceptPlates.ts";
+import { activeFestivalForm } from "./world/v2/live/nightSky.ts";
+
+// world-v2-spec.md#10 step 8 / master-plan.md#M36 (P3-07): the swap happens
+// HERE, not by forking this hub — WorldV2 replaces v1's `World` inside the
+// exact same header/transition/WorldBoundary/fallback shell this file
+// already built for v1, so every one of those behaviours (the wipe, the
+// list<->world toggle, the error boundary, the print branch) applies to
+// both worlds instead of being rebuilt for the new one. Lazy for the same
+// reason `World` is never imported eagerly here: nothing outside `/playground`
+// should pay for either world's three.js weight.
+const WorldV2 = lazy(() => import("./world/v2/WorldV2.tsx"));
 /**
  * The Playground — one full-screen hub for every interactive world on the site.
  * These used to be scattered down the scroll and behind hotkeys; gathering them
@@ -96,20 +110,41 @@ function saveViewPref(view: "world" | "list"): void {
   }
 }
 
-export default function Playground() {
+export interface PlaygroundProps {
+  /** `?world=v1` (routes/playground.tsx's own validateSearch) — the
+   *  production rollback to the unchanged v1 world (master-plan.md#M36,
+   *  #M51 superseded by #M70). Anything else, including undefined, is the
+   *  v2 default this lane ships.
+   *  // ponytail: archive(world-v1) until 2027-03-28; removal recipe in ARCHIVE.md#world-v1 */
+  world?: "v1";
+  /** `?at=<slug>` — living-ledger-spec.md#6.2's focus hand-off, validated
+   *  against the same registry `/map?focus=` uses (routes/playground.tsx).
+   *  Threaded through as `data-at` for now; see this component's own
+   *  `ConceptFallback`/world-mount comment for the acceptance gap this
+   *  leaves (WorldV2.tsx/Hodi.tsx are owned by a different, already-merged
+   *  lane and do not read it, so the hodi is not actually moored in 3D). */
+  at?: string;
+}
+
+export default function Playground({ world, at }: PlaygroundProps = {}) {
   // Everything shared on this page — presence, the tile counts, the sandbox and
   // the wall — reads from this one room. The pulse provider itself now
   // mounts once in __root.tsx (every room bumps the entry counter on mount,
   // not only this page), so this page just reads it like anywhere else.
   return (
     <DeferredPlayRoom>
-      <PlaygroundInner />
+      <PlaygroundInner world={world} at={at} />
     </DeferredPlayRoom>
   );
 }
 
-function PlaygroundInner() {
+function PlaygroundInner({ world, at }: PlaygroundProps) {
   const { goToSection } = useSectionNav();
+  // master-plan.md#M36: v2 is the default everywhere (including production);
+  // ?world=v1 is the one escape hatch back to the byte-for-byte unchanged v1
+  // hub below, kept reachable until P4-00 archives it (M51, superseded by
+  // M70 — archived behind hidden entry points, never deleted).
+  const isV1 = world === "v1";
 
   // Both start false and resolve after mount. hasWebGL() reads real browser
   // capability, not something to guess at during the render that also has to
@@ -140,8 +175,24 @@ function PlaygroundInner() {
     const saved = loadViewPref();
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     setForcedList(saved ? saved === "list" : reducedMotion);
-    setWorldCapable(hasWebGL());
-  }, []);
+    const webgl = hasWebGL();
+    if (isV1) {
+      // Unchanged v1 gate (e2e/world-fallback.spec.ts, e2e/world-driving.spec.ts
+      // pin this exact behaviour under ?world=v1) — WebGL alone.
+      setWorldCapable(webgl);
+      return;
+    }
+    // v2's own gate (conceptPlates.ts's own doc comment: "reduced motion
+    // before opt-in, saveData, no WebGL and Tier-3 (P3-07's consumers)") —
+    // the throttled tier and a saveData visitor land on the concept
+    // painting rather than a degraded live render, same
+    // navigator.connection.saveData idiom every other WebGL decoration on
+    // this site already gates on (AmbientBackground.tsx and siblings).
+    // ponytail: navigator.connection is unstandardised (no DOM lib type), so this
+    // is an inline cast rather than a shared hook for one flag.
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    setWorldCapable(webgl && !saveData && deviceTier() !== 3);
+  }, [isV1]);
 
   const wantsWorld = worldCapable && !forcedList && !worldFailed;
   const handleWorldError = useCallback(() => setWorldFailed(true), []);
@@ -245,9 +296,24 @@ function PlaygroundInner() {
           outgoing one and out over the incoming one, so a switch reads as a
           wipe rather than as the page breaking. aria-hidden: it is pure
           decoration and a screen reader has already been told about both
-          views. */}
+          views.
+
+          F20(b) / src/spine/registry.ts's own `playground-wipe` row (debt
+          "P1-01a", "already pointer-events:none ... the <div> lacks
+          data-spine and SP-00 does not own src/Playground.tsx"): SP-00
+          couldn't reach this file, this lane can. `.playground-wipe` in
+          src/index.css sets `pointer-events: none` unconditionally — the
+          `.is-active` variant only adds opacity, never re-enables hit
+          testing — and `runTransition` above always clears `transitioning`
+          260ms after it sets it, so the overlay never outlives its own
+          fade. e2e/playground-world.spec.ts's own "the wipe never
+          intercepts a click, mid-transition or after" proves both halves at
+          390px; the debt row is a handoff for the orchestrator to clear
+          once that test is green on the phase branch (registry.ts is
+          reconciled there, not edited per-lane — master-plan.md G2). */}
       <div
         aria-hidden="true"
+        data-spine="playground-wipe"
         className={`playground-wipe${transitioning ? " is-active" : ""}`}
       />
 
@@ -258,22 +324,33 @@ function PlaygroundInner() {
               paper. RoomGrid below is the alternative, not a lie about a grid
               "underneath": it's rendered right here, every time the world is,
               just visually hidden. */}
-          <div className="playground-canvas absolute inset-0">
+          <div className="playground-canvas absolute inset-0" data-at={at}>
             {/* wantsWorld is only ever true after hydration (see its own
                 comment above), so this branch never actually renders during
                 SSR — but a `useState`-gated ternary is not a compile-time
-                constant, so the bundler still resolves `World` (three.js,
-                Rapier) for the server. `<ClientOnly>` is what makes that
-                reference disappear from the SERVER compile itself: Start's
-                compiler strips its children there before the SSR bundle is
-                built. `wantsWorld` is already known true by the time this
-                branch is reached, so `<Hydrate when={load()} split>` just
-                keeps World in its own chunk on the client — there is no
-                further defer to express here. */}
+                constant, so the bundler still resolves `World`/`WorldV2`
+                (three.js, Rapier) for the server. `<ClientOnly>` is what makes
+                that reference disappear from the SERVER compile itself:
+                Start's compiler strips its children there before the SSR
+                bundle is built. `wantsWorld` is already known true by the
+                time this branch is reached, so `<Hydrate when={load()}
+                split>` just keeps whichever world in its own chunk on the
+                client — there is no further defer to express here.
+
+                master-plan.md#M36 (P3-07): WorldV2 by default, v1 only under
+                ?world=v1 — see this file's own `isV1`/`PlaygroundProps`
+                comment. `data-at` above is `?at=<slug>`'s real, validated
+                value (routes/playground.tsx), but WorldV2.tsx and Hodi.tsx
+                (the only places holding the boat's spawn state) belong to a
+                different, already-merged lane and are not in this lane's
+                `owns` — mooring the hodi there in 3D needs a change to one of
+                those files, which G2 (ownership) forbids here. This is the
+                honest signal this lane CAN ship: the slug really did survive
+                the URL/route/prop chain, visible on the DOM. */}
             <ClientOnly fallback={worldLoadingFallback}>
               <WorldBoundary onError={handleWorldError}>
                 <Hydrate when={load()} split fallback={worldLoadingFallback}>
-                  <World onShowList={showList} />
+                  {isV1 ? <World onShowList={showList} /> : <WorldV2 />}
                 </Hydrate>
               </WorldBoundary>
             </ClientOnly>
@@ -286,7 +363,15 @@ function PlaygroundInner() {
               either a blank printed page (nothing survived the print rule)
               or, for a screen-reader user, a hub with a header and a List
               button but zero room links — the ternary this replaced rendered
-              RoomGrid *instead of* the world, never alongside it. */}
+              RoomGrid *instead of* the world, never alongside it.
+
+              v1 only: WorldV2 already ships its own accessible surface (a
+              real <h1> plus HudV2's always-mounted LandmarkList, P2-19's own
+              task) — stacking this v1-shaped "8 rooms" block underneath it
+              would be a second, conflicting <h1> and a list of the wrong
+              nouns (rooms, not landmarks) for a page a screen reader or a
+              printer would otherwise read as one coherent document. */}
+          {isV1 && (
           <div className="sr-only print:not-sr-only">
             {/* World view had no <h1> at all — the visible one lives in the
                 list-view branch below, and this is the branch that renders by
