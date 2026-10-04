@@ -28,7 +28,8 @@ import { GENERATORS, CHECK_DETERMINISTIC } from "./generators.mjs";
 import { scan as scanOldNames } from "./check-old-names.mjs";
 
 export const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const KMP = join(root, "..", "cv-siddharth-kmp");
+// Same override gen-kotlin-data.mjs reads, so both look at one twin checkout.
+const KMP = process.env.CV_SIDDHARTH_KMP_ROOT ?? join(root, "..", "cv-siddharth-kmp");
 
 // ─────────────────────────── pure planning ────────────────────────────────
 // Every planX below is a function of its arguments ONLY: no fs/git/gh calls,
@@ -212,9 +213,12 @@ function gatherGeneratedPlan() {
   return planGenerated(dirty);
 }
 
-function gatherTwinPlan(tokenPresent) {
-  if (!existsSync(KMP)) return null;
-  const before = dirtyState(KMP);
+// `before` must be taken by the caller BEFORE gatherGeneratedPlan: the site
+// pass runs gen-kotlin-data too (it is in CHECK_DETERMINISTIC), so a snapshot
+// taken here already holds the regenerated twin and every drift reads as none.
+// That is how the twin heal never fired after the 2026-10-02 refresh.
+function gatherTwinPlan(tokenPresent, before) {
+  if (!before) return null;
   try {
     execFileSync("node", [join(root, "scripts/gen-kotlin-data.mjs")], { stdio: "ignore" });
   } catch {
@@ -350,9 +354,10 @@ function openTwinPr(branch, title, body) {
 async function plan(fixtureName) {
   (FIXTURES[fixtureName] ?? FIXTURES.none)();
   const results = [];
+  const twinBefore = existsSync(KMP) ? dirtyState(KMP) : null;
   const generated = gatherGeneratedPlan();
   if (generated) results.push(generated);
-  const twin = gatherTwinPlan(Boolean(process.env.TWIN_PR_TOKEN));
+  const twin = gatherTwinPlan(Boolean(process.env.TWIN_PR_TOKEN), twinBefore);
   if (twin) results.push(twin);
   results.push(...gatherFreshnessPlans());
   results.push(...gatherOldNamesPlans());

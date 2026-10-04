@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-09-26",
+  "generatedAt": "2026-10-03T12:25:27.538Z",
   "counts": {
     "year-strata": 8,
     "weir": 4,
     "footbridge": 0,
-    "pr-stone": 26,
+    "pr-stone": 27,
     "lesson-kite": 17,
     "archive-kite": 10,
     "chess-paddy": 8,
     "firefly": 208,
-    "deepmal-niche": 173,
+    "deepmal-niche": 178,
     "benchmark": 53,
-    "site-courses": 23,
+    "site-courses": 24,
     "employer-marker": 2
   },
   "peaks": {
@@ -461,24 +461,29 @@
       "peakAt": "2026-09-25"
     },
     "river-width:2026-06": {
-      "current": 28.52760097260039,
-      "peak": 28.52760097260039,
-      "peakAt": "2026-09-25"
+      "current": 28.55479353991388,
+      "peak": 28.55479353991388,
+      "peakAt": "2026-10-01T09:42:03.178Z"
     },
     "river-width:2026-07": {
-      "current": 30.00461656995811,
-      "peak": 30.00461656995811,
-      "peakAt": "2026-09-25"
+      "current": 30.137427421954566,
+      "peak": 30.137427421954566,
+      "peakAt": "2026-10-01T09:42:03.178Z"
     },
     "river-width:2026-08": {
-      "current": 28.65055627487773,
-      "peak": 28.65055627487773,
-      "peakAt": "2026-09-25"
+      "current": 28.905985734362943,
+      "peak": 28.905985734362943,
+      "peakAt": "2026-10-02T14:55:38.610Z"
     },
     "river-width:2026-09": {
-      "current": 29.13039814113122,
-      "peak": 29.13039814113122,
-      "peakAt": "2026-09-25"
+      "current": 30.009440641140195,
+      "peak": 30.01081681883764,
+      "peakAt": "2026-10-01T09:42:03.178Z"
+    },
+    "river-width:2026-10": {
+      "current": 18.696254917011313,
+      "peak": 18.696254917011313,
+      "peakAt": "2026-10-03T12:25:27.538Z"
     },
     "district-bench:foundation": {
       "current": 43,
@@ -616,14 +621,14 @@
       "peakAt": "2026-09-25"
     },
     "reach-installs:reach-installs": {
-      "current": 2917170,
-      "peak": 2917170,
-      "peakAt": "2026-09-25"
+      "current": 2937070,
+      "peak": 2937070,
+      "peakAt": "2026-10-01"
     },
     "reach-upstream:reach-upstream": {
-      "current": 24,
-      "peak": 24,
-      "peakAt": "2026-09-25"
+      "current": 25,
+      "peak": 25,
+      "peakAt": "2026-10-01T09:42:03.178Z"
     }
   }
 }

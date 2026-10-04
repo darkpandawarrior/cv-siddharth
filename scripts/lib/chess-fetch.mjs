@@ -109,8 +109,11 @@ async function defaultLichessMonthFetch(username, y, m) {
  * AND have no cached slice at all — a genuine gap the caller must refuse to
  * write over the committed corpus for (see gen-chess-stats.mjs).
  */
-export async function fetchLichessMonthly(username, { now = new Date(), sinceMs, fetchMonth = defaultLichessMonthFetch } = {}) {
-  const months = monthsBetween(sinceMs, now.getTime());
+export async function fetchLichessMonthly(username, { now = new Date(), sinceMs, seenAtMs = Infinity, fetchMonth = defaultLichessMonthFetch } = {}) {
+  // Nobody plays a game without being seen, so a month after the account's seenAt holds no games
+  // and needs no request. On 2026-10-01 the only month the daily run could not fetch was one the
+  // account had never been online in.
+  const months = monthsBetween(sinceMs, Math.min(now.getTime(), seenAtMs ?? Infinity));
   const currentKey = monthKey(now.getUTCFullYear(), now.getUTCMonth());
   const games = [];
   const unresolved = [];

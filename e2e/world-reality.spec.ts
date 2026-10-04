@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -47,6 +48,9 @@ async function gotoPlayground(page: Page, at: string): Promise<void> {
   // same as any other visitor, they reach the drivable world through the
   // "drive the 3D world instead" button rather than an automatic mount.
   const driveButton = page.getByRole("button", { name: "drive the 3D world instead" });
+  // Root hydration precedes Playground's capability/view effect. Wait for its
+  // resolved branch before deciding whether explicit entry is needed.
+  await expect(page.locator(".playground-world").or(driveButton)).toBeVisible();
   if (await driveButton.isVisible().catch(() => false)) await driveButton.click();
   await expect(page.locator(".playground-world canvas")).toBeVisible({ timeout: 20_000 });
 }
@@ -233,6 +237,7 @@ test.describe("reduced motion and low-tier rain rendering", () => {
    * literal reality-spec.md §7 R4 acceptance line.
    */
   test("reduced motion marks rain motion-reduced, with no rain mesh mounted", async ({ page }) => {
+    await forceDeviceTier(page, 1);
     await mockLiveRoutes(page, WEATHER_WET);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await gotoPlayground(page, NIGHT);

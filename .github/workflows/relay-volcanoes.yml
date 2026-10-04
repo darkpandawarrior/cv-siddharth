@@ -1,0 +1,67 @@
+name: Relay the weekly volcano report
+
+# Smithsonian's Cloudflare answers Vercel's datacenter IPs with 403 and serves most GitHub runners
+# (probed 2026-10-01; one runner got 403 on 2026-10-02). This copies the weekly RSS verbatim to the
+# relay-volcanoes branch, which api/_lib/volcano-handler.ts reads through raw.githubusercontent.com.
+# The branch carries its own vercel.json so Vercel never builds it, and it only gets a commit when
+# the report changes, about once a week.
+on:
+  schedule:
+    - cron: '37 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: relay-volcanoes
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch the weekly report
+        id: fetch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for attempt in 1 2 3; do
+            if curl -sSf --max-time 30 -o WeeklyVolcanoRSS.xml https://volcano.si.edu/news/WeeklyVolcanoRSS.xml \
+              && grep -q '<rss' WeeklyVolcanoRSS.xml && grep -q '<item>' WeeklyVolcanoRSS.xml; then
+              echo "fetched=1" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 30
+          done
+          # A blocked runner leaves the last good report on the branch, and the next run (6 h) usually
+          # gets a different runner. Fail only once that copy has missed a weekly report.
+          last=$(gh api "repos/${{ github.repository }}/commits/relay-volcanoes" --jq .commit.committer.date)
+          age_days=$(( ($(date +%s) - $(date -d "$last" +%s)) / 86400 ))
+          echo "::warning::Smithsonian fetch failed on this runner; relay copy is ${age_days} days old"
+          [ "$age_days" -lt 10 ]
+
+      - name: Commit to the relay branch when the report changed
+        if: ${{ steps.fetch.outputs.fetched == '1' }}
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q relay
+          cd relay
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
+          if git fetch -q --depth 1 origin relay-volcanoes; then
+            git checkout -q -b relay-volcanoes FETCH_HEAD
+          else
+            git checkout -q --orphan relay-volcanoes
+          fi
+          cp ../WeeklyVolcanoRSS.xml .
+          # This branch is data, not the site. Without a vercel.json of its own, Vercel built it
+          # as a Vite app and emailed "Preview deployment failed" (vite build exited 127) on every
+          # report change. main's ignoreCommand cannot help: Vercel reads the deployed commit's tree.
+          printf '{"git":{"deploymentEnabled":false}}\n' > vercel.json
+          git add WeeklyVolcanoRSS.xml vercel.json
+          if git diff --cached --quiet; then echo "report unchanged"; exit 0; fi
+          git commit -q -m "chore(relay): Smithsonian weekly volcano report"
+          git push -q origin relay-volcanoes

@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { globeFacts, liveDotsLabel, REACH_INSTALLS_CLAIM, REACH_UPSTREAM_CLAIM } from "./globeRows.ts";
+import { globeFacts, liveDotsLabel, weeksAgoLabel, REACH_INSTALLS_CLAIM, REACH_UPSTREAM_CLAIM } from "./globeRows.ts";
+import { fleetStats } from "../../data/store.ts";
 
 describe("globeFacts", () => {
   it("carries the exact reach-column claim sentences (living-ledger-spec.md#6.3)", () => {
     expect(REACH_INSTALLS_CLAIM).toBe("install floor across 88 live listings (Play's own install bands, summed as floors)");
-    expect(REACH_UPSTREAM_CLAIM).toBe("24 merged PRs in a repository starred 71k+ times");
+    expect(REACH_UPSTREAM_CLAIM).toBe("25 merged PRs in a repository starred 73k+ times");
   });
 
   it("every row carries a number and an EvidenceChip source (G8: a number always sits beside its chip)", () => {
@@ -15,9 +16,37 @@ describe("globeFacts", () => {
     }
   });
 
+  it("formats the install-floor number en-IN (lakh grouping), not en-US (data.md #1)", () => {
+    const row = globeFacts.find((r) => r.id === "reach-installs")!;
+    // Derived, not a literal: the floor moves with every store refresh, the grouping rule does not.
+    const lakh = fleetStats.installFloor.toLocaleString("en-IN");
+    expect(lakh).toMatch(/^\d{1,2}(,\d{2})*,\d{3}$/);
+    expect(row.label).toContain(lakh);
+    expect(row.label).not.toContain(fleetStats.installFloor.toLocaleString("en-US"));
+  });
+
+  it("does NOT bake '(N weeks ago)' into the static label (task Z1: that used to be a hydration-mismatch trap - GlobePanel/puneSelection append it once a real clock exists)", () => {
+    const row = globeFacts.find((r) => r.id === "reach-installs")!;
+    expect(row.label).not.toMatch(/\(\d+ weeks? ago\)/);
+  });
+
   it("states the employer-marker resolution as N of M, never a bare count", () => {
     const row = globeFacts.find((r) => r.id === "employer-marker")!;
     expect(row.label).toMatch(/^City markers: \d+ of \d+ mapped/);
+  });
+});
+
+describe("weeksAgoLabel (break-it, G15: the guard must actually fire)", () => {
+  it("54 days later reads '7 weeks ago' (data.md #6's own worked example)", () => {
+    expect(weeksAgoLabel("2026-08-07", new Date("2026-09-30T00:00:00Z"))).toBe("7 weeks ago");
+  });
+
+  it("under a week old reads as a floor phrase, never '0 weeks ago'", () => {
+    expect(weeksAgoLabel("2026-09-28", new Date("2026-09-30T00:00:00Z"))).toBe("less than a week ago");
+  });
+
+  it("exactly one week uses the singular", () => {
+    expect(weeksAgoLabel("2026-09-23", new Date("2026-09-30T00:00:00Z"))).toBe("1 week ago");
   });
 });
 

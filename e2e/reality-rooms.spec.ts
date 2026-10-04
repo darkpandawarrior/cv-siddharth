@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { historyGeneratedAt } from "../src/data/history.ts";
+import { laneMonths } from "../src/data/lanes.ts";
 
 /**
  * R5/P1-03 (reality-spec §6, §7): the data rooms' live layer.
@@ -87,19 +88,44 @@ test.describe("/chess: the live IST hour marker and back-links (T6)", () => {
   });
 });
 
-test("/lanes shows the newest activity.json push as the live tip", async ({ page }) => {
-  await mockLiveRoutes(page);
-  await page.clock.setFixedTime(new Date(NIGHT));
-  await page.goto("/lanes");
-  await waitForHydration(page);
+for (const width of [390, 1000, 1440]) {
+  test(`/lanes shows the newest push and opens the grid at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await mockLiveRoutes(page);
+    // The tip only draws pushes on or after the grid's last month, and every refresh moves that
+    // month (2026-10 after the 2026-10-01 refresh). Re-date the fixture into it so this tests the
+    // tip, not the calendar distance between the fixture's capture and the last refresh.
+    const lastMonth = laneMonths[laneMonths.length - 1];
+    const items = ACTIVITY.items.map((i) => ({ ...i, at: `${lastMonth}${i.at.slice(7)}` }));
+    await page.route("**/api/github-activity", (route) => route.fulfill({ json: { ...ACTIVITY, items } }));
+    await page.clock.setFixedTime(new Date(NIGHT));
+    await page.goto("/lanes");
+    await waitForHydration(page);
 
-  const newest = ACTIVITY.items
-    .filter((i) => i.type === "push")
-    .reduce((a, b) => (b.at > a.at ? b : a));
-  const tip = page.locator("[data-lane-tip]");
-  await expect(tip).toHaveCount(1);
-  await expect(tip).toHaveAttribute("data-tip-repo", newest.repo);
-});
+    const newest = items
+      .filter((i) => i.type === "push")
+      .reduce((a, b) => (b.at > a.at ? b : a));
+    const tip = page.locator("[data-lane-tip]");
+    await expect(tip).toHaveCount(1);
+    await expect(tip).toHaveAttribute("data-tip-repo", newest.repo);
+    const scroller = page.getByRole("region", { name: "Four lanes of activity by month, scrollable horizontally" });
+    await expect(scroller).toBeVisible();
+    if (width === 390) {
+      const overflow = await scroller.evaluate((el) => el.scrollWidth - el.clientWidth);
+      expect(overflow, "the phone check must exercise an overflowing grid").toBeGreaterThan(0);
+      await expect.poll(() => scroller.evaluate((el) => Math.abs(el.scrollWidth - el.clientWidth - el.scrollLeft))).toBeLessThanOrEqual(1);
+      const latestCell = scroller.locator(`[title^="${lastMonth}:"]`).first();
+      await expect(latestCell).toBeInViewport();
+      expect(await latestCell.evaluate((el) => {
+        const region = el.closest('[role="region"]')!;
+        return el.getBoundingClientRect().right <= region.getBoundingClientRect().right + 1;
+      }), "the latest month's right edge must clear the scroller clip").toBe(true);
+    } else {
+      expect(await scroller.evaluate((el) => el.scrollLeft)).toBe(0);
+      expect(await scroller.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(1);
+    }
+  });
+}
 
 test("/time-machine: push count since historyGeneratedAt, and the files sparkline has history.length points", async ({ page }) => {
   await mockLiveRoutes(page);

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useLayoutEffect, useRef } from "react";
 import { ArrowLeft, Rows3 } from "lucide-react";
 import { useSectionNav } from "./lib/navigation.ts";
 import { LauncherButton } from "./Launcher.tsx";
@@ -22,7 +23,10 @@ import type { GithubActivity } from "../api/_lib/github-activity-handler.ts";
  * from, live, instead of a static image.
  */
 
-const CELL = 9; // px, square
+// Cells fill the container (every year visible at once); below MIN_CELL px the
+// row stops shrinking and the region scrolls, which only happens on phones.
+const MIN_CELL = 5;
+const COLUMNS = `repeat(${laneMonths.length}, minmax(${MIN_CELL}px, 1fr))`;
 
 /** reality-spec §6 /lanes row: the newest public push after `lanes.ts`'s own
  *  last generated month, drawn as that lane's tip, a live dot past the
@@ -37,10 +41,7 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
       >
         {lane.label}
       </span>
-      <div
-        className="grid gap-[2px]"
-        style={{ gridTemplateColumns: `repeat(${laneMonths.length}, ${CELL}px)` }}
-      >
+      <div className="grid min-w-0 flex-1 gap-[2px]" style={{ gridTemplateColumns: COLUMNS }}>
         {laneMonths.map((m) => {
           const v = lane.months[m] ?? 0;
           const t = v === 0 ? 0 : 0.22 + 0.78 * (v / max);
@@ -48,10 +49,8 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
             <div
               key={m}
               title={`${m}: ${v} ${lane.unit}`}
-              className="rounded-[2px]"
+              className="aspect-square rounded-[2px]"
               style={{
-                width: CELL,
-                height: CELL,
                 background: v === 0 ? "var(--color-line)" : `var(${lane.hueVar})`,
                 opacity: v === 0 ? 1 : t,
               }}
@@ -59,21 +58,32 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
           );
         })}
       </div>
-      {tip && (
-        <span
-          data-lane-tip
-          data-tip-repo={tip.repo}
-          title={`live: ${tip.repo}, ${tip.message}`}
-          className="ml-1 h-2 w-2 shrink-0 animate-pulse rounded-full"
-          style={{ background: `var(${lane.hueVar})` }}
-        />
-      )}
+      {/* Every row reserves the tip slot, so all four grids (and the year row)
+          share one width and their columns stay aligned. */}
+      <span className="ml-1 w-2 shrink-0">
+        {tip && (
+          <span
+            data-lane-tip
+            data-tip-repo={tip.repo}
+            title={`live: ${tip.repo}, ${tip.message}`}
+            className="block h-2 w-2 animate-pulse rounded-full"
+            style={{ background: `var(${lane.hueVar})` }}
+          />
+        )}
+      </span>
     </div>
   );
 }
 
 export default function Lanes() {
   const { goToSection } = useSectionNav();
+  const gridScroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const scroller = gridScroller.current;
+    if (window.innerWidth < 1000 && scroller && scroller.scrollWidth > scroller.clientWidth) {
+      scroller.scrollLeft = scroller.scrollWidth;
+    }
+  }, []);
   const years = [...new Set(laneMonths.map((m) => m.slice(0, 4)))];
 
   // reality-spec §6 /lanes row: the newest PUBLIC PUSH that lands after
@@ -118,7 +128,7 @@ export default function Lanes() {
           <p className="mt-4 max-w-2xl leading-relaxed text-zinc-400">
             Work delivered, open source merged, writing published, chess played, every month since
             2019. Listed separately they read as four interests. Run in parallel they read as what
-            they were: the same seven years, moving on every lane at once.
+            they were: the same {years.length} years, moving on every lane at once.
           </p>
           <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
             Same grid this profile's README already draws (github.com/darkpandawarrior), rendered
@@ -132,6 +142,7 @@ export default function Lanes() {
         <h2 className="sr-only">The four lanes</h2>
         <Reveal>
           <div
+            ref={gridScroller}
             className="mt-10 overflow-x-auto pb-2"
             tabIndex={0}
             role="region"
@@ -145,14 +156,13 @@ export default function Lanes() {
                   tip={lane.key === tipLaneKey && newestPush ? { repo: newestPush.repo, message: newestPush.message } : undefined}
                 />
               ))}
-              <div
-                className="grid gap-[2px] pl-[124px]"
-                style={{ gridTemplateColumns: `repeat(${laneMonths.length}, ${CELL}px)` }}
-              >
+              <div className="grid gap-[2px] pl-[124px] pr-3" style={{ gridTemplateColumns: COLUMNS }}>
                 {laneMonths.map((m) => (
-                  <span key={m} className="relative">
+                  // In-flow height: an overflow-x region clips y too, so a label hung
+                  // below a zero-height row was cut in half.
+                  <span key={m} className="relative mt-1 h-3">
                     {m.endsWith("-01") && (
-                      <span className="absolute -bottom-4 left-0 font-mono text-[9px] text-muted">
+                      <span className="absolute left-0 top-0 whitespace-nowrap font-mono text-[9px] leading-3 text-muted">
                         {m.slice(0, 4)}
                       </span>
                     )}
@@ -161,31 +171,32 @@ export default function Lanes() {
               </div>
             </div>
 
-            {/* reality-spec §6, "the cheapest highest-leverage single fix in
-                the whole audit": these four cards used to sit OUTSIDE this
-                Reveal entirely, popping in flat while the grid above them
-                faded in. Same Reveal, same one-shot arrival; the total is
-                now a real count-up rather than a static number (no comma
-                grouping in the animated value itself — the tick loop only
-                touches the leading digit run, so `.toLocaleString()` here
-                would count "0,183" → "1,183" instead of 0 → 8,183). */}
-            <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {lanes.map((lane) => (
-                <div key={lane.key} className="card-elevated rounded-2xl border border-line bg-surface p-4">
-                  <p className="font-mono text-[10px] font-semibold" style={{ color: `var(${lane.hueVar})` }}>
-                    {lane.label}
-                  </p>
-                  <AnimatedMetric
-                    className=""
-                    viz="none"
-                    metric={{
-                      value: `${lane.total} ${lane.unit}`,
-                      label: `peak ${lane.peak.ym}: ${lane.peak.v.toLocaleString("en-US")}`,
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+          </div>
+
+          {/* reality-spec §6: the cards share the grid's Reveal (one arrival, a
+              real count-up) but sit OUTSIDE its scroll region, so a phone's
+              horizontal scroll moves the grid alone and the scrollbar sits
+              under the grid it belongs to. The total is the big number; the
+              unit is a line below, since "documented deliverables in force"
+              at metric size overflowed a quarter-width card. Writing is
+              plotted at year resolution, so its peak is named by year. */}
+          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {lanes.map((lane) => (
+              <div key={lane.key} className="card-elevated rounded-2xl border border-line bg-surface p-4">
+                <p className="font-mono text-[10px] font-semibold" style={{ color: `var(${lane.hueVar})` }}>
+                  {lane.label}
+                </p>
+                <AnimatedMetric
+                  className=""
+                  viz="none"
+                  metric={{
+                    value: lane.total.toLocaleString("en-US"),
+                    label: lane.unit,
+                    detail: `peak ${lane.key === "writing" ? lane.peak.ym.slice(0, 4) : lane.peak.ym}: ${lane.peak.v.toLocaleString("en-US")}`,
+                  }}
+                />
+              </div>
+            ))}
           </div>
         </Reveal>
 

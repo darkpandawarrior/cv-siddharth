@@ -1,13 +1,23 @@
 name: Lighthouse CI
 on:
   push: { branches: [main] }
+  # Heavy (16 e2e shards + 3 lhci jobs), so a PR runs it only when it can change what the suite
+  # measures: the same exclusions as scripts/vercel-ignore.sh, minus e2e/ and this workflow. A
+  # docs-, workflow- or unit-test-only PR gets ci.yml's gate alone; main still runs everything.
   pull_request:
+    paths:
+      - '**'
+      - '!.github/**'
+      - '.github/workflows/lighthouse.yml'
+      - '!docs/**'
+      - '!**/*.md'
+      - '!**/*.test.*'
+      - '!scripts/blender/**'
+      - '!state/**'
   # Manual calibration runs (arch-L13): re-measure lighthouserc.json's
   # thresholds against this same 2-core runner without waiting on a push.
-  # skip_e2e exists only for that lane — the e2e suite has its own, unrelated
-  # pre-existing failure (a route-tree warning, not a CWV concern) and every
-  # calibration dispatch pays its several minutes for zero extra signal about
-  # Lighthouse numbers. push/pull_request runs always run both suites.
+  # skip_e2e exists only for that lane: a calibration dispatch gains nothing
+  # from the e2e matrix. push/pull_request runs always run both jobs.
   workflow_dispatch:
     inputs:
       skip_e2e:
@@ -19,35 +29,62 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lhci:
+  # The Playwright suite lives here rather than in ci.yml because it needs a production build and
+  # a served origin. It runs as a sharded matrix, not one step: 1004 tests on three workers against
+  # one runner took 1.3 h and failed 92, mostly 30 s test timeouts in the WebGL globe specs (three
+  # software-rendered globes sharing a CPU-only runner). Each shard builds once and runs one worker,
+  # so a globe spec gets the runner to itself. Public repo: the extra runner minutes are free.
+  e2e:
+    # `inputs.*` (unlike `github.event.inputs.*`) is typed from the workflow_dispatch input
+    # declaration above, so this compares boolean to boolean -- confirmed by the round-1/round-2
+    # arch-L13 calibration dispatches: comparing against the string 'true' here instead made e2e
+    # run on every dispatch, the opposite of the point.
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != true }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      # Installed once: both the e2e suite and lhci drive chromium.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: End-to-end tests (shard ${{ matrix.shard }}/16)
+        env:
+          PLAYWRIGHT_PREBUILT: "1"
+        run: npx playwright test --shard=${{ matrix.shard }}/16 --workers=1
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        # An artifact is a convenience; the account's 500 MB artifact quota must not fail the gate.
+        continue-on-error: true
+        with:
+          name: playwright-report-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
+
+  lhci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run build
 
-      # The Playwright suite lives here rather than in ci.yml because it needs
-      # a production build and a served origin, and this workflow already pays
-      # for both. Running it in its own workflow would mean a second vite build
-      # on every PR for no extra signal.
-      - name: End-to-end tests
-        # `inputs.*` (unlike `github.event.inputs.*`) is typed from the
-        # workflow_dispatch input declaration above, so this compares
-        # boolean to boolean -- confirmed by the round-1/round-2 arch-L13
-        # calibration dispatches: comparing against the string 'true' here
-        # instead made e2e run on every dispatch, the opposite of the point.
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_e2e != true }}
-        env:
-          PLAYWRIGHT_PREBUILT: "1"
-        run: npm run test:e2e
-
-      - name: Lighthouse
-        if: ${{ !cancelled() }}
-        run: npx @lhci/cli autorun
+      # Every third URL of lighthouserc.json's list, three runs each (see its header).
+      - name: Lighthouse (shard ${{ matrix.shard }})
+        run: |
+          urls=$(node -p 'require("./lighthouserc.json").ci.collect.url.filter((_, i) => i % 3 === ${{ matrix.shard }}).map((u) => "--collect.url=" + u).join(" ")')
+          npx @lhci/cli autorun $urls
 
       # Summarises whatever .lighthouseci/ this run just produced into the
       # generated data file /ops reads (scripts/gen-lighthouse-summary.mjs).
@@ -62,16 +99,6 @@ jobs:
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: lighthouse-summary
+          name: lighthouse-summary-${{ matrix.shard }}
           path: src/data/generated/lighthouse.ts
           retention-days: 14
-
-      - name: Upload Playwright report
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        # An artifact is a convenience; the account's 500 MB artifact quota must not fail the gate.
-        continue-on-error: true
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7

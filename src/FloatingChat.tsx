@@ -386,9 +386,9 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
     }
   }, [messages, expanded, busy]);
 
-  const applyOpenDetail = useCallback((detail: OpenChatDetail | undefined) => {
+  const applyOpenDetail = useCallback((detail: OpenChatDetail | null | undefined) => {
     setOpen(true);
-    if (detail === undefined) return; // openChat() with no argument — just opens
+    if (detail == null) return; // Plain CustomEvent opens carry null; no payload to apply.
     if (typeof detail === "string") {
       if (detail.trim()) setPendingAsk({ text: detail });
       return;
@@ -919,13 +919,19 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                       }`}
                     >
                       {streaming && !m.content ? (
-                        <span className="animate-pulse text-muted">thinking…</span>
+                        // No animate-pulse: Tailwind's default keyframe dips
+                        // opacity to .5, which halves text-muted's contrast
+                        // against bg-surface (5.9:1 -> ~2.4:1 mid-pulse) and
+                        // fails axe's color-contrast rule (e2e/a11y.spec.ts).
+                        // Lanes.tsx pulses a decorative dot instead, never
+                        // readable text — same fix here: static, not pulsed.
+                        <span className="text-muted">thinking…</span>
                       ) : (
                         // The greeting is rendered from the CURRENT route, not
                         // from its stored content — that's what makes it
                         // acknowledge where you are without ever becoming a
                         // second message or resetting the conversation.
-                        <Hydrate when={load()} split fallback={<span className="animate-pulse text-muted">thinking…</span>}>
+                        <Hydrate when={load()} split fallback={<span className="text-muted">thinking…</span>}>
                         <ChatMessageBody
                           content={m === GREETING ? greeting : m.content}
                           // Not streaming = the reply is final, so a directive

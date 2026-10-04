@@ -10,11 +10,29 @@
 // (see src/routes/__root.tsx), so it never touches the first SSR paint or dev
 // HMR.
 
-const VERSION = "v1";
+const VERSION = "v2";
 const OFFLINE_CACHE = `offline-${VERSION}`;
 const ASSET_CACHE = `assets-${VERSION}`;
 const OFFLINE_URL = "/offline.html";
 const ASSET_MAX = 80;
+
+// GIBS whole-globe imagery (audit fix, 2026-09-28): every URL gibs.ts builds
+// is IMMUTABLE — its TIME query param pins the exact calendar date, and the
+// two static layers (BlueMarble base, Black Marble night) carry no TIME at
+// all and never change — so a same-day returning visitor can reuse
+// yesterday's fetch outright instead of re-downloading a multi-MB image.
+// A dedicated, versioned cache (not ASSET_CACHE: these are cross-origin
+// fetches, not this site's own image/font destinations) capped small — a
+// globe session with a handful of date-scrubbed frames shouldn't grow this
+// cache unbounded.
+const GIBS_CACHE = `gibs-${VERSION}`;
+const GIBS_HOST = "gibs.earthdata.nasa.gov";
+const GIBS_MAX = 12;
+
+/** True for a GIBS WMS GetMap request — the only kind gibs.ts ever builds. */
+function isGibsRequest(url) {
+  return url.hostname === GIBS_HOST && url.pathname.startsWith("/wms/");
+}
 
 // Precache only the offline shell + its icon — never app HTML (would serve
 // stale SSR) and never the big WASM apps or the streaming chat.
@@ -48,6 +66,26 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return; // POSTs (chat) pass straight through
   const url = new URL(request.url);
+
+  // Checked BEFORE the same-origin return below: gibs.earthdata.nasa.gov is
+  // cross-origin by design (never /api/*, so the "do not cache /api/*"
+  // contract elsewhere in this file is untouched by this branch existing).
+  if (isGibsRequest(url)) {
+    event.respondWith(
+      caches.open(GIBS_CACHE).then(async (cache) => {
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        const res = await fetch(request);
+        if (res.ok) {
+          cache.put(request, res.clone());
+          trimCache(cache, GIBS_MAX);
+        }
+        return res;
+      }),
+    );
+    return;
+  }
+
   if (url.origin !== self.location.origin) return; // third-party: untouched
   if (BYPASS.some((re) => re.test(url.pathname))) return;
 

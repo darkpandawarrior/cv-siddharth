@@ -8,6 +8,9 @@ import { subsolarPoint } from "../../lib/sky.ts";
 
 const RAD = Math.PI / 180;
 
+/** The render-space earth radius every globe layer scales unit vectors by. */
+export const GLOBE_RADIUS = 6;
+
 export interface LatLon {
   lat: number;
   lon: number;
@@ -20,8 +23,11 @@ export interface SpherePoint {
 }
 
 /** Unit-sphere xyz for a lat/lon in degrees: +X toward (0, 0), +Y toward the
- *  north pole, +Z toward (0, 90) -- the standard geographic-to-Cartesian
- *  convention, radius 1 (callers scale for a render-space globe). */
+ *  north pole, -Z toward (0, 90E), radius 1 (callers scale for a
+ *  render-space globe). -Z, not +Z: with +Y as north, only that keeps the
+ *  frame right-handed, so a viewer outside the globe sees east on their
+ *  right. +Z drew every continent mirror-imaged (Pune on the east side of
+ *  India's peninsula). */
 export function latLonToXyz(latDeg: number, lonDeg: number): SpherePoint {
   const lat = latDeg * RAD;
   const lon = lonDeg * RAD;
@@ -29,7 +35,7 @@ export function latLonToXyz(latDeg: number, lonDeg: number): SpherePoint {
   return {
     x: cosLat * Math.cos(lon),
     y: Math.sin(lat),
-    z: cosLat * Math.sin(lon),
+    z: -cosLat * Math.sin(lon),
   };
 }
 
@@ -41,7 +47,7 @@ export function xyzToLatLon(p: SpherePoint): LatLon {
   if (r === 0) return { lat: 0, lon: 0 };
   return {
     lat: Math.asin(Math.max(-1, Math.min(1, p.y / r))) / RAD,
-    lon: Math.atan2(p.z, p.x) / RAD,
+    lon: Math.atan2(-p.z, p.x) / RAD,
   };
 }
 

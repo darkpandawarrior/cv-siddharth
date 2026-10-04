@@ -102,6 +102,22 @@ describe("fetchLichessMonthly: resilience — one closed month keeps its cache, 
     // should have called the fetcher — not 2026-07.
     expect(calls).toBe(2);
   });
+
+  it("asks for no month after the account was last seen, so a dead current month cannot fail the run", async () => {
+    const fetched = [];
+    const fetchMonth = async (_u, y, m) => {
+      const key = monthKey(y, m);
+      fetched.push(key);
+      if (key === "2026-09") throw new Error("fetch failed"); // the current month, as on 2026-10-01
+      return `${JSON.stringify({ id: key })}\n`;
+    };
+    const { games, unresolved } = await fetchLichessMonthly("darkpandawarrior", {
+      now: NOW, sinceMs: SINCE, seenAtMs: Date.UTC(2026, 7, 7), fetchMonth, // last seen 2026-08-07
+    });
+    expect(fetched).toEqual(["2026-07", "2026-08"]);
+    expect(unresolved).toEqual([]);
+    expect(games.map((g) => g.id)).toEqual(["2026-07", "2026-08"]);
+  });
 });
 
 describe("fetchChessComMonthly: one archive's 500 keeps the rest of the corpus", () => {

@@ -7,6 +7,7 @@ import { join, dirname, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import sharp from "sharp";
+import { derivableExtensions } from "../src/data/derivableExtensions.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = join(root, "public");
@@ -83,7 +84,13 @@ for (const src of walkRoots([publicDir, heavyDir])) {
     }
     continue;
   }
-  if (![".png", ".jpg", ".jpeg", ".webp"].includes(ext)) continue;
+  if (!derivableExtensions.includes(ext.slice(1))) continue;
+  // public/globe/maps is scripts/gen-maps-places.mjs's own output: it already
+  // emits the single delivered format (AVIF) itself, sized and privacy-
+  // checked at generation time. A second derivative pass here would just
+  // re-encode an already-lossy thumbnail and ship a duplicate format nothing
+  // reads.
+  if (src.includes(`${sep}globe${sep}maps${sep}`)) continue;
   // Excelsior magazine pages are already the delivered format (see
   // gen-excelsior.mjs). Deriving an .avif per page would be ~400 extra files
   // regenerated on every build for no gain — they have no raster source here.
@@ -97,7 +104,7 @@ for (const src of walkRoots([publicDir, heavyDir])) {
   // (generated below from that raster), not a real source — skip it, or the
   // next run treats it as a fresh "source" and re-derives the .avif from the
   // lossy .webp instead of the original raster.
-  if (ext === ".webp" && [".png", ".jpg", ".jpeg"].some((e) => existsSync(base + e))) continue;
+  if (ext === ".webp" && derivableExtensions.some((e) => e !== "webp" && existsSync(`${base}.${e}`))) continue;
   const avif = `${base}.avif`;
   if (!fresher(src, avif)) {
     await sharp(src).avif({ quality: 50 }).toFile(avif);

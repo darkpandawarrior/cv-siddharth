@@ -142,22 +142,22 @@ export const projectCards: ProjectCard[] = [
     "description": "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
     "hasDetail": true,
     "repoUrl": "https://github.com/career-ops-hq/career-ops",
-    "overview": "Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (71k+ stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
+    "overview": "Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (73k+ stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
     "stack": [
       "Kotlin Multiplatform",
       "Compose Multiplatform",
       "Spring Boot 4",
       "Room (KMP)",
       "Ktor",
-      "89 ATS/board providers"
+      "103 ATS/board providers"
     ],
     "highlights": [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "89 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "24 merged PRs to the public career-ops project (71k+ stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below)."
+      "103 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "25 merged PRs to the public career-ops project (73k+ stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below)."
     ],
-    "status": "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
+    "status": "Active · 25 PRs merged to public career-ops · member of the career-ops-hq org",
     "badges": [
       "Kotlin Multiplatform",
       "25 modules",

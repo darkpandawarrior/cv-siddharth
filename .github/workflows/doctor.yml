@@ -47,6 +47,8 @@ jobs:
         with:
           repository: darkpandawarrior/cv-siddharth-kmp
           path: cv-siddharth-kmp-checkout
+          # Let the push URL use TWIN_PR_TOKEN instead of checkout's GITHUB_TOKEN header.
+          persist-credentials: false
       - name: Put the twin where the scripts expect it
         run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
       - uses: actions/setup-node@v4

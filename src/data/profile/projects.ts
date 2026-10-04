@@ -849,12 +849,12 @@ export const projects: Project[] = [
     tagline: "A native, multiplatform AI career-intelligence engine, and the open-source project it's built on.",
     description:
       "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored résumés. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
-    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "89 ATS/board providers"],
+    stack: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4", "Room (KMP)", "Ktor", "103 ATS/board providers"],
     highlights: [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "89 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      `24 merged PRs to the public career-ops project (${upstreamStars} stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
+      "103 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      `25 merged PRs to the public career-ops project (${upstreamStars} stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below).`,
     ],
     // The native app is a private, v1-in-progress repo with no screenshots yet
     // — case study shown via the site's own detail page instead of a code link.
@@ -866,11 +866,14 @@ export const projects: Project[] = [
     links: [
       { label: `Upstream (career-ops, ${upstreamStars} stars)`, url: "https://github.com/career-ops-hq/career-ops" },
     ],
-    status: "Active · 24 PRs merged to public career-ops · member of the career-ops-hq org",
+    status: "Active · 25 PRs merged to public career-ops · member of the career-ops-hq org",
     badges: ["Kotlin Multiplatform", "25 modules", "Open-source contributor"],
+    // The site accent is one step brighter than the #3B82F6 brand blue: the brand blue measured
+    // 4.27:1 on this card colour, under WCAG AA's 4.5 for the headings and tabs it colours.
+    // #60A5FA measures 6.2:1 on the card and 7.4:1 under ink-coloured CTA text.
     theme: {
-      accent: "#3B82F6",
-      accentDim: "#1D4ED8",
+      accent: "#60A5FA",
+      accentDim: "#3B82F6",
       ink: "#0A1120",
       surface: "#0F1B2E",
       card: "#16233A",
@@ -915,7 +918,7 @@ export const projects: Project[] = [
         },
         {
           heading: "Zero tokens until an LLM is actually needed",
-          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 89 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
+          body: "The engine's scan path hits Greenhouse, Ashby and Lever APIs plus per-company local parsers directly, at zero LLM cost, falling back to an agent-driven search only for companies with no structured source. Every scanned posting passes through one shared trust-validator that scores and flags it before it reaches the tracker. 103 ATS & job-board provider modules plug into that one contract instead of reinventing trust scoring each time.",
         },
         {
           heading: "One engine, many candidates",
@@ -931,20 +934,20 @@ export const projects: Project[] = [
         },
         {
           heading: "Genuine upstream contribution, not a personal fork",
-          body: "24 merged pull requests against the public career-ops repository (" + upstreamStars + " stars, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
+          body: "25 merged pull requests against the public career-ops repository (" + upstreamStars + " stars, independently verifiable): two new ATS providers (BambooHR, Breezy HR), a dashboard rendering fix that rewrites only the changed Status cell instead of the whole row, an agent-inbox feature for queuing requests across sessions, an opt-in LLM relevance re-ranker for the pipeline, and a long run of correctness fixes. Most target one class of defect: code that reports success while doing the wrong thing. Distinct non-Latin company names collapsed to one key and silently deleted a tracked application; a `$` sequence in CV text spliced the template into the résumé while the build exited 0; a date filter was ignored in its `--flag=value` form, so a bounded scan silently ran unbounded; concurrent adds to the agent inbox dropped queued requests with no error; an unlocked append to shared scan history could interleave and corrupt it; and a `k`/`M`/`B` magnitude suffix walked an inflated claim straight past the fact-checker that exists to stop exactly that. Each shipped with a runnable reproduction and a regression test proving the fix.",
         },
       ],
       metrics: [
         { value: "25", label: "KMP modules · 5 targets" },
         { value: "45k", label: "lines of Kotlin · 543 files" },
-        { value: "89", label: "ATS & job-board providers" },
-        { value: "24", label: "PRs merged upstream" },
+        { value: "103", label: "ATS & job-board providers" },
+        { value: "25", label: "PRs merged upstream" },
       ],
       techStack: [
         { group: "Native app", items: ["Kotlin Multiplatform", "Compose Multiplatform", "Spring Boot 4 server", "Room (KMP) + DataStore", "Ktor REST + NDJSON/SSE"] },
         { group: "On-device AI", items: ["ML Kit GenAI / Gemini Nano (Android)", "Apple Foundation Models (iOS)", "deterministic-heuristic fallback"] },
         { group: "Agent interop", items: ["Android AppFunctions", "iOS App Intents / Shortcuts", "candidai:// deep links", "OpenAPI contract"] },
-        { group: "Open-source engine (career-ops)", items: ["Node.js", "89 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
+        { group: "Open-source engine (career-ops)", items: ["Node.js", "103 ATS/job-board providers", "zero-token Greenhouse/Ashby/Lever scanning", "A-F fit rubric"] },
       ],
       extraLinks: [
         { label: "PR: agent-inbox feature", url: "https://github.com/career-ops-hq/career-ops/pull/1472" },

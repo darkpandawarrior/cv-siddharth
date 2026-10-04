@@ -12,7 +12,7 @@ export const storeApps = [
     "name": "Dice Employee HQ",
     "rating": 4.5,
     "installs": "100K+",
-    "url": "https://play.google.com/store/apps/details?id=io.eka.ekav2&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=io.eka.ekav2&hl=en&gl=IN",
     "role": "Technical owner & Product Owner",
     "employer": "Dice.tech",
     "icon": "/store/io.eka.ekav2.webp"
@@ -22,7 +22,7 @@ export const storeApps = [
     "name": "Jugnoo",
     "rating": 4.5,
     "installs": "5M+",
-    "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo&hl=en&gl=IN",
     "role": "Android developer",
     "employer": "Jugnoo",
     "icon": "/store/product.clicklabs.jugnoo.webp"
@@ -30,9 +30,9 @@ export const storeApps = [
   {
     "id": "product.clicklabs.jugnoo.driver",
     "name": "Jugnoo Drivers",
-    "rating": 4.6,
+    "rating": 4.5,
     "installs": "1M+",
-    "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.clicklabs.jugnoo.driver&hl=en&gl=IN",
     "role": "Android developer",
     "employer": "Jugnoo",
     "icon": "/store/product.clicklabs.jugnoo.driver.webp"
@@ -50,12 +50,12 @@ export const fleet = [
   "name": "SmartBike",
   "rating": 3.1,
   "installs": "1M+",
-  "url": "https://play.google.com/store/apps/details?id=production.smartbikemobility.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.smartbikemobility.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "SmartBike Mobility",
   "updated": "Sep 20, 2026",
-  "firstSeen": null,
+  "firstSeen": "20210127",
   "icon": "/store/production.smartbikemobility.customer.webp",
   "color": "#FD7945"
  },
@@ -64,7 +64,7 @@ export const fleet = [
   "name": "SnapE Cabs",
   "rating": 2,
   "installs": "500K+",
-  "url": "https://play.google.com/store/apps/details?id=com.snape&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.snape&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": true,
   "developer": "EC WHEELS INDIA PRIVATE LIMITED",
@@ -78,26 +78,26 @@ export const fleet = [
   "name": "TT RideShare",
   "rating": 5,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.ttrides.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.ttrides.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "TT RideShare Ltd",
   "updated": "Jun 6, 2026",
-  "firstSeen": null,
+  "firstSeen": "20190417",
   "icon": "/store/production.ttrides.customer.webp",
   "color": "#CC3333"
  },
  {
   "id": "production.zofeur.customer",
   "name": "Zofeur - Hire a Safe Driver.",
-  "rating": 4.8,
+  "rating": 4.7,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.zofeur.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.zofeur.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Zofeur",
   "updated": "Sep 16, 2026",
-  "firstSeen": null,
+  "firstSeen": "20230405",
   "icon": "/store/production.zofeur.customer.webp",
   "color": "#000000"
  },
@@ -106,7 +106,7 @@ export const fleet = [
   "name": "Viva Taxi",
   "rating": 4.2,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=com.VivaTaxi&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.VivaTaxi&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": true,
   "developer": "Viva Taxi",
@@ -120,11 +120,11 @@ export const fleet = [
   "name": "ASAP",
   "rating": 3.6,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=com.asap.courier&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.asap.courier&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "TMP S.A.",
-  "updated": "Sep 3, 2026",
+  "updated": "Sep 2, 2026",
   "firstSeen": null,
   "icon": "/store/com.asap.courier.webp",
   "color": "#35bdb2"
@@ -134,12 +134,12 @@ export const fleet = [
   "name": "Ryde – Book a Ride",
   "rating": 3.1,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.rydecust.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.rydecust.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Ryde Technology",
-  "updated": "Jun 14, 2026",
-  "firstSeen": null,
+  "updated": "Jun 13, 2026",
+  "firstSeen": "20221209",
   "icon": "/store/production.rydecust.customer.webp",
   "color": "#f79e20"
  },
@@ -148,12 +148,12 @@ export const fleet = [
   "name": "Togopool: Carpool & Bikepool",
   "rating": 2.9,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.togopool.carpool&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.togopool.carpool&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Togopool Pvt. Ltd.",
   "updated": "Jul 6, 2026",
-  "firstSeen": null,
+  "firstSeen": "20240920",
   "icon": "/store/production.togopool.carpool.webp",
   "color": "#ff9b05"
  },
@@ -162,12 +162,12 @@ export const fleet = [
   "name": "Urban - Passenger",
   "rating": null,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.urban.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.urban.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Urban Tecnologia e Turismo",
   "updated": "Jun 24, 2026",
-  "firstSeen": null,
+  "firstSeen": "20210528",
   "icon": "/store/production.urban.customer.webp",
   "color": "#000000"
  },
@@ -176,12 +176,12 @@ export const fleet = [
   "name": "Qooxy: Livraison à domicile",
   "rating": null,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.qooxy.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.qooxy.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Qooxy  Technologies",
   "updated": "Aug 21, 2024",
-  "firstSeen": null,
+  "firstSeen": "20221024",
   "icon": "/store/production.qooxy.customer.webp",
   "color": "#F19F41"
  },
@@ -190,12 +190,12 @@ export const fleet = [
   "name": "Urban Driver - for drivers",
   "rating": null,
   "installs": "100K+",
-  "url": "https://play.google.com/store/apps/details?id=production.urban.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.urban.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Urban Tecnologia e Turismo",
   "updated": "Jun 29, 2026",
-  "firstSeen": null,
+  "firstSeen": "20230307",
   "icon": "/store/production.urban.driver.webp",
   "color": null
  },
@@ -204,11 +204,11 @@ export const fleet = [
   "name": "Zofeur - Driver App",
   "rating": 4.6,
   "installs": "50K+",
-  "url": "https://play.google.com/store/apps/details?id=production.zofeur.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.zofeur.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Zofeur",
-  "updated": "Sep 9, 2026",
+  "updated": "Sep 29, 2026",
   "firstSeen": null,
   "icon": "/store/production.zofeur.driver.webp",
   "color": null
@@ -218,12 +218,12 @@ export const fleet = [
   "name": "pickUP Barbados",
   "rating": 4.5,
   "installs": "50K+",
-  "url": "https://play.google.com/store/apps/details?id=production.pickupbarbodas.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.pickupbarbodas.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "PickUp Barbados",
-  "updated": "Sep 10, 2026",
-  "firstSeen": null,
+  "updated": "Sep 25, 2026",
+  "firstSeen": "20220123",
   "icon": "/store/production.pickupbarbodas.customer.webp",
   "color": "#FFB800"
  },
@@ -232,12 +232,12 @@ export const fleet = [
   "name": "Ryde Drive",
   "rating": 3.9,
   "installs": "50K+",
-  "url": "https://play.google.com/store/apps/details?id=production.rydedrive.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.rydedrive.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Ryde Technology",
-  "updated": "Sep 22, 2026",
-  "firstSeen": null,
+  "updated": "Sep 21, 2026",
+  "firstSeen": "20241003",
   "icon": "/store/production.rydedrive.driver.webp",
   "color": null
  },
@@ -246,12 +246,12 @@ export const fleet = [
   "name": "1Bena – Food, Delivery & Rides",
   "rating": null,
   "installs": "50K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.bena&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.bena&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "1Bena",
-  "updated": "Sep 5, 2026",
-  "firstSeen": null,
+  "updated": "Sep 4, 2026",
+  "firstSeen": "20210507",
   "icon": "/store/product.customer.bena.webp",
   "color": null
  },
@@ -260,12 +260,12 @@ export const fleet = [
   "name": "TT RideShare Driver",
   "rating": null,
   "installs": "50K+",
-  "url": "https://play.google.com/store/apps/details?id=production.ttrides.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.ttrides.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "TT RideShare Ltd",
   "updated": "May 4, 2026",
-  "firstSeen": null,
+  "firstSeen": "20190603",
   "icon": "/store/production.ttrides.driver.webp",
   "color": null
  },
@@ -274,7 +274,7 @@ export const fleet = [
   "name": "DeliverMe TT Taxi - Rideshare",
   "rating": 5,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=app.production.delivermett&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=app.production.delivermett&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "DeliverMe TT Ltd",
@@ -288,7 +288,7 @@ export const fleet = [
   "name": "Pamdriver: Driver & Delivery",
   "rating": 4.9,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=com.tryapptivities.pamdriver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.tryapptivities.pamdriver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Pannaga Technologies",
@@ -302,7 +302,7 @@ export const fleet = [
   "name": "HITCH Bermuda",
   "rating": 4.7,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=com.hitch&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.hitch&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Hitch Limited",
@@ -316,11 +316,11 @@ export const fleet = [
   "name": "Rio Cabs",
   "rating": 4.5,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.rio&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.rio&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Rio cabs India",
-  "updated": "May 5, 2026",
+  "updated": "May 4, 2026",
   "firstSeen": null,
   "icon": "/store/product.customer.rio.webp",
   "color": "#203944"
@@ -330,7 +330,7 @@ export const fleet = [
   "name": "1Go",
   "rating": 3.8,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.one&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.one&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": true,
   "developer": "ONE TECHNOLOGY - SOLE PROPRIETORSHIP L.L.C",
@@ -344,7 +344,7 @@ export const fleet = [
   "name": "SnapE Driver Partner",
   "rating": 3.8,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.snapecabs&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.snapecabs&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": true,
   "developer": "EC WHEELS INDIA PRIVATE LIMITED",
@@ -358,40 +358,26 @@ export const fleet = [
   "name": "HURRY UP CAPTAIN",
   "rating": 3.3,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=com.hurryup.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.hurryup.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "BANGLAMARK  Corporation",
-  "updated": "Jun 28, 2023",
+  "updated": "Jun 27, 2023",
   "firstSeen": null,
   "icon": "/store/com.hurryup.driver.webp",
   "color": null
- },
- {
-  "id": "product.customer.dailyecuador",
-  "name": "Daily Pasajero: Viaja seguro",
-  "rating": null,
-  "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.dailyecuador&hl=en",
-  "side": "rider",
-  "setUpByHim": true,
-  "developer": "Daily Latam",
-  "updated": "Sep 3, 2026",
-  "firstSeen": null,
-  "icon": "/store/product.customer.dailyecuador.webp",
-  "color": "#48b981"
  },
  {
   "id": "production.hovr.customer",
   "name": "HOVR",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=production.hovr.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.hovr.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Ride HOVR Corporation",
-  "updated": "Jun 2, 2026",
-  "firstSeen": null,
+  "updated": "Sep 22, 2026",
+  "firstSeen": "20250305",
   "icon": "/store/production.hovr.customer.webp",
   "color": "#7CDC54"
  },
@@ -400,7 +386,7 @@ export const fleet = [
   "name": "Hola Taxi Ireland",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.hola&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.hola&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Hola Connect",
@@ -410,16 +396,30 @@ export const fleet = [
   "color": "#2562F7"
  },
  {
+  "id": "product.customer.dailyecuador",
+  "name": "Daily Pasajero: Viaja seguro",
+  "rating": null,
+  "installs": "10K+",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.dailyecuador&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": true,
+  "developer": "Daily Latam",
+  "updated": "Sep 28, 2026",
+  "firstSeen": "20210713",
+  "icon": "/store/product.customer.dailyecuador.webp",
+  "color": "#48b981"
+ },
+ {
   "id": "product.customer.onux",
   "name": "ONUX Cliente",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.onux&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.onux&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Onux Services",
   "updated": "Mar 16, 2026",
-  "firstSeen": null,
+  "firstSeen": "20220711",
   "icon": "/store/product.customer.onux.webp",
   "color": "#249708"
  },
@@ -428,12 +428,12 @@ export const fleet = [
   "name": "HUM Rideshare",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=production.hum.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.hum.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "HUM Limited Liability Company",
   "updated": "Sep 3, 2025",
-  "firstSeen": null,
+  "firstSeen": "20240523",
   "icon": "/store/production.hum.customer.webp",
   "color": "#1BAFA1"
  },
@@ -442,7 +442,7 @@ export const fleet = [
   "name": "Taxiye Passenger",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=com.taxiye&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.taxiye&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "ELNET TECHNOLOGY PLC",
@@ -452,16 +452,30 @@ export const fleet = [
   "color": "#93009D"
  },
  {
+  "id": "production.smartride.customer",
+  "name": "Neon Velocity",
+  "rating": null,
+  "installs": "10K+",
+  "url": "https://play.google.com/store/apps/details?id=production.smartride.customer&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": false,
+  "developer": "ADORBIT TECH LIMITED",
+  "updated": "Aug 12, 2026",
+  "firstSeen": "20201101",
+  "icon": "/store/production.smartride.customer.webp",
+  "color": "#CC3333"
+ },
+ {
   "id": "production.hovr.driver",
   "name": "HOVR Driver",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=production.hovr.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.hovr.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Ride HOVR Corporation",
-  "updated": "May 9, 2026",
-  "firstSeen": null,
+  "updated": "Sep 23, 2026",
+  "firstSeen": "20260421",
   "icon": "/store/production.hovr.driver.webp",
   "color": null
  },
@@ -470,12 +484,12 @@ export const fleet = [
   "name": "Daily Conductor: Maneja y gana",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.dailyecuador&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.dailyecuador&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": true,
   "developer": "Daily Latam",
-  "updated": "Sep 3, 2026",
-  "firstSeen": null,
+  "updated": "Sep 2, 2026",
+  "firstSeen": "20260416",
   "icon": "/store/product.driver.dailyecuador.webp",
   "color": null
  },
@@ -484,12 +498,12 @@ export const fleet = [
   "name": "ONUX Driver",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.onux&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.onux&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Onux Services",
   "updated": "Mar 16, 2026",
-  "firstSeen": null,
+  "firstSeen": "20230105",
   "icon": "/store/product.driver.onux.webp",
   "color": null
  },
@@ -498,12 +512,12 @@ export const fleet = [
   "name": "HUM Driver",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=production.hum.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.hum.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "HUM Limited Liability Company",
-  "updated": "Dec 16, 2025",
-  "firstSeen": null,
+  "updated": "Dec 15, 2025",
+  "firstSeen": "20241219",
   "icon": "/store/production.hum.driver.webp",
   "color": null
  },
@@ -512,7 +526,7 @@ export const fleet = [
   "name": "Taxiye Driver",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=com.taxiye.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.taxiye.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "ELNET TECHNOLOGY PLC",
@@ -522,44 +536,58 @@ export const fleet = [
   "color": null
  },
  {
-  "id": "production.qooxy.driver",
-  "name": "Qooxy Agent",
-  "rating": null,
-  "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=production.qooxy.driver&hl=en",
-  "side": "driver",
-  "setUpByHim": false,
-  "developer": "Qooxy  Technologies",
-  "updated": "Aug 21, 2024",
-  "firstSeen": null,
-  "icon": "/store/production.qooxy.driver.webp",
-  "color": null
- },
- {
   "id": "driver.production.delivermett",
   "name": "DeliverMe TT Driver",
   "rating": null,
   "installs": "10K+",
-  "url": "https://play.google.com/store/apps/details?id=driver.production.delivermett&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=driver.production.delivermett&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "DeliverMe TT Ltd",
-  "updated": "Jan 15, 2026",
+  "updated": "Jan 14, 2026",
   "firstSeen": null,
   "icon": "/store/driver.production.delivermett.webp",
   "color": null
  },
  {
+  "id": "production.qooxy.driver",
+  "name": "Qooxy Agent",
+  "rating": null,
+  "installs": "10K+",
+  "url": "https://play.google.com/store/apps/details?id=production.qooxy.driver&hl=en&gl=IN",
+  "side": "driver",
+  "setUpByHim": false,
+  "developer": "Qooxy  Technologies",
+  "updated": "Aug 21, 2024",
+  "firstSeen": "20221026",
+  "icon": "/store/production.qooxy.driver.webp",
+  "color": null
+ },
+ {
+  "id": "production.smartride.driver",
+  "name": "Starforge Bastion",
+  "rating": null,
+  "installs": "10K+",
+  "url": "https://play.google.com/store/apps/details?id=production.smartride.driver&hl=en&gl=IN",
+  "side": "driver",
+  "setUpByHim": false,
+  "developer": "ADORBIT TECH LIMITED",
+  "updated": "Aug 12, 2026",
+  "firstSeen": "20201031",
+  "icon": "/store/production.smartride.driver.webp",
+  "color": null
+ },
+ {
   "id": "production.nawi.customer",
   "name": "NAWI RIDES",
-  "rating": 4.8,
+  "rating": 4.3,
   "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=production.nawi.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.nawi.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Nawi Rides",
   "updated": "Aug 21, 2024",
-  "firstSeen": null,
+  "firstSeen": "20210411",
   "icon": "/store/production.nawi.customer.webp",
   "color": "#2B8741"
  },
@@ -568,7 +596,7 @@ export const fleet = [
   "name": "HURRY UP RIDE",
   "rating": 3.3,
   "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=com.hurryup&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.hurryup&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "BANGLAMARK  Corporation",
@@ -578,53 +606,11 @@ export const fleet = [
   "color": "#d30e1e"
  },
  {
-  "id": "product.customer.jett",
-  "name": "Jett :Safe , Affordable rides",
-  "rating": null,
-  "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.jett&hl=en",
-  "side": "rider",
-  "setUpByHim": false,
-  "developer": "Jett technology",
-  "updated": "Apr 17, 2024",
-  "firstSeen": null,
-  "icon": "/store/product.customer.jett.webp",
-  "color": "#4E45B7"
- },
- {
-  "id": "production.nairaxi.customer",
-  "name": "NAIRAXI- Ride, Shop, Delivery",
-  "rating": null,
-  "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=production.nairaxi.customer&hl=en",
-  "side": "rider",
-  "setUpByHim": false,
-  "developer": "TOAST TECHNOLOGIES LTD",
-  "updated": "Apr 17, 2024",
-  "firstSeen": null,
-  "icon": "/store/production.nairaxi.customer.webp",
-  "color": "#4FB852"
- },
- {
-  "id": "product.driver.jett",
-  "name": "Jett Driver: Drive,Earn",
-  "rating": null,
-  "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.jett&hl=en",
-  "side": "driver",
-  "setUpByHim": false,
-  "developer": "Jett technology",
-  "updated": "Aug 20, 2024",
-  "firstSeen": null,
-  "icon": "/store/product.driver.jett.webp",
-  "color": null
- },
- {
   "id": "production.woulib.customer",
   "name": "Woulib",
   "rating": null,
   "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=production.woulib.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.woulib.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "WOULIB",
@@ -634,25 +620,67 @@ export const fleet = [
   "color": "#F2C50E"
  },
  {
+  "id": "product.customer.jett",
+  "name": "Jett :Safe , Affordable rides",
+  "rating": null,
+  "installs": "5K+",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.jett&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": false,
+  "developer": "Jett technology",
+  "updated": "Apr 17, 2024",
+  "firstSeen": "20240531",
+  "icon": "/store/product.customer.jett.webp",
+  "color": "#4E45B7"
+ },
+ {
   "id": "production.pikmi.customer",
   "name": "Pikmi",
   "rating": null,
   "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=production.pikmi.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.pikmi.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Pikmi Global Company",
-  "updated": "May 15, 2024",
-  "firstSeen": null,
+  "updated": "May 14, 2024",
+  "firstSeen": "20211222",
   "icon": "/store/production.pikmi.customer.webp",
   "color": "#D10A13"
+ },
+ {
+  "id": "production.nairaxi.customer",
+  "name": "NAIRAXI- Ride, Shop, Delivery",
+  "rating": null,
+  "installs": "5K+",
+  "url": "https://play.google.com/store/apps/details?id=production.nairaxi.customer&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": false,
+  "developer": "TOAST TECHNOLOGIES LTD",
+  "updated": "Apr 17, 2024",
+  "firstSeen": "20230704",
+  "icon": "/store/production.nairaxi.customer.webp",
+  "color": "#4FB852"
+ },
+ {
+  "id": "product.driver.jett",
+  "name": "Jett Driver: Drive,Earn",
+  "rating": null,
+  "installs": "5K+",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.jett&hl=en&gl=IN",
+  "side": "driver",
+  "setUpByHim": false,
+  "developer": "Jett technology",
+  "updated": "Aug 20, 2024",
+  "firstSeen": null,
+  "icon": "/store/product.driver.jett.webp",
+  "color": null
  },
  {
   "id": "com.VivaDriver.driver",
   "name": "Motoristas moz",
   "rating": null,
   "installs": "5K+",
-  "url": "https://play.google.com/store/apps/details?id=com.VivaDriver.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.VivaDriver.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": true,
   "developer": "Viva Taxi",
@@ -662,25 +690,11 @@ export const fleet = [
   "color": null
  },
  {
-  "id": "product.driver.rio",
-  "name": "Rio Partners",
-  "rating": 4.7,
-  "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.rio&hl=en",
-  "side": "driver",
-  "setUpByHim": false,
-  "developer": "Rio cabs India",
-  "updated": "May 5, 2026",
-  "firstSeen": null,
-  "icon": "/store/product.driver.rio.webp",
-  "color": null
- },
- {
   "id": "product.driver.driveme",
   "name": "DriveMeApp Driver",
-  "rating": 4.7,
+  "rating": 4.9,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.driveme&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.driveme&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "DriveMeApp",
@@ -690,11 +704,39 @@ export const fleet = [
   "color": null
  },
  {
+  "id": "product.customer.driveme",
+  "name": "DriveMeApp: Book a Ride",
+  "rating": 4.7,
+  "installs": "1K+",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.driveme&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": false,
+  "developer": "DriveMeApp",
+  "updated": "Aug 30, 2024",
+  "firstSeen": "20241009",
+  "icon": "/store/product.customer.driveme.webp",
+  "color": "#379CC9"
+ },
+ {
+  "id": "product.driver.rio",
+  "name": "Rio Partners",
+  "rating": 4.7,
+  "installs": "1K+",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.rio&hl=en&gl=IN",
+  "side": "driver",
+  "setUpByHim": false,
+  "developer": "Rio cabs India",
+  "updated": "May 4, 2026",
+  "firstSeen": null,
+  "icon": "/store/product.driver.rio.webp",
+  "color": null
+ },
+ {
   "id": "production.woulib.driver",
   "name": "Woulib Chauffeur",
   "rating": 4.5,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=production.woulib.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.woulib.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "WOULIB",
@@ -704,25 +746,11 @@ export const fleet = [
   "color": null
  },
  {
-  "id": "product.customer.driveme",
-  "name": "DriveMeApp: Book a Ride",
-  "rating": 4.3,
-  "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.driveme&hl=en",
-  "side": "rider",
-  "setUpByHim": false,
-  "developer": "DriveMeApp",
-  "updated": "Aug 30, 2024",
-  "firstSeen": null,
-  "icon": "/store/product.customer.driveme.webp",
-  "color": "#379CC9"
- },
- {
   "id": "product.customer.superapp",
   "name": "Super Rental",
   "rating": 3.4,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.superapp&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.superapp&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "CROWD FORCE",
@@ -736,39 +764,25 @@ export const fleet = [
   "name": "Super driver!",
   "rating": 3.4,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.superapp.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.superapp.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "CROWD FORCE",
-  "updated": "Sep 10, 2024",
+  "updated": "Sep 9, 2024",
   "firstSeen": null,
   "icon": "/store/product.superapp.driver.webp",
   "color": null
- },
- {
-  "id": "product.limoz.customer",
-  "name": "Limoz Customer",
-  "rating": null,
-  "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.limoz.customer&hl=en",
-  "side": "rider",
-  "setUpByHim": false,
-  "developer": "Limoz, LLC",
-  "updated": "Apr 24, 2026",
-  "firstSeen": null,
-  "icon": "/store/product.limoz.customer.webp",
-  "color": "#086A2E"
  },
  {
   "id": "product.customer.yuber",
   "name": "YUBER Taxi",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.yuber&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.yuber&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "YUBLINK ANGOLA",
-  "updated": "May 28, 2025",
+  "updated": "May 27, 2025",
   "firstSeen": null,
   "icon": "/store/product.customer.yuber.webp",
   "color": null
@@ -778,7 +792,7 @@ export const fleet = [
   "name": "RODA",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.roda&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.roda&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Roda Singapore",
@@ -792,7 +806,7 @@ export const fleet = [
   "name": "Errand Philippines",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.adonisOville&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.adonisOville&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Errand Philippines",
@@ -806,25 +820,39 @@ export const fleet = [
   "name": "Salam-Taxi",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.salamtaxi&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.salamtaxi&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "SalamTaxi",
-  "updated": "Dec 8, 2024",
+  "updated": "Dec 7, 2024",
   "firstSeen": null,
   "icon": "/store/product.customer.salamtaxi.webp",
   "color": null
+ },
+ {
+  "id": "product.limoz.customer",
+  "name": "Limoz Customer",
+  "rating": null,
+  "installs": "1K+",
+  "url": "https://play.google.com/store/apps/details?id=product.limoz.customer&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": false,
+  "developer": "Limoz, LLC",
+  "updated": "Apr 24, 2026",
+  "firstSeen": "20250119",
+  "icon": "/store/product.limoz.customer.webp",
+  "color": "#086A2E"
  },
  {
   "id": "product.customer.choffer.shuttle",
   "name": "Choffer",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.choffer.shuttle&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.choffer.shuttle&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Choffer Technology",
-  "updated": "Feb 5, 2025",
+  "updated": "Feb 4, 2025",
   "firstSeen": null,
   "icon": "/store/product.customer.choffer.shuttle.webp",
   "color": "#FF0000"
@@ -834,11 +862,11 @@ export const fleet = [
   "name": "TT Cab",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.ttcab&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.ttcab&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Iris Technologies Ltd",
-  "updated": "Oct 29, 2024",
+  "updated": "Oct 28, 2024",
   "firstSeen": null,
   "icon": "/store/product.customer.ttcab.webp",
   "color": "#D90000"
@@ -848,7 +876,7 @@ export const fleet = [
   "name": "Cabby",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=com.cabby.customer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.cabby.customer&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "CABBY FOR ELECTRONIC TRANSPORT SERVICES CO. L.L.C",
@@ -862,7 +890,7 @@ export const fleet = [
   "name": "Leiwand Taxi",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=com.leiwand.user&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.leiwand.user&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Driverpos",
@@ -876,7 +904,7 @@ export const fleet = [
   "name": "Hola Driver Ireland",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.hola&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.hola&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Hola Connect",
@@ -890,7 +918,7 @@ export const fleet = [
   "name": "HITCH Bermuda Driver",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=com.hitch.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.hitch.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Hitch Limited",
@@ -904,11 +932,11 @@ export const fleet = [
   "name": "TAPP Rideshare Driver",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.tapp&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.tapp&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": true,
   "developer": "TAPP RideShare",
-  "updated": "Sep 19, 2024",
+  "updated": "Sep 18, 2024",
   "firstSeen": null,
   "icon": "/store/product.driver.tapp.webp",
   "color": null
@@ -918,12 +946,12 @@ export const fleet = [
   "name": "1Bena Driver –Delivery & Rides",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.bena&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.bena&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "1Bena",
   "updated": "Sep 3, 2026",
-  "firstSeen": null,
+  "firstSeen": "20211007",
   "icon": "/store/product.driver.bena.webp",
   "color": null
  },
@@ -932,7 +960,7 @@ export const fleet = [
   "name": "NAIRAXI DRIVER",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=production.nairaxi.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.nairaxi.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "TOAST TECHNOLOGIES LTD",
@@ -946,7 +974,7 @@ export const fleet = [
   "name": "Flinta Driver",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=com.leiwand.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.leiwand.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Driverpos",
@@ -960,11 +988,11 @@ export const fleet = [
   "name": "Pikmi Driver",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=production.pikmi.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.pikmi.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Pikmi Global Company",
-  "updated": "Aug 6, 2024",
+  "updated": "Aug 5, 2024",
   "firstSeen": null,
   "icon": "/store/production.pikmi.driver.webp",
   "color": null
@@ -974,7 +1002,7 @@ export const fleet = [
   "name": "B Taxi Driver",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=btaxi.rides.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=btaxi.rides.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "B TAXI",
@@ -988,7 +1016,7 @@ export const fleet = [
   "name": "B Taxi Brussels: Rides, 24/7",
   "rating": null,
   "installs": "1K+",
-  "url": "https://play.google.com/store/apps/details?id=btaxi.rides.passenger&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=btaxi.rides.passenger&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "B TAXI",
@@ -1002,7 +1030,7 @@ export const fleet = [
   "name": "YUBER Taxi - Driver",
   "rating": null,
   "installs": "500+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.yuber&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.yuber&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "YUBLINK ANGOLA",
@@ -1016,7 +1044,7 @@ export const fleet = [
   "name": "Errand Driver App",
   "rating": null,
   "installs": "500+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.adonisOville&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.adonisOville&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Errand Philippines",
@@ -1030,7 +1058,7 @@ export const fleet = [
   "name": "TT Cab Driver",
   "rating": null,
   "installs": "500+",
-  "url": "https://play.google.com/store/apps/details?id=product.clicklabs.ttcab.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.clicklabs.ttcab.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Iris Technologies Ltd",
@@ -1044,7 +1072,7 @@ export const fleet = [
   "name": "NAWI DRIVER",
   "rating": null,
   "installs": "500+",
-  "url": "https://play.google.com/store/apps/details?id=production.nawi.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.nawi.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Nawi Rides",
@@ -1054,11 +1082,39 @@ export const fleet = [
   "color": null
  },
  {
+  "id": "production.romi.driver",
+  "name": "Romi Driver",
+  "rating": 4.6,
+  "installs": "100+",
+  "url": "https://play.google.com/store/apps/details?id=production.romi.driver&hl=en&gl=IN",
+  "side": "driver",
+  "setUpByHim": false,
+  "developer": "ROMI ride",
+  "updated": "Apr 28, 2025",
+  "firstSeen": "20250713",
+  "icon": "/store/production.romi.driver.webp",
+  "color": null
+ },
+ {
+  "id": "production.romi.customer",
+  "name": "Romi Ride",
+  "rating": 4.4,
+  "installs": "100+",
+  "url": "https://play.google.com/store/apps/details?id=production.romi.customer&hl=en&gl=IN",
+  "side": "rider",
+  "setUpByHim": false,
+  "developer": "ROMI ride",
+  "updated": "Apr 28, 2025",
+  "firstSeen": "20250713",
+  "icon": "/store/production.romi.customer.webp",
+  "color": "#ff570b"
+ },
+ {
   "id": "com.limoz.driver",
   "name": "Limoz Driver",
-  "rating": 4.7,
+  "rating": 4.3,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=com.limoz.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=com.limoz.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Limoz, LLC",
@@ -1068,39 +1124,11 @@ export const fleet = [
   "color": null
  },
  {
-  "id": "production.romi.customer",
-  "name": "Romi Ride",
-  "rating": 4.6,
-  "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=production.romi.customer&hl=en",
-  "side": "rider",
-  "setUpByHim": false,
-  "developer": "ROMI ride",
-  "updated": "Apr 29, 2025",
-  "firstSeen": null,
-  "icon": "/store/production.romi.customer.webp",
-  "color": "#ff570b"
- },
- {
-  "id": "production.romi.driver",
-  "name": "Romi Driver",
-  "rating": 4.6,
-  "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=production.romi.driver&hl=en",
-  "side": "driver",
-  "setUpByHim": false,
-  "developer": "ROMI ride",
-  "updated": "Apr 29, 2025",
-  "firstSeen": null,
-  "icon": "/store/production.romi.driver.webp",
-  "color": null
- },
- {
   "id": "product.driver.one",
   "name": "1Drive",
   "rating": 3.8,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.one&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.one&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": true,
   "developer": "ONE TECHNOLOGY - SOLE PROPRIETORSHIP L.L.C",
@@ -1114,7 +1142,7 @@ export const fleet = [
   "name": "Island Transfer",
   "rating": null,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.angel&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.angel&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Mr. & Mrs. Punta Cana",
@@ -1128,12 +1156,12 @@ export const fleet = [
   "name": "InterMetroONE Customer App",
   "rating": null,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=production.redplate.customer.new&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.redplate.customer.new&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "Redplate Technologies Jamaica Limited",
   "updated": "Apr 6, 2026",
-  "firstSeen": null,
+  "firstSeen": "20210617",
   "icon": "/store/production.redplate.customer.new.webp",
   "color": "#e20613"
  },
@@ -1142,7 +1170,7 @@ export const fleet = [
   "name": "Salam-Chauffeur",
   "rating": null,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.salamtaxi&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.salamtaxi&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "SalamTaxi",
@@ -1156,7 +1184,7 @@ export const fleet = [
   "name": "Apilit Conductores",
   "rating": null,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.apilit&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.apilit&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": true,
   "developer": "apilit",
@@ -1170,7 +1198,7 @@ export const fleet = [
   "name": "Choffer Driver",
   "rating": null,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.choffer&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.choffer&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Choffer Technology",
@@ -1184,55 +1212,27 @@ export const fleet = [
   "name": "InterMetroONE Transporter",
   "rating": null,
   "installs": "100+",
-  "url": "https://play.google.com/store/apps/details?id=production.redplate.driver&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=production.redplate.driver&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Redplate Technologies Jamaica Limited",
-  "updated": "Sep 11, 2024",
+  "updated": "Sep 10, 2024",
   "firstSeen": null,
   "icon": "/store/production.redplate.driver.webp",
   "color": null
- },
- {
-  "id": "product.customer.dida",
-  "name": "Dida Client",
-  "rating": null,
-  "installs": "50+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.dida&hl=en",
-  "side": "rider",
-  "setUpByHim": true,
-  "developer": "DIDA RENTAL",
-  "updated": "May 20, 2024",
-  "firstSeen": null,
-  "icon": "/store/product.customer.dida.webp",
-  "color": "#4DB4E7"
  },
  {
   "id": "product.driver.roda",
   "name": "RODA Driver",
   "rating": null,
   "installs": "50+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.roda&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.roda&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Roda Singapore",
-  "updated": "Jun 26, 2025",
+  "updated": "Jun 25, 2025",
   "firstSeen": null,
   "icon": "/store/product.driver.roda.webp",
-  "color": null
- },
- {
-  "id": "product.driver.dida",
-  "name": "Dida Chauffeur",
-  "rating": null,
-  "installs": "50+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.dida&hl=en",
-  "side": "driver",
-  "setUpByHim": true,
-  "developer": "DIDA RENTAL",
-  "updated": "May 20, 2024",
-  "firstSeen": null,
-  "icon": "/store/product.driver.dida.webp",
   "color": null
  },
  {
@@ -1240,7 +1240,7 @@ export const fleet = [
   "name": "Island Drive",
   "rating": null,
   "installs": "10+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.angel&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.angel&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "Mr. & Mrs. Punta Cana",
@@ -1254,11 +1254,11 @@ export const fleet = [
   "name": "TAXI NEXLA",
   "rating": null,
   "installs": "5+",
-  "url": "https://play.google.com/store/apps/details?id=product.customer.btaxi&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.customer.btaxi&hl=en&gl=IN",
   "side": "rider",
   "setUpByHim": false,
   "developer": "B TAXI",
-  "updated": "Mar 7, 2025",
+  "updated": "Mar 6, 2025",
   "firstSeen": null,
   "icon": "/store/product.customer.btaxi.webp",
   "color": null
@@ -1268,11 +1268,11 @@ export const fleet = [
   "name": "NEXLA DRIVER",
   "rating": null,
   "installs": "5+",
-  "url": "https://play.google.com/store/apps/details?id=product.driver.btaxi&hl=en",
+  "url": "https://play.google.com/store/apps/details?id=product.driver.btaxi&hl=en&gl=IN",
   "side": "driver",
   "setUpByHim": false,
   "developer": "B TAXI",
-  "updated": "Mar 7, 2025",
+  "updated": "Mar 6, 2025",
   "firstSeen": null,
   "icon": "/store/product.driver.btaxi.webp",
   "color": null
@@ -1297,7 +1297,7 @@ export const liveClients = [
    {
     "id": "production.smartbikemobility.customer",
     "name": "SmartBike",
-    "url": "https://play.google.com/store/apps/details?id=production.smartbikemobility.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.smartbikemobility.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "1M+",
     "rating": 3.1,
@@ -1317,7 +1317,7 @@ export const liveClients = [
    {
     "id": "com.snape",
     "name": "SnapE Cabs",
-    "url": "https://play.google.com/store/apps/details?id=com.snape&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.snape&hl=en&gl=IN",
     "side": "rider",
     "installs": "500K+",
     "rating": 2,
@@ -1326,7 +1326,7 @@ export const liveClients = [
    {
     "id": "product.driver.snapecabs",
     "name": "SnapE Driver Partner",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.snapecabs&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.snapecabs&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": 3.8,
@@ -1346,7 +1346,7 @@ export const liveClients = [
    {
     "id": "production.ttrides.customer",
     "name": "TT RideShare",
-    "url": "https://play.google.com/store/apps/details?id=production.ttrides.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.ttrides.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": 5,
@@ -1355,7 +1355,7 @@ export const liveClients = [
    {
     "id": "production.ttrides.driver",
     "name": "TT RideShare Driver",
-    "url": "https://play.google.com/store/apps/details?id=production.ttrides.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.ttrides.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "50K+",
     "rating": null,
@@ -1375,20 +1375,20 @@ export const liveClients = [
    {
     "id": "production.zofeur.customer",
     "name": "Zofeur - Hire a Safe Driver.",
-    "url": "https://play.google.com/store/apps/details?id=production.zofeur.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.zofeur.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
-    "rating": 4.8,
+    "rating": 4.7,
     "updated": "Sep 16, 2026"
    },
    {
     "id": "production.zofeur.driver",
     "name": "Zofeur - Driver App",
-    "url": "https://play.google.com/store/apps/details?id=production.zofeur.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.zofeur.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "50K+",
     "rating": 4.6,
-    "updated": "Sep 9, 2026"
+    "updated": "Sep 29, 2026"
    }
   ]
  },
@@ -1404,7 +1404,7 @@ export const liveClients = [
    {
     "id": "com.VivaTaxi",
     "name": "Viva Taxi",
-    "url": "https://play.google.com/store/apps/details?id=com.VivaTaxi&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.VivaTaxi&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": 4.2,
@@ -1413,7 +1413,7 @@ export const liveClients = [
    {
     "id": "com.VivaDriver.driver",
     "name": "Motoristas moz",
-    "url": "https://play.google.com/store/apps/details?id=com.VivaDriver.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.VivaDriver.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "5K+",
     "rating": null,
@@ -1433,11 +1433,11 @@ export const liveClients = [
    {
     "id": "com.asap.courier",
     "name": "ASAP",
-    "url": "https://play.google.com/store/apps/details?id=com.asap.courier&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.asap.courier&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": 3.6,
-    "updated": "Sep 3, 2026"
+    "updated": "Sep 2, 2026"
    }
   ]
  },
@@ -1453,20 +1453,20 @@ export const liveClients = [
    {
     "id": "production.rydecust.customer",
     "name": "Ryde – Book a Ride",
-    "url": "https://play.google.com/store/apps/details?id=production.rydecust.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.rydecust.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": 3.1,
-    "updated": "Jun 14, 2026"
+    "updated": "Jun 13, 2026"
    },
    {
     "id": "production.rydedrive.driver",
     "name": "Ryde Drive",
-    "url": "https://play.google.com/store/apps/details?id=production.rydedrive.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.rydedrive.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "50K+",
     "rating": 3.9,
-    "updated": "Sep 22, 2026"
+    "updated": "Sep 21, 2026"
    }
   ]
  },
@@ -1482,7 +1482,7 @@ export const liveClients = [
    {
     "id": "production.togopool.carpool",
     "name": "Togopool: Carpool & Bikepool",
-    "url": "https://play.google.com/store/apps/details?id=production.togopool.carpool&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.togopool.carpool&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": 2.9,
@@ -1502,7 +1502,7 @@ export const liveClients = [
    {
     "id": "production.urban.customer",
     "name": "Urban - Passenger",
-    "url": "https://play.google.com/store/apps/details?id=production.urban.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.urban.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": null,
@@ -1511,7 +1511,7 @@ export const liveClients = [
    {
     "id": "production.urban.driver",
     "name": "Urban Driver - for drivers",
-    "url": "https://play.google.com/store/apps/details?id=production.urban.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.urban.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "100K+",
     "rating": null,
@@ -1531,7 +1531,7 @@ export const liveClients = [
    {
     "id": "production.qooxy.customer",
     "name": "Qooxy: Livraison à domicile",
-    "url": "https://play.google.com/store/apps/details?id=production.qooxy.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.qooxy.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "100K+",
     "rating": null,
@@ -1540,7 +1540,7 @@ export const liveClients = [
    {
     "id": "production.qooxy.driver",
     "name": "Qooxy Agent",
-    "url": "https://play.google.com/store/apps/details?id=production.qooxy.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.qooxy.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": null,
@@ -1560,11 +1560,11 @@ export const liveClients = [
    {
     "id": "production.pickupbarbodas.customer",
     "name": "pickUP Barbados",
-    "url": "https://play.google.com/store/apps/details?id=production.pickupbarbodas.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.pickupbarbodas.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "50K+",
     "rating": 4.5,
-    "updated": "Sep 10, 2026"
+    "updated": "Sep 25, 2026"
    }
   ]
  },
@@ -1580,16 +1580,16 @@ export const liveClients = [
    {
     "id": "product.customer.bena",
     "name": "1Bena – Food, Delivery & Rides",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.bena&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.bena&hl=en&gl=IN",
     "side": "rider",
     "installs": "50K+",
     "rating": null,
-    "updated": "Sep 5, 2026"
+    "updated": "Sep 4, 2026"
    },
    {
     "id": "product.driver.bena",
     "name": "1Bena Driver –Delivery & Rides",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.bena&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.bena&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
@@ -1609,7 +1609,7 @@ export const liveClients = [
    {
     "id": "app.production.delivermett",
     "name": "DeliverMe TT Taxi - Rideshare",
-    "url": "https://play.google.com/store/apps/details?id=app.production.delivermett&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=app.production.delivermett&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": 5,
@@ -1618,11 +1618,11 @@ export const liveClients = [
    {
     "id": "driver.production.delivermett",
     "name": "DeliverMe TT Driver",
-    "url": "https://play.google.com/store/apps/details?id=driver.production.delivermett&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=driver.production.delivermett&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": null,
-    "updated": "Jan 15, 2026"
+    "updated": "Jan 14, 2026"
    }
   ]
  },
@@ -1638,7 +1638,7 @@ export const liveClients = [
    {
     "id": "com.tryapptivities.pamdriver",
     "name": "Pamdriver: Driver & Delivery",
-    "url": "https://play.google.com/store/apps/details?id=com.tryapptivities.pamdriver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.tryapptivities.pamdriver&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": 4.9,
@@ -1658,7 +1658,7 @@ export const liveClients = [
    {
     "id": "com.hitch",
     "name": "HITCH Bermuda",
-    "url": "https://play.google.com/store/apps/details?id=com.hitch&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.hitch&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": 4.7,
@@ -1667,7 +1667,7 @@ export const liveClients = [
    {
     "id": "com.hitch.driver",
     "name": "HITCH Bermuda Driver",
-    "url": "https://play.google.com/store/apps/details?id=com.hitch.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.hitch.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
@@ -1687,20 +1687,20 @@ export const liveClients = [
    {
     "id": "product.customer.rio",
     "name": "Rio Cabs",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.rio&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.rio&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": 4.5,
-    "updated": "May 5, 2026"
+    "updated": "May 4, 2026"
    },
    {
     "id": "product.driver.rio",
     "name": "Rio Partners",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.rio&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.rio&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": 4.7,
-    "updated": "May 5, 2026"
+    "updated": "May 4, 2026"
    }
   ]
  },
@@ -1716,7 +1716,7 @@ export const liveClients = [
    {
     "id": "product.customer.one",
     "name": "1Go",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.one&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.one&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": 3.8,
@@ -1725,7 +1725,7 @@ export const liveClients = [
    {
     "id": "product.driver.one",
     "name": "1Drive",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.one&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.one&hl=en&gl=IN",
     "side": "driver",
     "installs": "100+",
     "rating": 3.8,
@@ -1745,7 +1745,7 @@ export const liveClients = [
    {
     "id": "com.hurryup",
     "name": "HURRY UP RIDE",
-    "url": "https://play.google.com/store/apps/details?id=com.hurryup&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.hurryup&hl=en&gl=IN",
     "side": "rider",
     "installs": "5K+",
     "rating": 3.3,
@@ -1754,40 +1754,11 @@ export const liveClients = [
    {
     "id": "com.hurryup.driver",
     "name": "HURRY UP CAPTAIN",
-    "url": "https://play.google.com/store/apps/details?id=com.hurryup.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.hurryup.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": 3.3,
-    "updated": "Jun 28, 2023"
-   }
-  ]
- },
- {
-  "key": "dailylatam",
-  "name": "Daily",
-  "developer": "Daily Latam",
-  "icon": "/store/product.customer.dailyecuador.webp",
-  "color": "#48b981",
-  "setUpByHim": true,
-  "rating": null,
-  "apps": [
-   {
-    "id": "product.customer.dailyecuador",
-    "name": "Daily Pasajero: Viaja seguro",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.dailyecuador&hl=en",
-    "side": "rider",
-    "installs": "10K+",
-    "rating": null,
-    "updated": "Sep 3, 2026"
-   },
-   {
-    "id": "product.driver.dailyecuador",
-    "name": "Daily Conductor: Maneja y gana",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.dailyecuador&hl=en",
-    "side": "driver",
-    "installs": "10K+",
-    "rating": null,
-    "updated": "Sep 3, 2026"
+    "updated": "Jun 27, 2023"
    }
   ]
  },
@@ -1803,20 +1774,20 @@ export const liveClients = [
    {
     "id": "production.hovr.customer",
     "name": "HOVR",
-    "url": "https://play.google.com/store/apps/details?id=production.hovr.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.hovr.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": null,
-    "updated": "Jun 2, 2026"
+    "updated": "Sep 22, 2026"
    },
    {
     "id": "production.hovr.driver",
     "name": "HOVR Driver",
-    "url": "https://play.google.com/store/apps/details?id=production.hovr.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.hovr.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": null,
-    "updated": "May 9, 2026"
+    "updated": "Sep 23, 2026"
    }
   ]
  },
@@ -1832,7 +1803,7 @@ export const liveClients = [
    {
     "id": "product.customer.hola",
     "name": "Hola Taxi Ireland",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.hola&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.hola&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": null,
@@ -1841,11 +1812,40 @@ export const liveClients = [
    {
     "id": "product.driver.hola",
     "name": "Hola Driver Ireland",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.hola&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.hola&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
     "updated": "Sep 8, 2026"
+   }
+  ]
+ },
+ {
+  "key": "dailylatam",
+  "name": "Daily",
+  "developer": "Daily Latam",
+  "icon": "/store/product.customer.dailyecuador.webp",
+  "color": "#48b981",
+  "setUpByHim": true,
+  "rating": null,
+  "apps": [
+   {
+    "id": "product.customer.dailyecuador",
+    "name": "Daily Pasajero: Viaja seguro",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.dailyecuador&hl=en&gl=IN",
+    "side": "rider",
+    "installs": "10K+",
+    "rating": null,
+    "updated": "Sep 28, 2026"
+   },
+   {
+    "id": "product.driver.dailyecuador",
+    "name": "Daily Conductor: Maneja y gana",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.dailyecuador&hl=en&gl=IN",
+    "side": "driver",
+    "installs": "10K+",
+    "rating": null,
+    "updated": "Sep 2, 2026"
    }
   ]
  },
@@ -1861,7 +1861,7 @@ export const liveClients = [
    {
     "id": "product.customer.onux",
     "name": "ONUX Cliente",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.onux&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.onux&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": null,
@@ -1870,7 +1870,7 @@ export const liveClients = [
    {
     "id": "product.driver.onux",
     "name": "ONUX Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.onux&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.onux&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": null,
@@ -1890,7 +1890,7 @@ export const liveClients = [
    {
     "id": "production.hum.customer",
     "name": "HUM Rideshare",
-    "url": "https://play.google.com/store/apps/details?id=production.hum.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.hum.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": null,
@@ -1899,11 +1899,11 @@ export const liveClients = [
    {
     "id": "production.hum.driver",
     "name": "HUM Driver",
-    "url": "https://play.google.com/store/apps/details?id=production.hum.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.hum.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": null,
-    "updated": "Dec 16, 2025"
+    "updated": "Dec 15, 2025"
    }
   ]
  },
@@ -1919,7 +1919,7 @@ export const liveClients = [
    {
     "id": "com.taxiye",
     "name": "Taxiye Passenger",
-    "url": "https://play.google.com/store/apps/details?id=com.taxiye&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.taxiye&hl=en&gl=IN",
     "side": "rider",
     "installs": "10K+",
     "rating": null,
@@ -1928,11 +1928,40 @@ export const liveClients = [
    {
     "id": "com.taxiye.driver",
     "name": "Taxiye Driver",
-    "url": "https://play.google.com/store/apps/details?id=com.taxiye.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.taxiye.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "10K+",
     "rating": null,
     "updated": "Jul 19, 2026"
+   }
+  ]
+ },
+ {
+  "key": "adorbittechlimited",
+  "name": "Neon Velocity",
+  "developer": "ADORBIT TECH LIMITED",
+  "icon": "/store/production.smartride.customer.webp",
+  "color": "#CC3333",
+  "setUpByHim": false,
+  "rating": null,
+  "apps": [
+   {
+    "id": "production.smartride.customer",
+    "name": "Neon Velocity",
+    "url": "https://play.google.com/store/apps/details?id=production.smartride.customer&hl=en&gl=IN",
+    "side": "rider",
+    "installs": "10K+",
+    "rating": null,
+    "updated": "Aug 12, 2026"
+   },
+   {
+    "id": "production.smartride.driver",
+    "name": "Starforge Bastion",
+    "url": "https://play.google.com/store/apps/details?id=production.smartride.driver&hl=en&gl=IN",
+    "side": "driver",
+    "installs": "10K+",
+    "rating": null,
+    "updated": "Aug 12, 2026"
    }
   ]
  },
@@ -1943,83 +1972,25 @@ export const liveClients = [
   "icon": "/store/production.nawi.customer.webp",
   "color": "#2B8741",
   "setUpByHim": false,
-  "rating": 4.8,
+  "rating": 4.3,
   "apps": [
    {
     "id": "production.nawi.customer",
     "name": "NAWI RIDES",
-    "url": "https://play.google.com/store/apps/details?id=production.nawi.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.nawi.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "5K+",
-    "rating": 4.8,
+    "rating": 4.3,
     "updated": "Aug 21, 2024"
    },
    {
     "id": "production.nawi.driver",
     "name": "NAWI DRIVER",
-    "url": "https://play.google.com/store/apps/details?id=production.nawi.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.nawi.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "500+",
     "rating": null,
     "updated": "Oct 10, 2024"
-   }
-  ]
- },
- {
-  "key": "jetttechnology",
-  "name": "Jett",
-  "developer": "Jett technology",
-  "icon": "/store/product.customer.jett.webp",
-  "color": "#4E45B7",
-  "setUpByHim": false,
-  "rating": null,
-  "apps": [
-   {
-    "id": "product.customer.jett",
-    "name": "Jett :Safe , Affordable rides",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.jett&hl=en",
-    "side": "rider",
-    "installs": "5K+",
-    "rating": null,
-    "updated": "Apr 17, 2024"
-   },
-   {
-    "id": "product.driver.jett",
-    "name": "Jett Driver: Drive,Earn",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.jett&hl=en",
-    "side": "driver",
-    "installs": "5K+",
-    "rating": null,
-    "updated": "Aug 20, 2024"
-   }
-  ]
- },
- {
-  "key": "toasttechnologiesltd",
-  "name": "NAIRAXI",
-  "developer": "TOAST TECHNOLOGIES LTD",
-  "icon": "/store/production.nairaxi.customer.webp",
-  "color": "#4FB852",
-  "setUpByHim": false,
-  "rating": null,
-  "apps": [
-   {
-    "id": "production.nairaxi.customer",
-    "name": "NAIRAXI- Ride, Shop, Delivery",
-    "url": "https://play.google.com/store/apps/details?id=production.nairaxi.customer&hl=en",
-    "side": "rider",
-    "installs": "5K+",
-    "rating": null,
-    "updated": "Apr 17, 2024"
-   },
-   {
-    "id": "production.nairaxi.driver",
-    "name": "NAIRAXI DRIVER",
-    "url": "https://play.google.com/store/apps/details?id=production.nairaxi.driver&hl=en",
-    "side": "driver",
-    "installs": "1K+",
-    "rating": null,
-    "updated": "Jul 31, 2023"
    }
   ]
  },
@@ -2035,7 +2006,7 @@ export const liveClients = [
    {
     "id": "production.woulib.customer",
     "name": "Woulib",
-    "url": "https://play.google.com/store/apps/details?id=production.woulib.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.woulib.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "5K+",
     "rating": null,
@@ -2044,11 +2015,40 @@ export const liveClients = [
    {
     "id": "production.woulib.driver",
     "name": "Woulib Chauffeur",
-    "url": "https://play.google.com/store/apps/details?id=production.woulib.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.woulib.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": 4.5,
     "updated": "Oct 28, 2025"
+   }
+  ]
+ },
+ {
+  "key": "jetttechnology",
+  "name": "Jett",
+  "developer": "Jett technology",
+  "icon": "/store/product.customer.jett.webp",
+  "color": "#4E45B7",
+  "setUpByHim": false,
+  "rating": null,
+  "apps": [
+   {
+    "id": "product.customer.jett",
+    "name": "Jett :Safe , Affordable rides",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.jett&hl=en&gl=IN",
+    "side": "rider",
+    "installs": "5K+",
+    "rating": null,
+    "updated": "Apr 17, 2024"
+   },
+   {
+    "id": "product.driver.jett",
+    "name": "Jett Driver: Drive,Earn",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.jett&hl=en&gl=IN",
+    "side": "driver",
+    "installs": "5K+",
+    "rating": null,
+    "updated": "Aug 20, 2024"
    }
   ]
  },
@@ -2064,20 +2064,49 @@ export const liveClients = [
    {
     "id": "production.pikmi.customer",
     "name": "Pikmi",
-    "url": "https://play.google.com/store/apps/details?id=production.pikmi.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.pikmi.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "5K+",
     "rating": null,
-    "updated": "May 15, 2024"
+    "updated": "May 14, 2024"
    },
    {
     "id": "production.pikmi.driver",
     "name": "Pikmi Driver",
-    "url": "https://play.google.com/store/apps/details?id=production.pikmi.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.pikmi.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
-    "updated": "Aug 6, 2024"
+    "updated": "Aug 5, 2024"
+   }
+  ]
+ },
+ {
+  "key": "toasttechnologiesltd",
+  "name": "NAIRAXI",
+  "developer": "TOAST TECHNOLOGIES LTD",
+  "icon": "/store/production.nairaxi.customer.webp",
+  "color": "#4FB852",
+  "setUpByHim": false,
+  "rating": null,
+  "apps": [
+   {
+    "id": "production.nairaxi.customer",
+    "name": "NAIRAXI- Ride, Shop, Delivery",
+    "url": "https://play.google.com/store/apps/details?id=production.nairaxi.customer&hl=en&gl=IN",
+    "side": "rider",
+    "installs": "5K+",
+    "rating": null,
+    "updated": "Apr 17, 2024"
+   },
+   {
+    "id": "production.nairaxi.driver",
+    "name": "NAIRAXI DRIVER",
+    "url": "https://play.google.com/store/apps/details?id=production.nairaxi.driver&hl=en&gl=IN",
+    "side": "driver",
+    "installs": "1K+",
+    "rating": null,
+    "updated": "Jul 31, 2023"
    }
   ]
  },
@@ -2088,24 +2117,24 @@ export const liveClients = [
   "icon": "/store/product.customer.driveme.webp",
   "color": "#379CC9",
   "setUpByHim": false,
-  "rating": 4.5,
+  "rating": 4.8,
   "apps": [
    {
     "id": "product.customer.driveme",
     "name": "DriveMeApp: Book a Ride",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.driveme&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.driveme&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
-    "rating": 4.3,
+    "rating": 4.7,
     "updated": "Aug 30, 2024"
    },
    {
     "id": "product.driver.driveme",
     "name": "DriveMeApp Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.driveme&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.driveme&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
-    "rating": 4.7,
+    "rating": 4.9,
     "updated": "Aug 30, 2024"
    }
   ]
@@ -2122,7 +2151,7 @@ export const liveClients = [
    {
     "id": "product.customer.superapp",
     "name": "Super Rental",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.superapp&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.superapp&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": 3.4,
@@ -2131,40 +2160,11 @@ export const liveClients = [
    {
     "id": "product.superapp.driver",
     "name": "Super driver!",
-    "url": "https://play.google.com/store/apps/details?id=product.superapp.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.superapp.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": 3.4,
-    "updated": "Sep 10, 2024"
-   }
-  ]
- },
- {
-  "key": "limozllc",
-  "name": "Limoz",
-  "developer": "Limoz, LLC",
-  "icon": "/store/product.limoz.customer.webp",
-  "color": "#086A2E",
-  "setUpByHim": false,
-  "rating": 4.7,
-  "apps": [
-   {
-    "id": "product.limoz.customer",
-    "name": "Limoz Customer",
-    "url": "https://play.google.com/store/apps/details?id=product.limoz.customer&hl=en",
-    "side": "rider",
-    "installs": "1K+",
-    "rating": null,
-    "updated": "Apr 24, 2026"
-   },
-   {
-    "id": "com.limoz.driver",
-    "name": "Limoz Driver",
-    "url": "https://play.google.com/store/apps/details?id=com.limoz.driver&hl=en",
-    "side": "driver",
-    "installs": "100+",
-    "rating": 4.7,
-    "updated": "Sep 11, 2026"
+    "updated": "Sep 9, 2024"
    }
   ]
  },
@@ -2180,16 +2180,16 @@ export const liveClients = [
    {
     "id": "product.customer.yuber",
     "name": "YUBER Taxi",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.yuber&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.yuber&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
-    "updated": "May 28, 2025"
+    "updated": "May 27, 2025"
    },
    {
     "id": "product.driver.yuber",
     "name": "YUBER Taxi - Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.yuber&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.yuber&hl=en&gl=IN",
     "side": "driver",
     "installs": "500+",
     "rating": null,
@@ -2209,7 +2209,7 @@ export const liveClients = [
    {
     "id": "product.customer.roda",
     "name": "RODA",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.roda&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.roda&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
@@ -2218,11 +2218,11 @@ export const liveClients = [
    {
     "id": "product.driver.roda",
     "name": "RODA Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.roda&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.roda&hl=en&gl=IN",
     "side": "driver",
     "installs": "50+",
     "rating": null,
-    "updated": "Jun 26, 2025"
+    "updated": "Jun 25, 2025"
    }
   ]
  },
@@ -2238,7 +2238,7 @@ export const liveClients = [
    {
     "id": "product.customer.adonisOville",
     "name": "Errand Philippines",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.adonisOville&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.adonisOville&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
@@ -2247,7 +2247,7 @@ export const liveClients = [
    {
     "id": "product.driver.adonisOville",
     "name": "Errand Driver App",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.adonisOville&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.adonisOville&hl=en&gl=IN",
     "side": "driver",
     "installs": "500+",
     "rating": null,
@@ -2267,20 +2267,49 @@ export const liveClients = [
    {
     "id": "product.customer.salamtaxi",
     "name": "Salam-Taxi",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.salamtaxi&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.salamtaxi&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
-    "updated": "Dec 8, 2024"
+    "updated": "Dec 7, 2024"
    },
    {
     "id": "product.driver.salamtaxi",
     "name": "Salam-Chauffeur",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.salamtaxi&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.salamtaxi&hl=en&gl=IN",
     "side": "driver",
     "installs": "100+",
     "rating": null,
     "updated": "Aug 27, 2024"
+   }
+  ]
+ },
+ {
+  "key": "limozllc",
+  "name": "Limoz",
+  "developer": "Limoz, LLC",
+  "icon": "/store/product.limoz.customer.webp",
+  "color": "#086A2E",
+  "setUpByHim": false,
+  "rating": 4.3,
+  "apps": [
+   {
+    "id": "product.limoz.customer",
+    "name": "Limoz Customer",
+    "url": "https://play.google.com/store/apps/details?id=product.limoz.customer&hl=en&gl=IN",
+    "side": "rider",
+    "installs": "1K+",
+    "rating": null,
+    "updated": "Apr 24, 2026"
+   },
+   {
+    "id": "com.limoz.driver",
+    "name": "Limoz Driver",
+    "url": "https://play.google.com/store/apps/details?id=com.limoz.driver&hl=en&gl=IN",
+    "side": "driver",
+    "installs": "100+",
+    "rating": 4.3,
+    "updated": "Sep 11, 2026"
    }
   ]
  },
@@ -2296,16 +2325,16 @@ export const liveClients = [
    {
     "id": "product.customer.choffer.shuttle",
     "name": "Choffer",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.choffer.shuttle&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.choffer.shuttle&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
-    "updated": "Feb 5, 2025"
+    "updated": "Feb 4, 2025"
    },
    {
     "id": "product.driver.choffer",
     "name": "Choffer Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.choffer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.choffer&hl=en&gl=IN",
     "side": "driver",
     "installs": "100+",
     "rating": null,
@@ -2325,16 +2354,16 @@ export const liveClients = [
    {
     "id": "product.customer.ttcab",
     "name": "TT Cab",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.ttcab&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.ttcab&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
-    "updated": "Oct 29, 2024"
+    "updated": "Oct 28, 2024"
    },
    {
     "id": "product.clicklabs.ttcab.driver",
     "name": "TT Cab Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.clicklabs.ttcab.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.clicklabs.ttcab.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "500+",
     "rating": null,
@@ -2354,7 +2383,7 @@ export const liveClients = [
    {
     "id": "com.cabby.customer",
     "name": "Cabby",
-    "url": "https://play.google.com/store/apps/details?id=com.cabby.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.cabby.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
@@ -2374,7 +2403,7 @@ export const liveClients = [
    {
     "id": "com.leiwand.user",
     "name": "Leiwand Taxi",
-    "url": "https://play.google.com/store/apps/details?id=com.leiwand.user&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.leiwand.user&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
@@ -2383,7 +2412,7 @@ export const liveClients = [
    {
     "id": "com.leiwand.driver",
     "name": "Flinta Driver",
-    "url": "https://play.google.com/store/apps/details?id=com.leiwand.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=com.leiwand.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
@@ -2403,11 +2432,11 @@ export const liveClients = [
    {
     "id": "product.driver.tapp",
     "name": "TAPP Rideshare Driver",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.tapp&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.tapp&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
-    "updated": "Sep 19, 2024"
+    "updated": "Sep 18, 2024"
    }
   ]
  },
@@ -2423,7 +2452,7 @@ export const liveClients = [
    {
     "id": "btaxi.rides.passenger",
     "name": "B Taxi Brussels: Rides, 24/7",
-    "url": "https://play.google.com/store/apps/details?id=btaxi.rides.passenger&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=btaxi.rides.passenger&hl=en&gl=IN",
     "side": "rider",
     "installs": "1K+",
     "rating": null,
@@ -2432,16 +2461,16 @@ export const liveClients = [
    {
     "id": "product.customer.btaxi",
     "name": "TAXI NEXLA",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.btaxi&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.btaxi&hl=en&gl=IN",
     "side": "rider",
     "installs": "5+",
     "rating": null,
-    "updated": "Mar 7, 2025"
+    "updated": "Mar 6, 2025"
    },
    {
     "id": "btaxi.rides.driver",
     "name": "B Taxi Driver",
-    "url": "https://play.google.com/store/apps/details?id=btaxi.rides.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=btaxi.rides.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "1K+",
     "rating": null,
@@ -2450,11 +2479,11 @@ export const liveClients = [
    {
     "id": "product.driver.btaxi",
     "name": "NEXLA DRIVER",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.btaxi&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.btaxi&hl=en&gl=IN",
     "side": "driver",
     "installs": "5+",
     "rating": null,
-    "updated": "Mar 7, 2025"
+    "updated": "Mar 6, 2025"
    }
   ]
  },
@@ -2465,25 +2494,25 @@ export const liveClients = [
   "icon": "/store/production.romi.customer.webp",
   "color": "#ff570b",
   "setUpByHim": false,
-  "rating": 4.6,
+  "rating": 4.5,
   "apps": [
    {
     "id": "production.romi.customer",
     "name": "Romi Ride",
-    "url": "https://play.google.com/store/apps/details?id=production.romi.customer&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.romi.customer&hl=en&gl=IN",
     "side": "rider",
     "installs": "100+",
-    "rating": 4.6,
-    "updated": "Apr 29, 2025"
+    "rating": 4.4,
+    "updated": "Apr 28, 2025"
    },
    {
     "id": "production.romi.driver",
     "name": "Romi Driver",
-    "url": "https://play.google.com/store/apps/details?id=production.romi.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.romi.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "100+",
     "rating": 4.6,
-    "updated": "Apr 29, 2025"
+    "updated": "Apr 28, 2025"
    }
   ]
  },
@@ -2499,7 +2528,7 @@ export const liveClients = [
    {
     "id": "product.customer.angel",
     "name": "Island Transfer",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.angel&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.customer.angel&hl=en&gl=IN",
     "side": "rider",
     "installs": "100+",
     "rating": null,
@@ -2508,7 +2537,7 @@ export const liveClients = [
    {
     "id": "product.driver.angel",
     "name": "Island Drive",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.angel&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.angel&hl=en&gl=IN",
     "side": "driver",
     "installs": "10+",
     "rating": null,
@@ -2528,7 +2557,7 @@ export const liveClients = [
    {
     "id": "production.redplate.customer.new",
     "name": "InterMetroONE Customer App",
-    "url": "https://play.google.com/store/apps/details?id=production.redplate.customer.new&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.redplate.customer.new&hl=en&gl=IN",
     "side": "rider",
     "installs": "100+",
     "rating": null,
@@ -2537,11 +2566,11 @@ export const liveClients = [
    {
     "id": "production.redplate.driver",
     "name": "InterMetroONE Transporter",
-    "url": "https://play.google.com/store/apps/details?id=production.redplate.driver&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=production.redplate.driver&hl=en&gl=IN",
     "side": "driver",
     "installs": "100+",
     "rating": null,
-    "updated": "Sep 11, 2024"
+    "updated": "Sep 10, 2024"
    }
   ]
  },
@@ -2557,40 +2586,11 @@ export const liveClients = [
    {
     "id": "product.driver.apilit",
     "name": "Apilit Conductores",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.apilit&hl=en",
+    "url": "https://play.google.com/store/apps/details?id=product.driver.apilit&hl=en&gl=IN",
     "side": "driver",
     "installs": "100+",
     "rating": null,
     "updated": "May 8, 2025"
-   }
-  ]
- },
- {
-  "key": "didarental",
-  "name": "Dida",
-  "developer": "DIDA RENTAL",
-  "icon": "/store/product.customer.dida.webp",
-  "color": "#4DB4E7",
-  "setUpByHim": true,
-  "rating": null,
-  "apps": [
-   {
-    "id": "product.customer.dida",
-    "name": "Dida Client",
-    "url": "https://play.google.com/store/apps/details?id=product.customer.dida&hl=en",
-    "side": "rider",
-    "installs": "50+",
-    "rating": null,
-    "updated": "May 20, 2024"
-   },
-   {
-    "id": "product.driver.dida",
-    "name": "Dida Chauffeur",
-    "url": "https://play.google.com/store/apps/details?id=product.driver.dida&hl=en",
-    "side": "driver",
-    "installs": "50+",
-    "rating": null,
-    "updated": "May 20, 2024"
    }
   ]
  }
@@ -2657,6 +2657,19 @@ export const delisted = [
   "url": "https://web.archive.org/web/20250404212203/https://play.google.com/store/apps/details?id=product.customer.superfix",
   "icon": "/store/product.customer.superfix.webp",
   "color": "#ffd404"
+ },
+ {
+  "id": "product.driver.dida",
+  "name": "Dida Chauffeur",
+  "rating": null,
+  "ratings": null,
+  "side": "driver",
+  "setUpByHim": true,
+  "firstSeen": "20250219",
+  "lastSeen": "20250219",
+  "url": "https://web.archive.org/web/20250219194718/https://play.google.com/store/apps/details?id=product.driver.dida",
+  "icon": null,
+  "color": null
  },
  {
   "id": "product.customer.toairportpassenger",
@@ -2734,6 +2747,19 @@ export const delisted = [
   "lastSeen": "20240809",
   "url": "https://web.archive.org/web/20240809010220/https://play.google.com/store/apps/details?id=product.driver.etaxi",
   "icon": "/store/product.driver.etaxi.webp",
+  "color": null
+ },
+ {
+  "id": "production.pickupbarbodas.driver",
+  "name": "pickUP Driver",
+  "rating": 3.4000000953674316,
+  "ratings": 36,
+  "side": "driver",
+  "setUpByHim": false,
+  "firstSeen": "20240520",
+  "lastSeen": "20240725",
+  "url": "https://web.archive.org/web/20240725002859/https://play.google.com/store/apps/details?id=production.pickupbarbodas.driver",
+  "icon": null,
   "color": null
  },
  {
@@ -2972,7 +2998,7 @@ export const delisted = [
  },
  {
   "id": "com.kadere.driver",
-  "name": "Kadere",
+  "name": "KD-KENYA1 DRIVERS",
   "rating": null,
   "ratings": null,
   "side": "driver",
@@ -3037,7 +3063,7 @@ export const delisted = [
  },
  {
   "id": "com.liftethiopia.customer",
-  "name": "Lift Ethiopia",
+  "name": "Lift ET Passenger",
   "rating": null,
   "ratings": null,
   "side": "rider",
@@ -3050,7 +3076,7 @@ export const delisted = [
  },
  {
   "id": "com.liftethiopia.driver",
-  "name": "Lift Ethiopia",
+  "name": "Lift ET Driver",
   "rating": null,
   "ratings": null,
   "side": "driver",
@@ -3073,6 +3099,19 @@ export const delisted = [
   "url": "https://web.archive.org/web/20220901003725/https://play.google.com/store/apps/details?id=production.tleva.customer",
   "icon": "/store/production.tleva.customer.webp",
   "color": "#2b2936"
+ },
+ {
+  "id": "com.redigo.production",
+  "name": "Redigo - Electric Bike Rentals",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20201123",
+  "lastSeen": "20220830",
+  "url": "https://web.archive.org/web/20220830023855/https://play.google.com/store/apps/details?id=com.redigo.production",
+  "icon": null,
+  "color": "#55B036"
  },
  {
   "id": "com.habesharide.passenger",
@@ -3166,6 +3205,19 @@ export const delisted = [
   "color": "#DE0909"
  },
  {
+  "id": "application.saide.customer",
+  "name": "Saide car",
+  "rating": null,
+  "ratings": null,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20201027",
+  "lastSeen": "20220707",
+  "url": "https://web.archive.org/web/20220707120022/https://play.google.com/store/apps/details?id=application.saide.customer",
+  "icon": null,
+  "color": "#A2BB3D"
+ },
+ {
   "id": "production.towncarsnow.driver",
   "name": "Towncarsnow Driver",
   "rating": null,
@@ -3245,7 +3297,7 @@ export const delisted = [
  },
  {
   "id": "products.peindia.customer",
-  "name": "Peindia",
+  "name": "Peindia Cab",
   "rating": null,
   "ratings": null,
   "side": "rider",
@@ -3258,7 +3310,7 @@ export const delisted = [
  },
  {
   "id": "com.matattu.rider",
-  "name": "Matatu",
+  "name": "Zido (Matatu) Taxi",
   "rating": null,
   "ratings": null,
   "side": "rider",
@@ -3439,6 +3491,19 @@ export const delisted = [
   "color": "#EE0000"
  },
  {
+  "id": "com.classco.temtem",
+  "name": "temtem",
+  "rating": 3.5172414779663086,
+  "ratings": 2369,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20190514",
+  "lastSeen": "20211220",
+  "url": "https://web.archive.org/web/20211220071558/https://play.google.com/store/apps/details?id=com.classco.temtem",
+  "icon": null,
+  "color": "#F8931F"
+ },
+ {
   "id": "production.limocameroun.customer",
   "name": "Limo Cameroun",
   "rating": null,
@@ -3557,7 +3622,7 @@ export const delisted = [
  },
  {
   "id": "com.giffi.courier",
-  "name": "Giffi",
+  "name": "Giffi Courier",
   "rating": null,
   "ratings": null,
   "side": "driver",
@@ -3582,6 +3647,19 @@ export const delisted = [
   "color": "#ffbd10"
  },
  {
+  "id": "com.ridelaay.customer",
+  "name": "Ridelaay",
+  "rating": 4.285714149475098,
+  "ratings": 28,
+  "side": "rider",
+  "setUpByHim": false,
+  "firstSeen": "20210612",
+  "lastSeen": "20210612",
+  "url": "https://web.archive.org/web/20210612233703/https://play.google.com/store/apps/details?id=com.ridelaay.customer",
+  "icon": null,
+  "color": "#FBBF1E"
+ },
+ {
   "id": "com.mpitsa.customer",
   "name": "Mpitsa",
   "rating": 4.904761791229248,
@@ -3596,9 +3674,9 @@ export const delisted = [
  },
  {
   "id": "com.kadere.customer",
-  "name": "Kadere",
-  "rating": null,
-  "ratings": null,
+  "name": "Kadere SHG Rider",
+  "rating": 5,
+  "ratings": 7,
   "side": "rider",
   "setUpByHim": false,
   "firstSeen": "20210331",
@@ -3609,9 +3687,9 @@ export const delisted = [
  },
  {
   "id": "com.giffi.customer",
-  "name": "Giffi",
-  "rating": null,
-  "ratings": null,
+  "name": "Giffi : Instant Delivery",
+  "rating": 1.875,
+  "ratings": 8,
   "side": "rider",
   "setUpByHim": false,
   "firstSeen": "20200815",
@@ -3697,28 +3775,18 @@ export const delisted = [
   "url": "https://web.archive.org/web/20210120204909/https://play.google.com/store/apps/details?id=production.uva.driver",
   "icon": "/store/production.uva.driver.webp",
   "color": null
- },
- {
-  "id": "production.pickupbarbodas.driver",
-  "name": "pickUP Driver",
-  "rating": null,
-  "ratings": null,
-  "side": "driver",
-  "setUpByHim": false,
-  "firstSeen": null,
-  "lastSeen": "20260924",
-  "url": "https://play.google.com/store/apps/details?id=production.pickupbarbodas.driver&hl=en",
-  "icon": "/store/production.pickupbarbodas.driver.webp",
-  "color": null
  }
 ] as const;
 
-/** The pulled apps, grouped the same way. Preserved verbatim in published-only
- *  mode: a fresh probe cannot re-prove anything about a listing that is gone.
- *  // ponytail: a fleet id goneFromPublished newly moved to delisted this run
- *  // is not yet grouped into a company here (it groups on the next full
- *  // mine); it is still fully present, correctly, in the flat delisted
- *  // export above. */
+/** The pulled apps, grouped the same way. Regrouped from `pastKept` in every
+ *  mode, published-only included: grouping is a pure function of fields
+ *  `delisted` already carries (id/name/side/...), so it needs no fresh probe
+ *  and there is no reason to lag behind a client this run just confirmed gone.
+ *  (Previously reused `published.pastClients` verbatim in published-only
+ *  mode, which left a newly-delisted fleet id ungrouped until the next full
+ *  mine — the flat `delisted` export was correct while the grouped
+ *  `pastClients` the page renders from was one app short, e.g.
+ *  `production.pickupbarbodas.driver`.) */
 export const pastClients = [
  {
   "key": "drivern",
@@ -3771,6 +3839,25 @@ export const pastClients = [
     "side": "driver",
     "rating": null,
     "lastSeen": "20250407"
+   }
+  ]
+ },
+ {
+  "key": "dida",
+  "name": "Dida Chauffeur",
+  "icon": null,
+  "color": null,
+  "setUpByHim": true,
+  "lastSeen": "20250219",
+  "firstSeen": "20250219",
+  "apps": [
+   {
+    "id": "product.driver.dida",
+    "name": "Dida Chauffeur",
+    "url": "https://web.archive.org/web/20250219194718/https://play.google.com/store/apps/details?id=product.driver.dida",
+    "side": "driver",
+    "rating": null,
+    "lastSeen": "20250219"
    }
   ]
  },
@@ -3863,6 +3950,25 @@ export const pastClients = [
     "side": "driver",
     "rating": null,
     "lastSeen": "20240814"
+   }
+  ]
+ },
+ {
+  "key": "pickupbarbodas",
+  "name": "pickUP Driver",
+  "icon": null,
+  "color": null,
+  "setUpByHim": false,
+  "lastSeen": "20240725",
+  "firstSeen": "20240520",
+  "apps": [
+   {
+    "id": "production.pickupbarbodas.driver",
+    "name": "pickUP Driver",
+    "url": "https://web.archive.org/web/20240725002859/https://play.google.com/store/apps/details?id=production.pickupbarbodas.driver",
+    "side": "driver",
+    "rating": 3.4000000953674316,
+    "lastSeen": "20240725"
    }
   ]
  },
@@ -4196,7 +4302,7 @@ export const pastClients = [
  },
  {
   "key": "kadere",
-  "name": "Kadere",
+  "name": "Kadere SHG Rider",
   "icon": null,
   "color": "#6EC4E8",
   "setUpByHim": false,
@@ -4205,15 +4311,15 @@ export const pastClients = [
   "apps": [
    {
     "id": "com.kadere.customer",
-    "name": "Kadere",
+    "name": "Kadere SHG Rider",
     "url": "https://web.archive.org/web/20210331050040/https://play.google.com/store/apps/details?id=com.kadere.customer",
     "side": "rider",
-    "rating": null,
+    "rating": 5,
     "lastSeen": "20210331"
    },
    {
     "id": "com.kadere.driver",
-    "name": "Kadere",
+    "name": "KD-KENYA1 DRIVERS",
     "url": "https://web.archive.org/web/20221028134807/https://play.google.com/store/apps/details?id=com.kadere.driver",
     "side": "driver",
     "rating": null,
@@ -4288,7 +4394,7 @@ export const pastClients = [
  },
  {
   "key": "liftethiopia",
-  "name": "Lift Ethiopia",
+  "name": "Lift ET",
   "icon": null,
   "color": "#FF2B1A",
   "setUpByHim": false,
@@ -4297,7 +4403,7 @@ export const pastClients = [
   "apps": [
    {
     "id": "com.liftethiopia.customer",
-    "name": "Lift Ethiopia",
+    "name": "Lift ET Passenger",
     "url": "https://web.archive.org/web/20220903150254/https://play.google.com/store/apps/details?id=com.liftethiopia.customer",
     "side": "rider",
     "rating": null,
@@ -4305,7 +4411,7 @@ export const pastClients = [
    },
    {
     "id": "com.liftethiopia.driver",
-    "name": "Lift Ethiopia",
+    "name": "Lift ET Driver",
     "url": "https://web.archive.org/web/20220903154413/https://play.google.com/store/apps/details?id=com.liftethiopia.driver",
     "side": "driver",
     "rating": null,
@@ -4329,6 +4435,25 @@ export const pastClients = [
     "side": "rider",
     "rating": 4.111111164093018,
     "lastSeen": "20220901"
+   }
+  ]
+ },
+ {
+  "key": "redigoproduction",
+  "name": "Redigo - Electric Bike Rentals",
+  "icon": null,
+  "color": "#55B036",
+  "setUpByHim": false,
+  "lastSeen": "20220830",
+  "firstSeen": "20201123",
+  "apps": [
+   {
+    "id": "com.redigo.production",
+    "name": "Redigo - Electric Bike Rentals",
+    "url": "https://web.archive.org/web/20220830023855/https://play.google.com/store/apps/details?id=com.redigo.production",
+    "side": "rider",
+    "rating": null,
+    "lastSeen": "20220830"
    }
   ]
  },
@@ -4440,6 +4565,25 @@ export const pastClients = [
     "side": "rider",
     "rating": null,
     "lastSeen": "20220720"
+   }
+  ]
+ },
+ {
+  "key": "applicationsaide",
+  "name": "Saide car",
+  "icon": null,
+  "color": "#A2BB3D",
+  "setUpByHim": false,
+  "lastSeen": "20220707",
+  "firstSeen": "20201027",
+  "apps": [
+   {
+    "id": "application.saide.customer",
+    "name": "Saide car",
+    "url": "https://web.archive.org/web/20220707120022/https://play.google.com/store/apps/details?id=application.saide.customer",
+    "side": "rider",
+    "rating": null,
+    "lastSeen": "20220707"
    }
   ]
  },
@@ -4567,7 +4711,7 @@ export const pastClients = [
  },
  {
   "key": "peindia",
-  "name": "Peindia",
+  "name": "Peindia Cab",
   "icon": "/store/product.peindia.customer.webp",
   "color": "#EE0000",
   "setUpByHim": false,
@@ -4576,7 +4720,7 @@ export const pastClients = [
   "apps": [
    {
     "id": "products.peindia.customer",
-    "name": "Peindia",
+    "name": "Peindia Cab",
     "url": "https://web.archive.org/web/20220413174442/https://play.google.com/store/apps/details?id=products.peindia.customer",
     "side": "rider",
     "rating": null,
@@ -4594,7 +4738,7 @@ export const pastClients = [
  },
  {
   "key": "matattu",
-  "name": "Matatu",
+  "name": "Zido (Matatu) Taxi",
   "icon": null,
   "color": "#262626",
   "setUpByHim": false,
@@ -4603,7 +4747,7 @@ export const pastClients = [
   "apps": [
    {
     "id": "com.matattu.rider",
-    "name": "Matatu",
+    "name": "Zido (Matatu) Taxi",
     "url": "https://web.archive.org/web/20220401121002/https://play.google.com/store/apps/details?id=com.matattu.rider",
     "side": "rider",
     "rating": null,
@@ -4796,6 +4940,25 @@ export const pastClients = [
   ]
  },
  {
+  "key": "classcotemtem",
+  "name": "temtem",
+  "icon": null,
+  "color": "#F8931F",
+  "setUpByHim": false,
+  "lastSeen": "20211220",
+  "firstSeen": "20190514",
+  "apps": [
+   {
+    "id": "com.classco.temtem",
+    "name": "temtem",
+    "url": "https://web.archive.org/web/20211220071558/https://play.google.com/store/apps/details?id=com.classco.temtem",
+    "side": "rider",
+    "rating": 3.5172414779663086,
+    "lastSeen": "20211220"
+   }
+  ]
+ },
+ {
   "key": "limocameroun",
   "name": "Limo Cameroun",
   "icon": "/store/production.limocameroun.customer.webp",
@@ -4936,15 +5099,15 @@ export const pastClients = [
   "apps": [
    {
     "id": "com.giffi.customer",
-    "name": "Giffi",
+    "name": "Giffi : Instant Delivery",
     "url": "https://web.archive.org/web/20210307030437/https://play.google.com/store/apps/details?id=com.giffi.customer",
     "side": "rider",
-    "rating": null,
+    "rating": 1.875,
     "lastSeen": "20210307"
    },
    {
     "id": "com.giffi.courier",
-    "name": "Giffi",
+    "name": "Giffi Courier",
     "url": "https://web.archive.org/web/20210623120436/https://play.google.com/store/apps/details?id=com.giffi.courier",
     "side": "driver",
     "rating": null,
@@ -4968,6 +5131,25 @@ export const pastClients = [
     "side": "rider",
     "rating": null,
     "lastSeen": "20210620"
+   }
+  ]
+ },
+ {
+  "key": "ridelaay",
+  "name": "Ridelaay",
+  "icon": null,
+  "color": "#FBBF1E",
+  "setUpByHim": false,
+  "lastSeen": "20210612",
+  "firstSeen": "20210612",
+  "apps": [
+   {
+    "id": "com.ridelaay.customer",
+    "name": "Ridelaay",
+    "url": "https://web.archive.org/web/20210612233703/https://play.google.com/store/apps/details?id=com.ridelaay.customer",
+    "side": "rider",
+    "rating": 4.285714149475098,
+    "lastSeen": "20210612"
    }
   ]
  },
@@ -5084,25 +5266,6 @@ export const pastClients = [
     "lastSeen": "20210127"
    }
   ]
- },
- {
-  "key": "pickupbarbodas",
-  "name": "pickUP Driver",
-  "icon": "/store/production.pickupbarbodas.driver.webp",
-  "color": null,
-  "setUpByHim": false,
-  "lastSeen": "20260924",
-  "firstSeen": "20260924",
-  "apps": [
-   {
-    "id": "production.pickupbarbodas.driver",
-    "name": "pickUP Driver",
-    "url": "https://play.google.com/store/apps/details?id=production.pickupbarbodas.driver&hl=en",
-    "side": "driver",
-    "rating": null,
-    "lastSeen": "20260924"
-   }
-  ]
  }
 ] as const;
 
@@ -5111,16 +5274,16 @@ export const fleetStats = {
   "branches": 1642,
   "clients": 1322,
   "live": 88,
-  "setUpByHim": 12,
-  "carryingHisCommits": 80,
-  "installFloor": 2917170,
+  "setUpByHim": 10,
+  "carryingHisCommits": 79,
+  "installFloor": 2937070,
   "developers": 47,
-  "delisted": 85,
-  "archiveChecked": 1241,
-  "predatingHim": 22,
+  "delisted": 90,
+  "archiveChecked": 1257,
+  "predatingHim": 20,
   "joined": "2021-01",
   "clientsLive": 47,
-  "clientsGone": 64
+  "clientsGone": 69
 } as const;
 
 /**
@@ -5132,12 +5295,12 @@ export const lastShipped = [
  {
   "year": 2021,
   "live": 0,
-  "gone": 21
+  "gone": 23
  },
  {
   "year": 2022,
   "live": 0,
-  "gone": 37
+  "gone": 39
  },
  {
   "year": 2023,
@@ -5146,24 +5309,24 @@ export const lastShipped = [
  },
  {
   "year": 2024,
-  "live": 25,
-  "gone": 7
+  "live": 23,
+  "gone": 8
  },
  {
   "year": 2025,
   "live": 21,
-  "gone": 3
+  "gone": 4
  },
  {
   "year": 2026,
-  "live": 36,
-  "gone": 2
+  "live": 38,
+  "gone": 1
  }
 ] as const;
 
-export const storeGeneratedAt = "2026-08-07";
+export const storeGeneratedAt = "2026-10-01";
 
 /** When a --published-only run last re-verified every listing above against
  *  live Play. check-freshness.mjs reads max(storeGeneratedAt, storeVerifiedAt),
  *  the one stamp that is the run time by definition (G13's one exception). */
-export const storeVerifiedAt = "2026-09-24";
+export const storeVerifiedAt = "2026-10-03";

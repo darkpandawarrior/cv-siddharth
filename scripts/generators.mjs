@@ -162,7 +162,7 @@ export const GENERATORS = [
     inputs: ["src/data/anthology.ts", "src/data/archiveText.ts"], outputs: ["public/sitemap.xml"], stages: { refresh: 11 } },
   { id: "system-prompt", script: "gen-system-prompt.mjs", npmName: "gen:system-prompt", kind: "local",
     inputs: ["src/data/writing.ts", "src/data/chess.ts"],
-    outputs: ["api/_lib/system-prompt.ts", "api/_lib/jd-prompt.ts"], stages: { build: 9, refresh: 17 } },
+    outputs: ["api/_lib/system-prompt.ts", "api/_lib/jd-prompt.ts", "public/llms.txt", "public/llms-full.txt"], stages: { build: 9, refresh: 17 } },
   // Same now-restamping shape as sitemap above (`generatedAt: new
   // Date().toISOString()` unconditionally), plus a real undeclared input:
   // it dynamically imports src/data/timeline.ts for month/lane data, so it
@@ -257,7 +257,7 @@ export const GENERATORS = [
     // itself is a re-export barrel post-arch-L15 — the prose these numbers
     // actually live in moved to profile/projects.ts and profile/openSource.ts.
     inputs: [],
-    outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
+    outputs: ["src/data/profile/projects.ts", "src/data/profile/openSource.ts", "src/data/profile/projectCards.ts", "src/labs/FanoutLab.tsx", "src/data/careerOpsUpstream.ts"],
     stages: { refresh: 4 } },
   { id: "oss-stats", script: "gen-oss-stats.mjs", npmName: "gen:oss-stats", kind: "network",
     // Measures merged/open/closed PR counts via `gh pr list`, not the search
@@ -268,7 +268,7 @@ export const GENERATORS = [
   { id: "project-heroes", script: "gen-project-heroes.mjs", npmName: "gen:heroes", kind: "local",
     inputs: [], outputs: ["public/projects/_heroes/*.png"], stages: { refresh: 12 } },
   { id: "og", script: "gen-og.mjs", npmName: "gen:og", kind: "local",
-    inputs: ["src/data/writing.ts"], outputs: ["public/projects/*/og.png"], stages: { refresh: 13 } },
+    inputs: ["src/data/writing.ts"], outputs: ["public/projects/*/og.png", "public/og-image.png"], stages: { refresh: 13 } },
   { id: "weeb", script: "gen-weeb.mjs", npmName: "gen:weeb", kind: "network",
     inputs: [], outputs: ["src/data/weeb.ts", "src/data/weebTitles.ts"], stages: { refresh: 14 } },
   { id: "chess-stats", script: "gen-chess-stats.mjs", npmName: "gen:chess", kind: "network",
@@ -296,6 +296,11 @@ export const GENERATORS = [
     inputs: [], outputs: [".store-siblings.json"], stages: {} },
   { id: "store-flavours", script: "gen-store-flavours.mjs", npmName: null, kind: "private-env",
     inputs: [], outputs: [".store-flavours.json"], stages: {} },
+  // Refuses to run without MAPS_TAKEOUT_DIR pointing at a private Google
+  // Maps Takeout export (same posture as gen-store-flavours.mjs above);
+  // MAPS_PHOTOS_DIR is optional (falls back to the committed thumbnails).
+  { id: "maps-places", script: "gen-maps-places.mjs", npmName: null, kind: "private-env",
+    inputs: [], outputs: ["src/data/generated/mapsPlaces.ts", "public/globe/maps/**"], stages: {} },
   { id: "excelsior", script: "gen-excelsior.mjs", npmName: null, kind: "network",
     inputs: [], outputs: ["src/data/excelsior.ts", "public/excelsior/pages/**"], stages: {} },
   // Manual annual refresh, deliberately NOT wired into any build/refresh/check
@@ -335,7 +340,7 @@ export const GENERATORS = [
   // header says so, G13): bakes the Black Marble night-radiance land mask by
   // hand; the build must never block on NASA's server.
   { id: "globe-earth", script: "gen-globe-earth.mjs", npmName: "gen:globe-earth", kind: "network",
-    inputs: [], outputs: ["heavy/globe/earth-720x360.bin"], stages: {} },
+    inputs: [], outputs: ["public/sky/earth-720x360.bin"], stages: {} },
   // Manual/occasional, same posture as gen-globe-earth.mjs above (its own
   // header says so, G13): bakes country centroids from Natural Earth's
   // admin-0 GeoJSON mirror by hand.

@@ -3,7 +3,7 @@ import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { buildCheckFixture, buildEarthMask, LAND_SUM_THRESHOLD } from "./gen-globe-earth.mjs";
 
-const OUT_PATH = fileURLToPath(new URL("../heavy/globe/earth-720x360.bin", import.meta.url));
+const OUT_PATH = fileURLToPath(new URL("../public/sky/earth-720x360.bin", import.meta.url));
 
 describe("buildEarthMask", () => {
   const { rgb, width, height } = buildCheckFixture();
@@ -47,7 +47,7 @@ describe("buildEarthMask", () => {
   });
 });
 
-describe("heavy/globe/earth-720x360.bin (committed)", () => {
+describe("public/sky/earth-720x360.bin (committed)", () => {
   it("exists, is <= 72,000 bytes, and matches the 360x180 header", () => {
     const stat = statSync(OUT_PATH);
     expect(stat.size).toBeLessThanOrEqual(72_000);

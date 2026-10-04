@@ -57,3 +57,54 @@ describe("service worker wasm bypass", () => {
     expect(bypassed("/api/chat")).toBe(true);
   });
 });
+
+/**
+ * Audit fix (2026-09-28): GIBS whole-globe imagery is immutable per URL (its
+ * TIME param pins the date; the two static layers never change), so a
+ * same-day returning visitor should redownload nothing — cache-first, in a
+ * dedicated versioned cache, checked BEFORE the same-origin bypass since
+ * gibs.earthdata.nasa.gov is cross-origin by design.
+ *
+ * Same eval-from-source approach as the BYPASS suite above: this is a real
+ * Service Worker (`self`, `caches`, `fetch`) that vitest's node environment
+ * doesn't provide, so the exact predicate function is extracted out of the
+ * committed file and exercised directly rather than re-implemented here,
+ * which would only prove the copy agrees with itself.
+ */
+describe("service worker GIBS cache-first rule", () => {
+  const root = new URL("../../", import.meta.url).pathname;
+  const sw = readFileSync(join(root, "public", "sw.js"), "utf8");
+
+  const GIBS_HOST = sw.match(/^const GIBS_HOST = "(.+)";$/m)![1];
+  const GIBS_MAX = Number(sw.match(/^const GIBS_MAX = (\d+);$/m)![1]);
+  const isGibsRequestSrc = sw.match(/^function isGibsRequest\(url\) \{\n {2}return .+;\n\}$/m)![0];
+  const isGibsRequest: (url: URL) => boolean = eval(`(${isGibsRequestSrc.replace("function isGibsRequest", "function")})`);
+
+  it("matches a real GIBS WMS GetMap URL", () => {
+    expect(isGibsRequest(new URL(`https://${GIBS_HOST}/wms/epsg4326/best/wms.cgi?SERVICE=WMS&REQUEST=GetMap`))).toBe(true);
+  });
+
+  it("does not match this site's own /api/* routes or an unrelated cross-origin host", () => {
+    expect(isGibsRequest(new URL("https://siddharth-pandalai.vercel.app/api/whereami"))).toBe(false);
+    expect(isGibsRequest(new URL("https://example.com/wms/epsg4326/best/wms.cgi"))).toBe(false);
+  });
+
+  it("does not match a GIBS host on a different, non-WMS path", () => {
+    expect(isGibsRequest(new URL(`https://${GIBS_HOST}/some-other-endpoint`))).toBe(false);
+  });
+
+  it("caps the GIBS cache at a small, bounded number of entries", () => {
+    expect(GIBS_MAX).toBeGreaterThan(0);
+    expect(GIBS_MAX).toBeLessThanOrEqual(20);
+  });
+
+  it("checks GIBS requests before the same-origin bypass, since they're cross-origin by design", () => {
+    const fetchBody = sw.slice(sw.indexOf('self.addEventListener("fetch"'));
+    expect(fetchBody.indexOf("isGibsRequest(url)")).toBeLessThan(fetchBody.indexOf("url.origin !== self.location.origin"));
+  });
+
+  it("the service worker's VERSION was bumped alongside the new cache (it versions every cache name)", () => {
+    expect(sw).toMatch(/^const VERSION = "v2";$/m);
+    expect(sw).toContain("`gibs-${VERSION}`");
+  });
+});

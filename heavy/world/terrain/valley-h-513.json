@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T12:06:57.519Z",
+  "generatedAt": "2026-10-03T21:37:24.289Z",
   "grid": 513,
   "metresPerTexel": 1.5,
   "extent": 768,
@@ -13,7 +13,7 @@
     "zMin": -344,
     "zMax": 424
   },
-  "min": -3.0002769941974865,
+  "min": -3.008245645317274,
   "max": 102.22745005289713,
   "note": "real height = min + (pixel/255) * (max-min); 8-bit fallback, see this file's honesty note"
 }

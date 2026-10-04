@@ -1,24 +1,38 @@
 import { useMemo } from "react";
-import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { latLonToXyz } from "./geoMath.ts";
 import { readColor } from "../../themeColorThree.ts";
 import { PUNE } from "../../lib/sky.ts";
 import { fleetStats } from "../../data/store.ts";
 import { upstreamMergedPRs } from "../../data/profile.ts";
-import { globeFacts } from "./globeRows.ts";
 import { GLOBE_RADIUS } from "./EarthDots.tsx";
-import { calculatePosition, calloutStyle } from "./htmlLabelClamp.ts";
+import { useGlobe } from "./globeStore.ts";
+import { buildPuneSelection } from "./puneSelection.ts";
 
 const COLUMN_RADIUS = 0.06;
 const MIN_HEIGHT = 0.4;
+// log10 alone put the install column at 6.5 world units on a radius-6
+// globe: a spike longer than the Earth, its label pinned off-screen. A
+// quarter keeps the log ordering and tops out near a quarter-radius.
+const HEIGHT_PER_DECADE = 0.25;
 // World units, not degrees - a lat/lon nudge near Pune would separate the
 // two columns by a fraction of a millimetre on a radius-6 globe. This is a
 // fixed sideways offset along the local tangent plane instead.
 const COLUMN_SPACING = 0.3;
+// Pune declutter (P4, wave 9): the column base used to stand at EXACTLY
+// GLOBE_RADIUS, the same radius EarthImagery/TileLayer's sphere surface
+// sits at directly underneath it - perf.md's own suspected cause of the
+// Pune moire ("check TileLayer.tsx's tile-patch radius against
+// ReachColumns.tsx's ring radius for an exact match, the classic
+// z-fight cause"). This lifts the base a hair off the surface, the lowest
+// step in the Pune marker stack (see familyCiRing.tsx/reachAppRing.tsx/
+// hazardHalos.tsx/layers/TogetherLayer.tsx for the rest of the stack -
+// every SURFACE_LIFT-equivalent constant across those five files is a
+// distinct value on purpose, so no two Pune layers share a height).
+export const SURFACE_LIFT = 0.008;
 
 function columnHeight(magnitude: number): number {
-  return Math.max(MIN_HEIGHT, Math.log10(Math.max(1, magnitude)));
+  return Math.max(MIN_HEIGHT, Math.log10(Math.max(1, magnitude)) * HEIGHT_PER_DECADE);
 }
 
 function surfaceNormal(lat: number, lon: number): THREE.Vector3 {
@@ -28,21 +42,47 @@ function surfaceNormal(lat: number, lon: number): THREE.Vector3 {
 
 /** One reach column (G15/G16, living-ledger-spec.md#6.3 task 2): a thin
  *  emissive shaft standing on the globe surface, height by log10 of its own
- *  magnitude, labelled with the exact claim sentence - never a bare number
- *  with no source in reach. */
-function Column({ base, up, height, color, label }: { base: THREE.Vector3; up: THREE.Vector3; height: number; color: THREE.Color; label: string }) {
+ *  magnitude. Its exact claim sentence lives on the Pune card (Markers.tsx),
+ *  keyed by colour - never a bare number with no source in reach. */
+function Column({
+  base,
+  up,
+  height,
+  color,
+  onSelect,
+}: {
+  base: THREE.Vector3;
+  up: THREE.Vector3;
+  height: number;
+  color: THREE.Color;
+  onSelect: () => void;
+}) {
   const quaternion = useMemo(() => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up), [up]);
   return (
     <group position={base} quaternion={quaternion}>
-      <mesh position={[0, height / 2, 0]}>
+      <mesh
+        position={[0, height / 2, 0]}
+        renderOrder={0}
+        onClick={(e) => {
+          e.stopPropagation();
+          void import("./useMarkerClick.ts").then(({ claimGuideClick }) => {
+            if (!claimGuideClick(e.nativeEvent)) onSelect();
+          });
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = "auto";
+        }}
+      >
         <cylinderGeometry args={[COLUMN_RADIUS, COLUMN_RADIUS, height, 8]} />
-        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} />
+        {/* polygonOffset pulls the column's base cap toward the camera by a
+            tiny, consistent amount - belt-and-suspenders with SURFACE_LIFT
+            above against the earth sphere directly beneath it. */}
+        <meshBasicMaterial color={color} toneMapped={false} transparent opacity={0.85} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} />
       </mesh>
-      <Html position={[0, height + 0.18, 0]} center distanceFactor={10} calculatePosition={calculatePosition} style={{ pointerEvents: "none" }}>
-        <div data-reach-label style={calloutStyle(color, 180)}>
-          {label}
-        </div>
-      </Html>
     </group>
   );
 }
@@ -54,9 +94,15 @@ function Column({ base, up, height, color, label }: { base: THREE.Vector3; up: T
 export function ReachColumns() {
   const signal = useMemo(() => readColor("--color-signal", "#3ddc84"), []);
   const probe = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
+  const select = useGlobe((s) => s.select);
+  const setView = useGlobe((s) => s.setView);
 
-  const installsLabel = useMemo(() => globeFacts.find((r) => r.id === "reach-installs")!.label, []);
-  const upstreamLabel = useMemo(() => globeFacts.find((r) => r.id === "reach-upstream")!.label, []);
+  const onSelect = () => {
+    const selection = buildPuneSelection();
+    if (!selection) return;
+    setView("orbit");
+    select(selection);
+  };
 
   const normal = useMemo(() => surfaceNormal(PUNE.lat, PUNE.lon), []);
   const tangent = useMemo(() => {
@@ -65,13 +111,13 @@ export function ReachColumns() {
     return t.lengthSq() > 1e-6 ? t.normalize() : new THREE.Vector3(1, 0, 0);
   }, [normal]);
 
-  const baseA = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS).addScaledVector(tangent, -COLUMN_SPACING), [normal, tangent]);
-  const baseB = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS).addScaledVector(tangent, COLUMN_SPACING), [normal, tangent]);
+  const baseA = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS + SURFACE_LIFT).addScaledVector(tangent, -COLUMN_SPACING), [normal, tangent]);
+  const baseB = useMemo(() => normal.clone().multiplyScalar(GLOBE_RADIUS + SURFACE_LIFT).addScaledVector(tangent, COLUMN_SPACING), [normal, tangent]);
 
   return (
     <group>
-      <Column base={baseA} up={normal} height={columnHeight(fleetStats.installFloor)} color={signal} label={installsLabel} />
-      <Column base={baseB} up={normal} height={columnHeight(upstreamMergedPRs)} color={probe} label={upstreamLabel} />
+      <Column base={baseA} up={normal} height={columnHeight(fleetStats.installFloor)} color={signal} onSelect={onSelect} />
+      <Column base={baseB} up={normal} height={columnHeight(upstreamMergedPRs)} color={probe} onSelect={onSelect} />
     </group>
   );
 }

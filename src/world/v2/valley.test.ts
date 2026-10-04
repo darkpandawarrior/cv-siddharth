@@ -5,6 +5,7 @@ import {
   BOUNDS,
   districtAnchors,
   placementCounts,
+  RIVER_SCALE,
   RIVER_SCALE_PRIMARY,
   riverPolygonCollides,
   riverWidthAtZ,
@@ -103,10 +104,19 @@ describe("river shape (open-data-spec §3 A3)", () => {
     expect(riverX(z)).toBeLessThan(0);
   });
 
-  it("no real placement (the district anchors) collides with the river polygon", () => {
+  // Checked against RIVER_SCALE (the resolved scale actually rendered), not
+  // RIVER_SCALE_PRIMARY: resolveRiverScale() in valley.ts already falls back
+  // to the compressed scale the moment a real anchor collides at primary
+  // scale (M5 task 2) — that fallback firing is the system doing its job,
+  // not a regression. Pinning this to PRIMARY made the suite red the first
+  // time real growth (ledger.systemGraph) pushed an anchor across that
+  // boundary, even though production was already rendering the compressed,
+  // collision-free layout via RIVER_SCALE. The invariant that actually
+  // matters is "nothing collides in the scene the user sees".
+  it("no real placement (the district anchors) collides with the river polygon actually rendered", () => {
     const ids = [...new Set(ledger.systemGraph.edges.filter((e) => e.kind === "includeBuild").map((e) => e.from))];
     const anchors = districtAnchors(ids, basin);
-    const collided = riverPolygonCollides(anchors, RIVER_SCALE_PRIMARY, basin.z, (z) => riverWidthAtZ(z));
+    const collided = riverPolygonCollides(anchors, RIVER_SCALE, basin.z, (z) => riverWidthAtZ(z));
     expect(collided).toBe(false);
   });
 });
@@ -114,7 +124,11 @@ describe("river shape (open-data-spec §3 A3)", () => {
 describe("riverPolygonCollides: the compression fallback actually fires (break-it, G15)", () => {
   it("flags a synthetic anchor planted exactly on the river's own centreline", () => {
     const z = BOUNDS.zMin + 0.27733 * (basin.z - BOUNDS.zMin); // the real amplitude peak (s=0.27733)
-    const onRiver = { x: riverX(z), z };
+    // riverX(z) renders at whichever scale is currently resolved (RIVER_SCALE,
+    // now the fallback — see the comment above). Rescale back to PRIMARY so
+    // this fixture still lands exactly on the PRIMARY-scale centreline the
+    // assertion below tests against, regardless of which scale is live.
+    const onRiver = { x: riverX(z) * (RIVER_SCALE_PRIMARY / RIVER_SCALE), z };
     expect(riverPolygonCollides([onRiver], RIVER_SCALE_PRIMARY, basin.z, (zz) => riverWidthAtZ(zz))).toBe(true);
   });
 

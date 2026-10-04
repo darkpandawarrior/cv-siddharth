@@ -218,20 +218,26 @@ function scanIncludeBuild(dir) {
 
 let anySiblingFound = false;
 const scannedIncludeBuild = [];
+const scannedConsumers = new Set();
 for (const [consumer, dirs] of Object.entries(CANDIDATE_DIRS)) {
-  const dir = dirs.find(existsSync);
+  const dir = dirs.find((candidate) => existsSync(join(candidate, "settings.gradle.kts")));
   if (!dir) continue;
   anySiblingFound = true;
+  scannedConsumers.add(consumer);
   for (const dep of scanIncludeBuild(dir)) if (dep !== consumer) scannedIncludeBuild.push([consumer, dep]);
 }
 
-let includeBuildPairs = anySiblingFound ? scannedIncludeBuild : null;
-if (!includeBuildPairs && existsSync(graphOut)) {
+let committedIncludeBuild = [];
+if (existsSync(graphOut)) {
   const prev = readFileSync(graphOut, "utf8");
   const m = /export const includeBuildPairs = (\[[\s\S]*?\]) as const;/.exec(prev);
-  if (m) includeBuildPairs = JSON.parse(m[1]);
+  if (m) committedIncludeBuild = JSON.parse(m[1]);
 }
-if (!includeBuildPairs) includeBuildPairs = [];
+// A readable settings file replaces only that consumer's previous edges.
+// Missing inputs keep their measured edges even when other siblings were scanned.
+const includeBuildPairs = anySiblingFound
+  ? [...scannedIncludeBuild, ...committedIncludeBuild.filter(([consumer]) => !scannedConsumers.has(consumer))]
+  : committedIncludeBuild;
 for (const [from, to] of includeBuildPairs) add(from, to, "includeBuild", "measured", `${from}/settings.gradle.kts`);
 
 /* ── Emit systemGraph.ts ──────────────────────────────────────────────── */
@@ -255,12 +261,11 @@ writeFileSync(
     `export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; evidence: SystemEdgeEvidence; detail?: string; url?: string }\n\n` +
     `export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }\n\n` +
     `export const systemGraph: SystemGraph = ${JSON.stringify({ generatedAt, nodes, edges }, null, 2)};\n\n` +
-    `// The sibling-scanned half of \`includeBuild\`, kept separate so a run with no\n` +
-    `// sibling checkouts on disk can fall back to what was last committed here\n` +
-    `// instead of shipping an empty scan as if it were a measured zero.\n` +
+    `// The sibling-scanned half of \`includeBuild\`. Each consumer with missing\n` +
+    `// settings keeps its last committed edges; readable settings replace them.\n` +
     `export const includeBuildPairs = ${JSON.stringify(includeBuildPairs)} as const;\n\n` +
-    `// The sibling-scanned half of \`feeds-data\` (E3) — same missing-sibling\n` +
-    `// fallback contract as includeBuildPairs above.\n` +
+    `// The sibling-scanned half of \`feeds-data\` (E3). Missing profile scripts\n` +
+    `// keep the last committed file list.\n` +
     `export const feedsDataFiles = ${JSON.stringify(feedsDataFiles)} as const;\n`,
 );
 

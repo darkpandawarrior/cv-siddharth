@@ -29,9 +29,11 @@
     "all 23 URLs are re-run — tightening an error gate on one re-measured URL is how a gate that",
     "nobody can pass gets born.",
     "",
-    "numberOfRuns is 1, not 3: this list went from 12 URLs to 23, and 23 single runs is fewer",
-    "Lighthouse runs than the 36 it was doing before. accessibility and seo, the two gates that",
-    "have always been errors, are deterministic and gain nothing from a median of three.",
+    "numberOfRuns is 3 (2026-10-02). With one run nothing is aggregated, so a single noisy sample",
+    "decides the gate: / total-blocking-time failed in 3 of 6 runs on the same code (2,976ms",
+    "against 2,100 in one) and /project/gaddi LCP in 2. Assertions use LHCI's default optimistic",
+    "aggregation, so three runs gate on the best sample. lighthouse.yml splits the URL list across",
+    "three parallel jobs to keep the wall-clock where one run per URL had it.",
     "",
     "W15 (2026-09-07, mobile performance lane): the below-the-fold homepage sections (case",
     "studies, projects, experience, skills, circuit, doorways, contact, the multiplatform frame",
@@ -114,7 +116,7 @@
         "http://localhost:4173/excelsior",
         "http://localhost:4173/loopdown"
       ],
-      "numberOfRuns": 1
+      "numberOfRuns": 3
     },
     "assert": {
       "assertMatrix": [

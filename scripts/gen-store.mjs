@@ -229,7 +229,7 @@ const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 /** Cache schema version. Bump to force a re-probe of everything already live. */
-const PROBE_V = 5;
+const PROBE_V = 6;
 
 const unescape = (s) =>
   s
@@ -240,7 +240,12 @@ const unescape = (s) =>
     .trim();
 
 async function probe(id) {
-  const url = `https://play.google.com/store/apps/details?id=${id}&hl=en`;
+  // gl pins the storefront. Without it Play answers for the caller's country, so a CI runner in
+  // the US read every client app not offered in the US (an Angolan taxi app, say) as a 404 and
+  // stopped the daily refresh. IN is the storefront the full mine has always seen, from India.
+  // ponytail: one storefront; an app offered nowhere near IN would read as delisted. Upgrade path:
+  // confirm a 404 against the client's own country before treating it as evidence.
+  const url = `https://play.google.com/store/apps/details?id=${id}&hl=en&gl=IN`;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const res = await fetchWithTimeout(url, { headers: { "user-agent": UA } });

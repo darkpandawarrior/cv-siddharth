@@ -13,7 +13,7 @@ export interface SystemEdge { from: string; to: string; kind: SystemEdgeKind; ev
 export interface SystemGraph { generatedAt: string; nodes: SystemNode[]; edges: SystemEdge[] }
 
 export const systemGraph: SystemGraph = {
-  "generatedAt": "2026-09-26",
+  "generatedAt": "2026-10-03",
   "nodes": [
     {
       "id": "gaddi",
@@ -649,11 +649,10 @@ export const systemGraph: SystemGraph = {
   ]
 };
 
-// The sibling-scanned half of `includeBuild`, kept separate so a run with no
-// sibling checkouts on disk can fall back to what was last committed here
-// instead of shipping an empty scan as if it were a measured zero.
+// The sibling-scanned half of `includeBuild`. Each consumer with missing
+// settings keeps its last committed edges; readable settings replace them.
 export const includeBuildPairs = [["doori","kmp-build-logic"],["doori","kmp-toolkit"],["gaddi","kmp-build-logic"],["gaddi","kmp-toolkit"],["paymentslab-kmp","kmp-build-logic"],["paymentslab-kmp","kmp-toolkit"],["candidai","kmp-build-logic"],["candidai","kmp-toolkit"],["kmp-toolkit","kmp-build-logic"],["kmp-app-template","kmp-build-logic"],["kmp-app-template","kmp-toolkit"],["portfolio","kmp-build-logic"],["portfolio","kmp-toolkit"]] as const;
 
-// The sibling-scanned half of `feeds-data` (E3) — same missing-sibling
-// fallback contract as includeBuildPairs above.
+// The sibling-scanned half of `feeds-data` (E3). Missing profile scripts
+// keep the last committed file list.
 export const feedsDataFiles = ["store.ts","timeline.ts"] as const;

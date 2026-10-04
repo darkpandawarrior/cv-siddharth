@@ -199,26 +199,11 @@ test.describe("WorldV2 hub (P2-19, preview only)", () => {
   });
 });
 
-test.describe("WorldV2 hub — visual capture (verifier)", () => {
-  const SCRATCH_DIR =
-    "/private/tmp/claude-501/-Users-darkpandawarrior-Repos/341200d5-5e29-43e9-96c5-0adfcdd173b3/scratchpad/lanes/P2-19";
-
-  test("captures /playground?world=v2 at 1440x900 and 390x844", async ({ page }) => {
-    await gotoWorldV2(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.screenshot({ path: join(SCRATCH_DIR, "world-v2-1440x900.png") });
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.screenshot({ path: join(SCRATCH_DIR, "world-v2-390x844.png") });
-  });
-
-  test("captures /playground (v1, unaffected) at 1440x900 and 390x844", async ({ page }) => {
-    await mockLiveRoutes(page);
-    await page.clock.setFixedTime(new Date(NOON_IST));
-    await page.goto("/playground", { waitUntil: "networkidle" });
-    await waitForHydration(page);
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.screenshot({ path: join(SCRATCH_DIR, "playground-v1-1440x900.png") });
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.screenshot({ path: join(SCRATCH_DIR, "playground-v1-390x844.png") });
-  });
-});
+// A "WorldV2 hub — visual capture (verifier)" describe block used to sit
+// here: two assertion-free tests that only called page.screenshot() into a
+// hardcoded path under a since-deleted Claude agent session's /private/tmp
+// scratch directory (.../claude-501/.../scratchpad/lanes/P2-19). It was dev
+// scratch tooling from lane P2-19, never meant to ship, and it failed CI's
+// "End-to-end tests" step on every run with ENOENT once that directory
+// stopped existing. Removed rather than repointed: it verified nothing
+// (no expect() calls), so there was nothing here worth keeping alive.
