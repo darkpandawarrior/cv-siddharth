@@ -83,6 +83,8 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   await page.locator("[data-altitude-stop='street']").click();
   await expect(page).toHaveURL(/\/playground\?at=doori$/);
   const hull = page.locator("canvas[data-hodi-at='doori']");
+  // Hodi writes this arrival signal from its first rendered frame.
+  await hull.waitFor();
   await expect(hull).toBeVisible();
   await expect(hull).toHaveAttribute("data-hodi-moored", "true");
   const pose = async () => hull.evaluate((canvas) => ({
