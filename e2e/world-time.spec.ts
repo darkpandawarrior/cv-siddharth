@@ -22,6 +22,7 @@ const responses: Record<string, unknown> = {
 test.beforeEach(async ({ page }) => {
   await forceDeviceTier(page, 2);
   await page.clock.install({ time: NOW });
+  await page.clock.pauseAt(new Date(NOW.getTime() + 1000));
   await page.clock.setFixedTime(NOW);
   await page.route("**/api/**", (route) => {
     const name = new URL(route.request().url()).pathname.slice("/api/".length);
