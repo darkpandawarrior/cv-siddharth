@@ -3,7 +3,7 @@ import { recordBindings } from "./recordBindings.ts";
 import { landmarkPositions } from "./landmarkPositions.ts";
 import { terrainHeight, type Heightmap } from "./terrainHeight.ts";
 import { BOUNDS } from "./valley.ts";
-import { clampWalk, getWalk, landingAt, moveWalk, returnToBoat, startWalk, subscribeWalk, walkLandings, type Landing } from "./walk.ts";
+import { clampWalk, getWalk, landingAt, moveWalk, returnToBoat, startWalk, subscribeWalk, walkDirection, walkLandings, type Landing } from "./walk.ts";
 
 const landing: Landing = { id: "ghat", label: "Ghat", x: 1, z: 0, halfX: 0.5, halfZ: 0.5 };
 const heightmap: Heightmap = {
@@ -14,6 +14,14 @@ const heightAt = (x: number, z: number) => terrainHeight(x, z, heightmap);
 afterEach(returnToBoat);
 
 describe("landing and shoreline constraints", () => {
+  it("moves with the headset's forward axis and caps diagonal stick speed", () => {
+    expect(walkDirection(0, 1)).toEqual({ x: 0, z: 1 });
+    expect(walkDirection(0, 1, 0, { x: 0, z: -1 })).toEqual({ x: 0, z: -1 });
+    expect(walkDirection(0, 0, 1, { x: 0, z: -1 })).toEqual({ x: 1, z: 0 });
+    const diagonal = walkDirection(0, 1, 1, { x: 1, z: 0 });
+    expect(Math.hypot(diagonal.x, diagonal.z)).toBeCloseTo(1);
+    expect(walkDirection(0, 1, 1, { x: 0, z: 0 })).toEqual({ x: 0, z: 0 });
+  });
   it("uses existing ghat, chhatri and employer flight footprints", () => {
     const positions = landmarkPositions();
     const records = recordBindings();

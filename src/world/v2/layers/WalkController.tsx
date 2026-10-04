@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { Vector3 } from "three";
 import { deviceTier } from "../../deviceTier.ts";
 import { input } from "../../input.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
@@ -7,7 +8,7 @@ import { useTerrainHeight } from "../terrainSurface.tsx";
 import { landmarkPositions } from "../landmarkPositions.ts";
 import { recordBindings } from "../recordBindings.ts";
 import { getTourStop } from "../tour.ts";
-import { getWalk, moveWalk, returnToBoat, setWalkControls, startWalk, walkLandings } from "../walk.ts";
+import { getWalk, moveWalk, returnToBoat, setWalkControls, startWalk, walkDirection, walkLandings } from "../walk.ts";
 import { playImpact, playPickup } from "../haptics.ts";
 import { cancelXR, registerXR, startXR } from "../xr.ts";
 
@@ -22,6 +23,7 @@ export default function WalkController() {
   const heading = useRef(0);
   const distance = useRef(0);
   const reference = useRef<XRReferenceSpace | null>(null);
+  const forward = useRef(new Vector3());
   const landings = useMemo(() => walkLandings(landmarkPositions(), recordBindings())
     .filter((p) => heightAt(p.x, p.z) > 0), [heightAt]);
 
@@ -63,6 +65,7 @@ export default function WalkController() {
     window.addEventListener("keydown", onKey);
     return () => {
       unregister();
+      void gl.xr.getSession()?.end().catch(() => {});
       setWalkControls(null);
       returnToBoat();
       window.removeEventListener("keydown", onKey);
@@ -83,9 +86,11 @@ export default function WalkController() {
         if (Math.abs(y) > 0.15) throttle = -y;
       }
     }
-    heading.current += steer * dt * 1.5;
-    moveWalk({ x: walk.position.x + Math.sin(heading.current) * throttle * SPEED * dt,
-      z: walk.position.z + Math.cos(heading.current) * throttle * SPEED * dt }, heightAt);
+    if (gl.xr.isPresenting) gl.xr.getCamera().getWorldDirection(forward.current);
+    else heading.current += steer * dt * 1.5;
+    const direction = walkDirection(heading.current, throttle, steer, gl.xr.isPresenting ? forward.current : undefined);
+    moveWalk({ x: walk.position.x + direction.x * SPEED * dt,
+      z: walk.position.z + direction.z * SPEED * dt }, heightAt);
     const position = getWalk()!.position;
     distance.current += Math.hypot(position.x - walk.position.x, position.z - walk.position.z);
     const ground = heightAt(position.x, position.z);

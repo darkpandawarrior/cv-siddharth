@@ -33,6 +33,18 @@ export function landingAt(position: WalkPosition, landings: readonly Landing[]):
   return landings.find((l) => Math.abs(position.x - l.x) <= l.halfX && Math.abs(position.z - l.z) <= l.halfZ);
 }
 
+/** XR uses headset-relative forward and strafe without rotating the head pose. */
+export function walkDirection(heading: number, throttle: number, strafe = 0, forward?: WalkPosition): WalkPosition {
+  let x = Math.sin(heading) * throttle, z = Math.cos(heading) * throttle;
+  if (forward) {
+    const length = Math.max(Math.hypot(forward.x, forward.z), 0.0001);
+    x = (forward.x * throttle - forward.z * strafe) / length;
+    z = (forward.z * throttle + forward.x * strafe) / length;
+  }
+  const magnitude = Math.max(1, Math.hypot(x, z));
+  return { x: x / magnitude, z: z / magnitude };
+}
+
 const dry = (p: WalkPosition, heightAt: HeightAt) => Number.isFinite(p.x) && Number.isFinite(p.z)
   && p.x >= BOUNDS.xMin && p.x <= BOUNDS.xMax && p.z >= BOUNDS.zMin && p.z <= BOUNDS.zMax
   && heightAt(p.x, p.z) > WATER_LEVEL;

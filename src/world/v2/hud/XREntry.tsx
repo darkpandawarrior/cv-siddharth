@@ -17,7 +17,7 @@ export default function XREntry() {
   useEffect(() => {
     let active = true;
     void supportsVR().then((value) => { if (active) setSupported(value); });
-    return () => { active = false; };
+    return () => { active = false; cancelXR(); };
   }, []);
 
   return <section aria-label="Walk and VR" data-vr-supported={supported ?? "pending"} className="pointer-events-auto absolute right-3 top-16 z-20 max-w-64 rounded-xl border border-line bg-card/95 p-3 text-sm backdrop-blur">
