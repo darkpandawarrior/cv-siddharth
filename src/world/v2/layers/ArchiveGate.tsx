@@ -4,7 +4,7 @@ import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { riverSpline } from "../valley.ts";
 import { input, isInteractiveTarget } from "../../input.ts";
-import { openArchive, shouldOpen, sourceSpringPosition, type ArchiveSample } from "../archiveGate.ts";
+import { sourceSpringPosition, watchArchiveGate } from "../archiveGate.ts";
 
 export const layer = { id: "archive-gate", order: 75 };
 const spring = sourceSpringPosition(riverSpline()[0]);
@@ -12,30 +12,20 @@ const spring = sourceSpringPosition(riverSpline()[0]);
 export default function ArchiveGate() {
   const { gl } = useThree();
   useEffect(() => {
-    let samples: ArchiveSample[] = [];
-    let opened = false;
-    // Record downstream intent even between slow render frames.
+    const hold = watchArchiveGate(() => ({
+      distance: Math.hypot(Number(gl.domElement.dataset.hodiX) - spring[0], Number(gl.domElement.dataset.hodiZ) - spring[2]),
+      upstream: input.throttle < 0,
+    }));
+    // Record downstream intent and releases even between slow render frames.
     const reset = (event: KeyboardEvent) => {
-      if (!isInteractiveTarget(event.target) && ["ArrowUp", "w", "W"].includes(event.key)) samples = [];
+      if (!isInteractiveTarget(event.target) && ["ArrowUp", "w", "W"].includes(event.key)) hold.reset();
+    };
+    const release = (event: KeyboardEvent) => {
+      if (["ArrowDown", "s", "S"].includes(event.key)) hold.reset();
     };
     window.addEventListener("keydown", reset);
-    const release = (event: KeyboardEvent) => {
-      if (["ArrowDown", "s", "S"].includes(event.key)) samples = [];
-    };
     window.addEventListener("keyup", release);
-    const timer = window.setInterval(() => {
-      if (opened) return;
-      const x = Number(gl.domElement.dataset.hodiX);
-      const z = Number(gl.domElement.dataset.hodiZ);
-      const at = performance.now() / 1000;
-      const distance = Math.hypot(x - spring[0], z - spring[2]);
-      if (!Number.isFinite(distance) || distance > 4 || input.throttle >= 0) { samples = []; return; }
-      samples.push({ at, distance, upstream: true });
-      // Retain one sample before the cutoff to measure the full hold.
-      while (samples.length > 2 && samples[1].at <= at - 2) samples.shift();
-      if (shouldOpen(samples)) { opened = true; openArchive(); }
-    }, 50);
-    return () => { window.clearInterval(timer); window.removeEventListener("keydown", reset); window.removeEventListener("keyup", release); };
+    return () => { hold.stop(); window.removeEventListener("keydown", reset); window.removeEventListener("keyup", release); };
   }, [gl]);
   return <group name="source-spring" position={spring}>
     <mesh position={[3, 0.6, 0]}><dodecahedronGeometry args={[0.8, 0]} /><meshStandardMaterial color="#9d9886" roughness={1} /></mesh>

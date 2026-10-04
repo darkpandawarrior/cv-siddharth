@@ -1,5 +1,5 @@
 import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
-import { Link, ClientOnly } from "@tanstack/react-router";
+import { Link, ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
 import { ArrowLeft, Activity, LayoutGrid, Gamepad2 } from "lucide-react";
@@ -18,6 +18,7 @@ import {
 } from "./play/DeferredPlayRoom.tsx";
 
 import { ConceptFallback, CorridorPlate } from "./world/CorridorPlate.tsx";
+import { registerArchiveNavigation } from "./world/v2/archiveGate.ts";
 import { deviceTier } from "./world/deviceTier.ts";
 
 // Load either world only after the visitor chooses it.
@@ -167,6 +168,12 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
   }, [isV1]);
 
   const wantsWorld = worldCapable && !forcedList && !worldFailed;
+  const navigate = useNavigate();
+  // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
+  useEffect(() => {
+    if (!wantsWorld || isV1) return;
+    return registerArchiveNavigation(() => { void navigate({ to: "/playground", search: { world: "v1" }, viewTransition: false }); });
+  }, [wantsWorld, isV1, navigate]);
   const handleWorldError = useCallback(() => setWorldFailed(true), []);
 
   // The World's HUD calls this (via onShowList) to drop back to the grid;

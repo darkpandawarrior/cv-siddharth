@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 import { test, expect, waitForHydration } from "./lib/test.ts";
+import { skipSoftwareRenderer } from "./lib/gpu.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
 
 const fixture = (name: string): unknown => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
@@ -37,7 +38,10 @@ async function world(page: Page, url = "/playground") {
   await page.goto(url);
   await waitForHydration(page);
   await expect(page.locator('[data-world="v2"]')).toBeVisible();
-  await page.locator("body").click({ position: { x: 2, y: 2 } });
+  await expect(page.getByRole("list", { name: "Landmarks in this world" })).toBeAttached();
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
 }
 
 test("quiet URL", async ({ page }) => {
@@ -79,7 +83,8 @@ test("Konami sequence inside the world", async ({ page }) => {
   await archived(page);
 });
 
-test("source-spring upstream hold", async ({ page }) => {
+test("source-spring upstream hold", { tag: "@gpu" }, async ({ page }) => {
+  await skipSoftwareRenderer(page);
   await world(page, "/playground?at=source-spring");
   await expect(page.locator("canvas[data-hodi-at='source-spring']")).toBeVisible();
   await page.keyboard.down("ArrowDown");

@@ -26,7 +26,7 @@ The first drivable Night Survey world stays reachable at `/playground?world=v1`.
 The five hidden entrances are the quiet URL; terminal commands `git checkout v1`
 and `cd ~/world/v1`; the exact palette query `night survey`; the Konami sequence
 inside the Sangam; and a two second upstream hold within four metres of the
-2017 source spring. `e2e/archive-v1.spec.ts` names and checks each entrance.
+river source spring. `e2e/archive-v1.spec.ts` names and checks each entrance.
 Neither terminal command appears in help. The palette query `night` shows no
 archive entry. The spring is excluded from the landmark list, shared paths
 and tour stops.
