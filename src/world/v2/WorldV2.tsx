@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore, type JSX } from "re
 import { subscribeReplay, getReplay, getServerReplay } from "./timelapse.ts";
 import { CaptureControl } from "./CaptureControl.tsx";
 import { Canvas } from "@react-three/fiber";
+import { getXRTier, subscribeXRTier } from "./xr.ts";
 import { PCFSoftShadowMap } from "three";
 import { skyLighting } from "./skyLighting.ts";
 import { SkyDome } from "./SkyDome.tsx";
@@ -83,7 +84,8 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
   const [previewMinutes, setPreviewMinutes] = useState<number | null>(null);
   const [highlightedRule, setHighlightedRule] = useState<string | null>(null);
   const [lastSeen, setLastSeen] = useState<LastSeen | null>(null);
-  const tier = useMemo(() => deviceTier(), []);
+  const xrTier = useSyncExternalStore(subscribeXRTier, getXRTier, () => null);
+  const tier = xrTier ?? deviceTier();
   const reducedMotion = prefersReducedMotion();
   const touched = useTouched();
 
@@ -134,7 +136,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
 
   return (
     <div data-world="v2" className="absolute inset-0">
-      {heightmap && <TerrainSurface value={heightmap}><Canvas
+      {heightmap && <TerrainSurface value={heightmap}><Canvas key={tier}
         shadows={{ type: PCFSoftShadowMap }}
         dpr={captureDpr(typeof window === "undefined" ? {} : window)}
         camera={camera}

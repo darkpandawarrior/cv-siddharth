@@ -1,4 +1,6 @@
-import { forwardRef, useMemo, type ReactNode } from "react";
+import { forwardRef, useMemo, useSyncExternalStore, type ReactNode } from "react";
+import { useThree } from "@react-three/fiber";
+import { subscribePresenting } from "./xr.ts";
 import { Bloom, EffectComposer, SMAA } from "@react-three/postprocessing";
 import type { DeviceTier } from "../deviceTier.ts";
 import { GradeEffect, type GradeLook } from "./Grade.ts";
@@ -45,6 +47,11 @@ export interface PostProps {
  * tier ever removes.
  */
 export function Post({ tier, look, volumetric }: PostProps) {
+  const xr = useThree((state) => state.gl.xr);
+  const presenting = useSyncExternalStore(
+    (listener) => subscribePresenting(xr, listener), () => xr.isPresenting, () => xr.isPresenting,
+  );
+  if (presenting) return null;
   if (tier === 3) {
     return (
       <EffectComposer multisampling={0}>
