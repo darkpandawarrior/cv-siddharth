@@ -10,7 +10,8 @@ import { spawnState, step, type HodiInput, type HodiState } from "./driveSpline.
 import { attachKeyboard, input } from "../input.ts";
 import { prefersReducedMotion } from "../reducedMotion.ts";
 import { useReducedMotion } from "../../SceneActivity.tsx";
-import { landmarkPositions } from "./layers/LandmarksApps.tsx";
+import { useTerrainHeight } from "./terrainSurface.tsx";
+import { landmarkPositions } from "./landmarkPositions.ts";
 
 /**
  * THE HODI — world-v2-spec.md §4 "Route and camera". Drives `driveSpline.ts`
@@ -121,6 +122,8 @@ export function mooredStateAt(landmark: { x: number; z: number }): HodiState {
 
 export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps) {
   const { camera, gl } = useThree();
+  const heightAt = useTerrainHeight();
+  const aboveGround = (p: THREE.Vector3) => { p.y = Math.max(p.y, heightAt(p.x, p.z) + CHASE_UP); };
   const arrivalPosition = arrival ? LANDMARK_POSITIONS[arrival] : undefined;
   const mooring = useRef({ held: !!arrivalPosition, released: false });
   useEffect(() => attachKeyboard(), []);
@@ -269,6 +272,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
         boatPos.z - Math.cos(boatHeading) * CHASE_BACK,
       );
       camera.position.lerpVectors(highVantage, chasePose, eased);
+      aboveGround(camera.position);
       camera.lookAt(boatPos.x, boatPos.y + 1, boatPos.z);
       if (t >= 1) flyIn.current.done = true;
       return;
@@ -289,13 +293,16 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
       boatPos.z - Math.cos(yaw) * backXZ,
     );
     const easeT = 1 - Math.exp(-CAMERA_EASE_RATE * cameraDelta);
+    aboveGround(camTarget.current);
     camera.position.lerp(camTarget.current, easeT);
+    aboveGround(camera.position);
 
     lookTarget.current.set(
       boatPos.x + Math.sin(boatHeading) * CHASE_LOOKAHEAD,
       boatPos.y + 1,
       boatPos.z + Math.cos(boatHeading) * CHASE_LOOKAHEAD,
     );
+    aboveGround(lookTarget.current);
     camera.lookAt(lookTarget.current);
   });
 

@@ -18,6 +18,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html, Instance, Instances } from "@react-three/drei";
 import type { LightProbe } from "three";
+import { groundPosition } from "../terrainHeight.ts";
+import { useTerrainHeight } from "../terrainSurface.tsx";
 import { ledger } from "../ledger.ts";
 import { recordBindings, stoneMaterial, type EmployerGhat, type HeroStone } from "../recordBindings.ts";
 import type { DetailLink } from "../worldModel.ts";
@@ -110,7 +112,19 @@ function HeroStoneStele({ stone, palette, opacity }: { stone: HeroStone; palette
 export default function LandmarksRecords() {
   const palette = worldPalette();
   const reducedMotion = prefersReducedMotion();
-  const bindings = useMemo(() => recordBindings(ledger), []);
+  const heightAt = useTerrainHeight();
+  const rawBindings = useMemo(() => recordBindings(ledger), []);
+  const bindings = useMemo(() => {
+    const placed = <T extends { pos: readonly number[] }>(items: readonly T[]) => items.map((item) => ({ ...item, pos: groundPosition(item.pos, heightAt) }));
+    return {
+    ...rawBindings,
+    deepmal: { ...rawBindings.deepmal, niches: placed(rawBindings.deepmal.niches), centroid: groundPosition(rawBindings.deepmal.centroid, heightAt) },
+    steppingStones: { ...rawBindings.steppingStones, stones: placed(rawBindings.steppingStones.stones), cairns: placed(rawBindings.steppingStones.cairns) },
+    weirs: placed(rawBindings.weirs), employerGhats: placed(rawBindings.employerGhats),
+    heroStones: placed(rawBindings.heroStones), roomChhatris: placed(rawBindings.roomChhatris),
+    oldTown: placed(rawBindings.oldTown), benchmarks: placed(rawBindings.benchmarks),
+    };
+  }, [rawBindings, heightAt]);
   const [opacity, setOpacity] = useState(reducedMotion ? 1 : 0);
   useReveal(true, reducedMotion, setOpacity);
 

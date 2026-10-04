@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type JSX } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { heavy } from "../../lib/assetBase.ts";
+import { terrainHeight, type Heightmap } from "./terrainHeight.ts";
 import { deviceTier } from "../deviceTier.ts";
 import { buildTerrainMaterial, type TerrainMaterialHandle } from "./terrainMaterial.ts";
 import { BOUNDS, EXTENT } from "./valley.ts";
@@ -24,76 +24,6 @@ const CHUNKS_PER_AXIS = 4;
 // evenly by CHUNKS_PER_AXIS.
 const SEGMENTS_DESKTOP = 512;
 const SEGMENTS_PHONE = 256;
-
-interface HeightmapMeta {
-  grid: number;
-  metresPerTexel: number;
-  min: number;
-  max: number;
-  bounds: { xMin: number; xMax: number; zMin: number; zMax: number };
-}
-
-interface Heightmap {
-  heights: Float32Array; // meta.grid x meta.grid, real metres
-  meta: HeightmapMeta;
-}
-
-/** Decodes the generator's own 8-bit-plus-{min,max} heightmap (see
- *  gen-terrain.mjs's own honesty note) via a plain 2D canvas, the same
- *  "load a PNG's real pixels client-side" technique `terrainPlate.ts`
- *  already uses for its own baked texture, just reading a fetched image
- *  instead of drawing one from scratch. */
-async function fetchOk(url: string): Promise<Response> {
-  const res = await fetch(url);
-  // A missing heavy asset (unpublished, or the CDN sync hasn't run yet — see
-  // assetBase.ts's own doc comment) 404s to GitHub Pages' own HTML page, not
-  // to JSON/PNG bytes. Without this check that surfaced as `r.json()`
-  // throwing "Unexpected token '<'... is not valid JSON" — true but useless
-  // for finding which asset is actually missing. Same "absent, not faked"
-  // contract as EarthDots.tsx's loadEarthMask, just with a named error
-  // instead of a silent null: no ground mesh is ever built from a heightmap
-  // this obviously isn't, but the console now says which URL and status.
-  if (!res.ok) throw new Error(`Terrain.tsx: ${url} -> HTTP ${res.status} (heavy asset not published?)`);
-  return res;
-}
-
-async function loadHeightmap(pngUrl: string, jsonUrl: string): Promise<Heightmap> {
-  const [meta, blob] = await Promise.all([
-    fetchOk(jsonUrl).then((r) => r.json() as Promise<HeightmapMeta>),
-    fetchOk(pngUrl).then((r) => r.blob()),
-  ]);
-  const bitmap = await createImageBitmap(blob);
-  const canvas = document.createElement("canvas");
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Terrain.tsx: 2d canvas context unavailable");
-  ctx.drawImage(bitmap, 0, 0);
-  bitmap.close();
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const heights = new Float32Array(meta.grid * meta.grid);
-  const range = meta.max - meta.min;
-  for (let i = 0; i < heights.length; i++) heights[i] = meta.min + (img.data[i * 4] / 255) * range; // greyscale: R=G=B
-  return { heights, meta };
-}
-
-function bilinearHeight(x: number, z: number, hm: Heightmap): number {
-  const { heights, meta } = hm;
-  const { grid, metresPerTexel, bounds } = meta;
-  const fx = (x - bounds.xMin) / metresPerTexel;
-  const fz = (z - bounds.zMin) / metresPerTexel;
-  const x0 = Math.min(grid - 2, Math.max(0, Math.floor(fx)));
-  const z0 = Math.min(grid - 2, Math.max(0, Math.floor(fz)));
-  const tx = Math.min(1, Math.max(0, fx - x0));
-  const tz = Math.min(1, Math.max(0, fz - z0));
-  const h00 = heights[z0 * grid + x0];
-  const h10 = heights[z0 * grid + x0 + 1];
-  const h01 = heights[(z0 + 1) * grid + x0];
-  const h11 = heights[(z0 + 1) * grid + x0 + 1];
-  const a = h00 + (h10 - h00) * tx;
-  const b = h01 + (h11 - h01) * tx;
-  return a + (b - a) * tz;
-}
 
 /** One splat.worker.ts instance, request/response id-correlated, the same
  *  idiom src/chess/engineClient.ts already ships for its own worker. */
@@ -149,7 +79,7 @@ function buildChunkGeometry(cx: number, cz: number, chunkSegments: number, chunk
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
-    pos.setY(i, bilinearHeight(x, z, hm));
+    pos.setY(i, terrainHeight(x, z, hm));
   }
   pos.needsUpdate = true;
   geometry.computeVertexNormals();
@@ -180,7 +110,7 @@ async function bakeChunkSplat(
   const localHeights = new Float32Array(localGrid * localGrid);
   for (let gz = 0; gz < localGrid; gz++) {
     for (let gx = 0; gx < localGrid; gx++) {
-      localHeights[gz * localGrid + gx] = bilinearHeight(originX + gx * step, originZ + gz * step, hm);
+      localHeights[gz * localGrid + gx] = terrainHeight(originX + gx * step, originZ + gz * step, hm);
     }
   }
   const { aSplat, aAux } = await client.bake({ grid: localGrid, step, originX, originZ, heights: localHeights });
@@ -209,17 +139,11 @@ interface TerrainAssets {
   materialHandle: TerrainMaterialHandle;
 }
 
-async function buildTerrainAssets(): Promise<TerrainAssets> {
+async function buildTerrainAssets(hm: Heightmap): Promise<TerrainAssets> {
   const tier = deviceTier();
   const segments = tier === 1 ? SEGMENTS_DESKTOP : SEGMENTS_PHONE;
   const chunkSegments = segments / CHUNKS_PER_AXIS;
   const chunkSize = EXTENT / CHUNKS_PER_AXIS;
-
-  // world-v2-spec §3: valley-h-513.png is "first view AND mobile"; the
-  // 1025 bake is a desktop-only upgrade this lane leaves unwired, ponytail:
-  // add a post-load texture swap when a real LOD-driven asset system exists
-  // to hang it off, rather than a second bespoke fetch path for one tier.
-  const hm = await loadHeightmap(heavy("/world/terrain/valley-h-513.png"), heavy("/world/terrain/valley-h-513.json"));
 
   const client = createSplatClient();
   try {
@@ -238,14 +162,14 @@ async function buildTerrainAssets(): Promise<TerrainAssets> {
   }
 }
 
-export function Terrain(): JSX.Element | null {
+export function Terrain({ heightmap }: { heightmap: Heightmap }): JSX.Element | null {
   const [assets, setAssets] = useState<TerrainAssets | null>(null);
   const mounted = useRef(true);
   const camera = useThree((s) => s.camera);
 
   useEffect(() => {
     mounted.current = true;
-    buildTerrainAssets()
+    buildTerrainAssets(heightmap)
       .then((a) => {
         if (mounted.current) setAssets(a);
       })
@@ -255,7 +179,7 @@ export function Terrain(): JSX.Element | null {
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [heightmap]);
 
   useEffect(
     () => () => {

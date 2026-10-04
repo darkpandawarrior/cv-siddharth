@@ -10,6 +10,7 @@
  * picked deliberately either side of solar noon, pins exactly that).
  */
 
+import { groundPosition, type HeightAt } from "./terrainHeight.ts";
 import type { Daypart } from "../../lib/sky.ts";
 import { riverX, sangamBasin, valleyZ } from "./valley.ts";
 
@@ -75,10 +76,15 @@ function isMorningAz(sunAzDeg: number): boolean {
   return ((sunAzDeg % 360) + 360) % 360 < 180;
 }
 
-export function spawnPose(daypart: Daypart, sunAzDeg: number): SpawnPose {
+function flatSpawnPose(daypart: Daypart, sunAzDeg: number): SpawnPose {
   if (daypart === "night") return sangamPose();
   if (daypart === "dawn" || daypart === "day") return downstreamPose();
   if (daypart === "dusk") return upstreamPose();
   // "golden" — the only case that happens twice a day.
   return isMorningAz(sunAzDeg) ? downstreamPose() : upstreamPose();
+}
+
+export function spawnPose(daypart: Daypart, sunAzDeg: number, heightAt?: HeightAt): SpawnPose {
+  const pose = flatSpawnPose(daypart, sunAzDeg);
+  return heightAt ? { ...pose, pos: groundPosition(pose.pos, heightAt), look: groundPosition(pose.look, heightAt) } : pose;
 }

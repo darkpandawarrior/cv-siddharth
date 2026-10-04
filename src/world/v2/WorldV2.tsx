@@ -23,6 +23,8 @@ import { worldModel } from "./worldModel.ts";
 import type { You } from "./worldModel.ts";
 import type { LastSeen } from "./visitDiff.ts";
 import { ledger } from "./ledger.ts";
+import { TerrainSurface, loadTerrainHeightmap } from "./terrainSurface.tsx";
+import { terrainHeight, type Heightmap } from "./terrainHeight.ts";
 import { spawnPose } from "./spawn.ts";
 import { deviceTier } from "../deviceTier.ts";
 import { prefersReducedMotion } from "../reducedMotion.ts";
@@ -67,6 +69,12 @@ function previewAtToMinutes(d: Date): number {
 
 export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
   const arrival = Object.entries(LANDMARK_OPENS).find(([id, link]) => id === at || link.target === at)?.[0];
+  const [heightmap, setHeightmap] = useState<Heightmap | null>(null);
+  useEffect(() => {
+    let active = true;
+    loadTerrainHeightmap().then((hm) => { if (active) setHeightmap(hm); }).catch((error) => { console.error("Terrain heightmap unavailable", error); });
+    return () => { active = false; };
+  }, []);
   const [previewMinutes, setPreviewMinutes] = useState<number | null>(null);
   const [highlightedRule, setHighlightedRule] = useState<string | null>(null);
   const [lastSeen, setLastSeen] = useState<LastSeen | null>(null);
@@ -112,27 +120,14 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
     return buildLedgerSections(wm.rows, nowModel.raw);
   }, [wm, nowModel]);
 
-  // ponytail: spawnPose's CHASE_Y (spawn.ts) is a fixed world-space height
-  // (~1.9 m), written against a flat, Y=0 river assumption. The real
-  // heightmap Terrain.tsx now loads (P2-05's gen-terrain.mjs) ranges from
-  // about -3 m to +102 m across the valley, and GRAMMAR features
-  // (worldModel.ts's own buildFeature) place at a fixed y=0 too — neither
-  // was reconciled against the other before this lane, the first one to
-  // mount both together. The result: the spawn camera and every
-  // GrammarInstances placeholder can sit well below or above the real
-  // ground at their (x,z), which reads as a bad camera angle rather than a
-  // ledger/grammar bug. Fixing it needs a shared terrain-height sampler
-  // neither valley.ts nor worldModel.ts owns yet (this lane owns neither) —
-  // flagged for whichever lane gives GRAMMAR/spawn a real y = terrainHeight
-  // (x, z) call, not patched here with a second, disagreeing height guess.
   const daypart = nowModel?.now.sky.daypart ?? "day";
   const sunAzDeg = nowModel?.raw.sky?.sun.azimuthDeg ?? 90;
-  const spawn = useMemo(() => spawnPose(daypart, sunAzDeg), [daypart, sunAzDeg]);
+  const spawn = useMemo(() => spawnPose(daypart, sunAzDeg, heightmap ? (x, z) => terrainHeight(x, z, heightmap) : undefined), [daypart, sunAzDeg, heightmap]);
   const camera = useMemo(() => ({ position: spawn.pos, fov: 46, near: 0.3, far: 3000 }), [spawn.pos]);
 
   return (
     <div data-world="v2" className="absolute inset-0">
-      <Canvas
+      {heightmap && <TerrainSurface value={heightmap}><Canvas
         shadows={{ type: PCFSoftShadowMap }}
         dpr={[1, 2]}
         camera={camera}
@@ -143,7 +138,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
         <directionalLight castShadow position={[40, 80, 40]} intensity={1.1} />
         <SkyDome />
         <Env />
-        <Terrain />
+        <Terrain heightmap={heightmap} />
         <Water />
         {nowModel && <Hodi key={at ?? "spawn"} spawnZ={spawn.pos[2]} arrival={arrival} />}
         {wm && <GrammarInstances worldModel={wm} highlightedRule={highlightedRule} />}
@@ -151,7 +146,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
           <layer.Component key={layer.id} />
         ))}
         <Post tier={tier} look="golden" />
-      </Canvas>
+      </Canvas></TerrainSurface>}
 
       {wm && (
         <div aria-hidden="true">

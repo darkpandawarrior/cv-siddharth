@@ -61,6 +61,8 @@ import { deviceTier } from "../../deviceTier.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { applyAtmosphere } from "../atmosphere.ts";
 import { applyWindSway, applyBoatPush, WIND_DESIGN_DEFAULT, BOAT_XZ_PARKED } from "../windSway.glsl.ts";
+import { loadTerrainHeightmap } from "../terrainSurface.tsx";
+import { terrainHeight } from "../terrainHeight.ts";
 import { scatterVegetation, type ScatterKind, type ScatterSurface, type ScatterPoint } from "../vegetationScatter.ts";
 import { BOUNDS, riverX, riverWidthAtZ, distanceToRiver, riverSpline } from "../valley.ts";
 import { hashNoise, stringSeed } from "../hash.ts";
@@ -83,57 +85,9 @@ function unit(seed: number): number {
 
 // ── the real heightmap (the same asset Terrain.tsx displaces from) ─────────
 
-interface HeightmapMeta {
-  grid: number;
-  metresPerTexel: number;
-  min: number;
-  max: number;
-  bounds: { xMin: number; xMax: number; zMin: number; zMax: number };
-}
-
-async function fetchOk(url: string): Promise<Response> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Vegetation.tsx: ${url} -> HTTP ${res.status}`);
-  return res;
-}
-
-/** Loads the same `valley-h-513` heightmap Terrain.tsx displaces from (see
- *  this file's own doc comment for why this is a small duplicate rather
- *  than a shared import) and wraps it as a `ScatterSurface`. */
 async function loadHeightSurface(): Promise<ScatterSurface> {
-  const [meta, blob] = await Promise.all([
-    fetchOk(heavy("/world/terrain/valley-h-513.json")).then((r) => r.json() as Promise<HeightmapMeta>),
-    fetchOk(heavy("/world/terrain/valley-h-513.png")).then((r) => r.blob()),
-  ]);
-  const bitmap = await createImageBitmap(blob);
-  const canvas = document.createElement("canvas");
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Vegetation.tsx: 2d canvas context unavailable");
-  ctx.drawImage(bitmap, 0, 0);
-  bitmap.close();
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const { grid, metresPerTexel, min, max, bounds } = meta;
-  const range = max - min;
-  const heights = new Float32Array(grid * grid);
-  for (let i = 0; i < heights.length; i++) heights[i] = min + (img.data[i * 4] / 255) * range;
-
-  function heightAt(x: number, z: number): number {
-    const fx = (x - bounds.xMin) / metresPerTexel;
-    const fz = (z - bounds.zMin) / metresPerTexel;
-    const x0 = Math.min(grid - 2, Math.max(0, Math.floor(fx)));
-    const z0 = Math.min(grid - 2, Math.max(0, Math.floor(fz)));
-    const tx = Math.min(1, Math.max(0, fx - x0));
-    const tz = Math.min(1, Math.max(0, fz - z0));
-    const h00 = heights[z0 * grid + x0];
-    const h10 = heights[z0 * grid + x0 + 1];
-    const h01 = heights[(z0 + 1) * grid + x0];
-    const h11 = heights[(z0 + 1) * grid + x0 + 1];
-    const a = h00 + (h10 - h00) * tx;
-    const b = h01 + (h11 - h01) * tx;
-    return a + (b - a) * tz;
-  }
+  const hm = await loadTerrainHeightmap();
+  const heightAt = (x: number, z: number) => terrainHeight(x, z, hm);
 
   // A standalone density proxy (this file's own doc comment): bare at the
   // waterline, fullest a little past the bank, thinning upslope toward the
