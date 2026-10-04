@@ -170,7 +170,24 @@ The reality ledger records each binding's source and availability. Visitors
 using reduced motion, save data or a tier 3 device get a concept painting and
 the room list. The list also stays available if WebGL fails.
 
-`/playground?world=v1` keeps the earlier street world available as a rollback.
+Ambient sound starts after a pointer or keyboard gesture. Rain, wind and water
+follow the available readings; the mute choice persists across reloads.
+Time replay filters dated ledger records by month and marks undated records
+at their snapshot month. The sky and other ambient layers stay live. Replay
+has pause, speed and Back to now controls.
+
+The guided tour visits landmarks with source captions. Shared path links
+replay known landmarks in order. Reduced motion uses manual steps for both
+the tour and time replay.
+
+Visitors can choose a dry landing, walk with WASD and return with B or
+Back to boat. The Enter VR button appears only when the browser reports
+`immersive-vr` support. Enter VR prepares the scene; a separate Start VR
+action requests the session. Headset rendering has not been verified on
+hardware.
+
+[ARCHIVE.md](ARCHIVE.md): superseded features kept on purpose, with their removal recipes.
+
 The port audit below comes from `src/world/v2/carryOver.ts`. Native means
 ported, Degraded means the mechanic changed, Dropped means it was left out,
 and Absent means there is no manifest entry. Every listed feature currently

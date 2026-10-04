@@ -493,7 +493,7 @@ const surfaceMap = WALL_GROUPS.map((g) => {
 const playgroundSurface = surfaces.find((surface) => surface.to === "/playground");
 const llmsSurfaceMap = surfaceMap.replace(
   `- [${playgroundSurface.label}](${SITE}/playground): ${playgroundSurface.blurb}`,
-  `- [The Sangam](${SITE}/playground): A river valley explored by boat, with project landmarks at ghats and writing above the banks. The GPS lens draws raw and filtered wakes; the reality ledger records data sources and availability. Reduced motion, save data, tier 3 devices and WebGL failures have a concept painting and room list. The earlier street world remains available at /playground?world=v1.`,
+  `- [The Sangam](${SITE}/playground): A river valley explored by boat, with project landmarks at ghats and writing above the banks. The GPS lens draws raw and filtered wakes; the reality ledger records data sources and availability. Ambient sound starts after a pointer or keyboard gesture, follows available weather and water readings, and remembers mute. Time replay filters dated ledger records by month and marks undated records at their snapshot; ambient layers stay live. The guided tour has source captions, and shared path links replay known landmarks in order. Reduced motion uses manual replay and tour steps. Visitors can walk from dry landings and return to the boat. Enter VR appears only when the browser reports immersive-vr support; Enter VR prepares the scene and a separate Start VR action requests the session. Headset rendering has not been verified on hardware. Reduced motion, save data, devices on the fallback tier and WebGL failures have a concept painting and room list.`,
 );
 
 /** The projects with a real write-up, each at its own route. */
