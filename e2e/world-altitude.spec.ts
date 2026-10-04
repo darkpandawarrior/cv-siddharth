@@ -94,6 +94,8 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   expect(Math.hypot(initial.x - doori.x, initial.z - doori.z)).toBeLessThan(95);
   await page.waitForTimeout(6500);
   expect(await pose()).toEqual(initial);
+  // Driving keys ignore a focused link left by the altitude navigation.
+  await page.getByText("Sangam", { exact: true }).click();
   await page.keyboard.down("w");
   await expect(page.locator("canvas[data-hodi-moored='false']")).toBeVisible();
   await page.keyboard.up("w");

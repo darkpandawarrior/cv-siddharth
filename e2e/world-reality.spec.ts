@@ -205,6 +205,12 @@ test.describe("the You row (sessionRipple, in-memory)", () => {
 
     await page.goto("/project/doori");
     await waitForHydration(page);
+    // The shared header can hydrate before the split project and its visit effect.
+    await page.waitForFunction(() => {
+      const project = document.querySelector(".project-detail");
+      return project && Object.keys(project).some((key) => key.startsWith("__react"));
+    });
+    await page.getByRole("heading", { name: "Doori", level: 1, exact: true }).click();
 
     // Client navigation preserves the module-scoped touched list. The
     // public footer now opens v2, so the archive URL goes through history.
