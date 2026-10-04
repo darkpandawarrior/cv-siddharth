@@ -13,6 +13,7 @@ import { useReducedMotion } from "../../SceneActivity.tsx";
 import { useTerrainHeight } from "./terrainSurface.tsx";
 import { landmarkPositions } from "./landmarkPositions.ts";
 import { getTourStop, subscribeTour } from "./tour.ts";
+import { getWalk, subscribeWalk } from "./walk.ts";
 
 /**
  * THE HODI — world-v2-spec.md §4 "Route and camera". Drives `driveSpline.ts`
@@ -123,6 +124,7 @@ export function mooredStateAt(landmark: { x: number; z: number }): HodiState {
 
 export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps) {
   const tourStop = useSyncExternalStore(subscribeTour, getTourStop, () => null);
+  const walking = useSyncExternalStore(subscribeWalk, getWalk, () => null);
   const { camera, gl } = useThree();
   const heightAt = useTerrainHeight();
   const aboveGround = (p: THREE.Vector3) => { p.y = Math.max(p.y, heightAt(p.x, p.z) + CHASE_UP); };
@@ -211,14 +213,18 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
 
   const flyIn = useRef({ elapsed: 0, done: !!arrivalPosition || prefersReducedMotion() });
   useEffect(() => {
-    if (!tourStop) return;
+    if (!tourStop || walking) return;
     hodiStateRef.current = mooredStateAt({ x: tourStop.position[0], z: tourStop.position[2] });
     flyIn.current.done = true;
-  }, [tourStop]);
+  }, [tourStop, walking]);
   const camTarget = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
 
   useFrame((_state, rawDelta) => {
+    if (walking) {
+      motionObjectRef.current = ghostRef.current;
+      return;
+    }
     // Bound physics steps; time the camera in elapsed seconds.
     const cameraDelta = Math.max(0, rawDelta);
     const dt = Math.min(cameraDelta, 1 / 20);
