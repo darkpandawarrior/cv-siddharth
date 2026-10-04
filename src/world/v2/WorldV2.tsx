@@ -1,13 +1,8 @@
 /**
- * The Sangam hub (this lane's own task list, master-plan.md#M17/#M22/#M36/
- * #M56/#M67/#M68): assembles every phase-2 world-v2 piece — terrain, water,
- * sky, environment, post, the hodi, the growth grammar and its ledger —
- * behind ONE route, `/playground?world=v2` (preview only, `playground.tsx`
- * gates that). Phase-3/4 lanes extend this hub through `layers.ts`/
- * `kits.ts`'s glob registries, never by editing this file.
- *
- * `<Canvas>` is `aria-hidden`; `HudV2` (a DOM sibling, never a child) is the
- * whole accessible surface — the same split `World.tsx` (v1) already uses.
+ * Sangam at /playground. Playground keeps the v1 rollback, capability
+ * gates and concept fallback in the shared shell. Canvas is aria-hidden;
+ * HudV2 is its accessible DOM sibling. Later layers register through the
+ * canvas and HUD globs rather than changing this hub.
  */
 import { useEffect, useMemo, useState, type JSX } from "react";
 import { Canvas } from "@react-three/fiber";
@@ -173,7 +168,7 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
           HudV2's own LandmarkList is already the accessible content this
           heads (a visually hidden list of real, Tab-reachable buttons); this
           just gives it — and the page — a name. */}
-      <h1 className="sr-only">Sangam — the growth model, drawn from real activity</h1>
+      <h1 className="sr-only">Sangam, the growth model drawn from real activity</h1>
 
       {sections && (
         <HudV2
