@@ -65,7 +65,8 @@ class WorldBoundary extends Component<{ children: ReactNode; onError: () => void
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch() {
+  componentDidCatch(error: Error) {
+    console.error("Sangam could not render the world:", error.message);
     this.props.onError();
   }
   render() {

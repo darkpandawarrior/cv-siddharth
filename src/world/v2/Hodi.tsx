@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { MotionPathControls, useMotion } from "@react-three/drei";
@@ -126,9 +126,16 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
   useEffect(() => attachKeyboard(), []);
   const reducedMotionLive = useReducedMotion();
 
-  const hodiStateRef = useRef<HodiState>(arrivalPosition
+  const [initialState] = useState<HodiState>(() => arrivalPosition
     ? mooredStateAt({ x: arrivalPosition[0], z: arrivalPosition[2] })
     : spawnState(spawnZ ?? DEFAULT_SPAWN_Z));
+  const hodiStateRef = useRef(initialState);
+  useEffect(() => {
+    gl.domElement.dataset.hodiX = String(initialState.x);
+    gl.domElement.dataset.hodiZ = String(initialState.z);
+    gl.domElement.dataset.hodiMoored = String(!!arrivalPosition);
+    if (arrival && arrivalPosition) gl.domElement.dataset.hodiAt = arrival;
+  }, [gl, initialState, arrival, arrivalPosition]);
 
   const groupRef = useRef<THREE.Group>(null!);
   // The permanent ghost MotionPathControls "moves" while a human is driving
@@ -202,7 +209,9 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
   const lookTarget = useRef(new THREE.Vector3());
 
   useFrame((_state, rawDelta) => {
-    const dt = Math.min(rawDelta, 1 / 20);
+    // Bound physics steps; time the camera in elapsed seconds.
+    const cameraDelta = Math.max(0, rawDelta);
+    const dt = Math.min(cameraDelta, 1 / 20);
     const reduced = reducedMotionLive;
 
     const axes: HodiInput = { steer: input.steer, throttle: input.throttle };
@@ -250,7 +259,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
     // world-v2-spec §4 "Fly-in": a held-then-eased descent before the chase
     // camera takes over; a cut (skipped outright) under reduced motion.
     if (!flyIn.current.done) {
-      flyIn.current.elapsed += dt;
+      flyIn.current.elapsed += cameraDelta;
       const t = clamp01(flyIn.current.elapsed / FLY_IN_DURATION_S);
       const eased = FLY_IN_EASE(t);
       const highVantage = new THREE.Vector3(boatPos.x + 30, boatPos.y + FLY_IN_HEIGHT, boatPos.z - 40);
@@ -266,7 +275,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
     }
 
     if (!dragging.current) {
-      const springT = 1 - Math.exp(-ORBIT_SPRING_BACK_RATE * dt);
+      const springT = 1 - Math.exp(-ORBIT_SPRING_BACK_RATE * cameraDelta);
       orbitYaw.current += (0 - orbitYaw.current) * springT;
       orbitPitch.current += (0 - orbitPitch.current) * springT;
     }
@@ -279,7 +288,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
       boatPos.y + CHASE_UP + Math.sin(pitch) * CHASE_BACK,
       boatPos.z - Math.cos(yaw) * backXZ,
     );
-    const easeT = 1 - Math.exp(-CAMERA_EASE_RATE * dt);
+    const easeT = 1 - Math.exp(-CAMERA_EASE_RATE * cameraDelta);
     camera.position.lerp(camTarget.current, easeT);
 
     lookTarget.current.set(
@@ -302,7 +311,7 @@ export function Hodi({ waterUniforms, waveUniforms, spawnZ, arrival }: HodiProps
       >
         <AutopilotProgressDriver hodiStateRef={hodiStateRef} zStart={zStart} zSpan={zSpan} />
       </MotionPathControls>
-      <group ref={groupRef}>
+      <group ref={groupRef} position={[initialState.x, WATER_Y, initialState.z]} rotation={[0, initialState.heading, 0]}>
         <mesh material={hullMaterial} position={[0, 0.25, 0]}>
           <boxGeometry args={[HULL_MAX_HALF_BEAM * 2, 0.5, HULL_LENGTH]} />
         </mesh>

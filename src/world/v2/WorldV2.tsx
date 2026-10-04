@@ -125,18 +125,17 @@ export default function WorldV2({ at }: { at?: string } = {}): JSX.Element {
   // neither valley.ts nor worldModel.ts owns yet (this lane owns neither) —
   // flagged for whichever lane gives GRAMMAR/spawn a real y = terrainHeight
   // (x, z) call, not patched here with a second, disagreeing height guess.
-  const spawn = useMemo(() => {
-    const daypart = nowModel?.now.sky.daypart ?? "day";
-    const sunAzDeg = nowModel?.raw.sky?.sun.azimuthDeg ?? 90;
-    return spawnPose(daypart, sunAzDeg);
-  }, [nowModel]);
+  const daypart = nowModel?.now.sky.daypart ?? "day";
+  const sunAzDeg = nowModel?.raw.sky?.sun.azimuthDeg ?? 90;
+  const spawn = useMemo(() => spawnPose(daypart, sunAzDeg), [daypart, sunAzDeg]);
+  const camera = useMemo(() => ({ position: spawn.pos, fov: 46, near: 0.3, far: 3000 }), [spawn.pos]);
 
   return (
     <div data-world="v2" className="absolute inset-0">
       <Canvas
         shadows={{ type: PCFSoftShadowMap }}
         dpr={[1, 2]}
-        camera={{ position: spawn.pos, fov: 46, near: 0.3, far: 3000 }}
+        camera={camera}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         aria-hidden="true"
       >

@@ -22,7 +22,7 @@ const NIGHT = "2026-09-24T03:15:00+05:30";
 async function prepare(page: Page, time = NOON, wet = false) {
   page.on("pageerror", (error) => console.error(`world-altitude page error: ${error.message}`));
   page.on("console", (message) => {
-    if (message.type() === "error") console.error(`world-altitude console error: ${message.text().slice(0, 1200)}`);
+    if (message.type() === "error") console.error(`world-altitude console error: ${message.location().url} ${message.text().slice(0, 1200)}`);
   });
   await page.clock.setFixedTime(new Date(time));
   await page.addInitScript(() => {
@@ -129,6 +129,7 @@ for (const width of [1440, 390]) {
       await expect(page.locator(".playground-canvas canvas")).toHaveCount(0);
       await expect(image).toBeVisible();
       await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+      await expect(page.locator("[data-ledger-row='weather']")).toContainText("°C");
       await page.screenshot({ path: `${LANE_DIR}/fallback-${state.name}-${width}.png`, fullPage: true });
       expect(hydration).toEqual([]);
     });
@@ -142,6 +143,7 @@ for (const width of [1440, 390]) {
     await waitForHydration(page);
     await expect(page.locator("[data-concept-fallback]")).toBeVisible();
     await expect(page.locator(".playground-canvas canvas")).toHaveCount(0);
+    await expect(page.locator("[data-ledger-row='weather']")).toContainText("°C");
     await page.screenshot({ path: `${LANE_DIR}/reduced-motion-${width}.png`, fullPage: true });
     await page.getByRole("button", { name: "Enter the valley" }).click();
     await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
