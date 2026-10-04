@@ -80,7 +80,6 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   await page.goto("/map?focus=doori");
   await waitForHydration(page);
   await expect(page.locator("[data-focused='doori']")).toBeVisible();
-  await page.screenshot({ path: `${LANE_DIR}/map-focus-doori.png`, fullPage: true });
   await page.locator("[data-altitude-stop='street']").click();
   await expect(page).toHaveURL(/\/playground\?at=doori$/);
   const hull = page.locator("canvas[data-hodi-at='doori']");
@@ -93,10 +92,8 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   const initial = await pose();
   const doori = districtAnchors(["doori", "gaddi", "paymentslab-kmp", "candidai", "kmp-app-template", "portfolio", "stutter", "sinc-p"])[0];
   expect(Math.hypot(initial.x - doori.x, initial.z - doori.z)).toBeLessThan(95);
-  await page.screenshot({ path: `${LANE_DIR}/playground-at-doori.png`, fullPage: true });
   await page.waitForTimeout(6500);
   expect(await pose()).toEqual(initial);
-  await hull.click({ position: { x: 30, y: 30 } });
   await page.keyboard.down("w");
   await expect(page.locator("canvas[data-hodi-moored='false']")).toBeVisible();
   await page.keyboard.up("w");
@@ -106,10 +103,30 @@ test("the map focus reaches STREET and returns to the same node", async ({ page 
   await page.locator("[data-altitude-stop='globe']").click();
   await expect(page).toHaveURL(/\/globe\?focus=pune$/);
   await expect(page.locator("canvas").first()).toBeVisible();
-  await page.screenshot({ path: `${LANE_DIR}/globe.png`, fullPage: true });
 });
 
 for (const width of [1440, 390]) {
+  for (const route of ["map", "arrival", "globe"] as const) {
+    test(`visual ${route} at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      await forceDeviceTier(page, "viewport");
+      await prepare(page);
+      await page.goto(route === "arrival" ? "/playground?at=doori" : "/map?focus=doori");
+      await waitForHydration(page);
+      if (route === "arrival") {
+        await expect(page.locator("canvas[data-hodi-at='doori']")).toHaveAttribute("data-hodi-moored", "true");
+      } else {
+        await expect(page.locator("[data-focused='doori']")).toBeVisible();
+        if (route === "globe") {
+          await page.locator("[data-altitude-stop='globe']").click();
+          await expect(page).toHaveURL(/\/globe\?focus=pune$/);
+          await expect(page.locator("canvas").first()).toBeVisible();
+        }
+      }
+      const name = route === "map" ? "map-focus-doori" : route === "arrival" ? "playground-at-doori" : "globe";
+      await page.screenshot({ path: `${LANE_DIR}/${name}-${width}.png`, fullPage: true });
+    });
+  }
   for (const state of [
     { name: "day", time: NOON, frame: "01-golden-spawn", wet: false },
     { name: "night", time: NIGHT, frame: "02-night-survey", wet: false },
@@ -154,6 +171,7 @@ for (const width of [1440, 390]) {
       await forceDeviceTier(page, "viewport");
       await prepare(page, state.time);
       await page.goto("/playground");
+      await waitForHydration(page);
       await expect(page.locator(".playground-canvas [data-world='v2'] canvas")).toBeVisible();
       await page.waitForTimeout(4000);
       await page.screenshot({ path: `${LANE_DIR}/preview-${state.name}-${width}.png`, fullPage: true });
