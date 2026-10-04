@@ -1,3 +1,4 @@
+import { forceDeviceTier } from "./lib/deviceTier.ts";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Page } from "@playwright/test";
@@ -64,6 +65,7 @@ async function mockLiveRoutes(page: Page, weather: unknown = WEATHER_OVERCAST): 
 }
 
 async function gotoWorldV2(page: Page, at: Date | string, weather: unknown = WEATHER_OVERCAST): Promise<void> {
+  await forceDeviceTier(page, "viewport");
   await mockLiveRoutes(page, weather);
   await page.clock.setFixedTime(new Date(at));
   await page.setViewportSize({ width: 1440, height: 900 });

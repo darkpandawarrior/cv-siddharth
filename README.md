@@ -286,7 +286,7 @@ PR once every lane's own gate was green.
 <summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
 <br/>
 
-Forty `gen:` scripts over forty-six generator files. The ones you will
+Forty-one `gen:` scripts over forty-six generator files. The ones you will
 actually reach for:
 
 ```bash

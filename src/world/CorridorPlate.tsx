@@ -2,6 +2,7 @@ import type { JSX } from "react";
 import { ClientOnly, Link } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
 import { load } from "@tanstack/react-start/hydration";
+import { EvidenceChip } from "../EvidenceChip.tsx";
 import { corridorPlateMeta } from "./corridorPlate.ts";
 import { heavy } from "../lib/assetBase.ts";
 import LiveLitMapOverlay from "./LiveLitMapOverlay.tsx";
@@ -10,6 +11,7 @@ import { useSky, useWeather } from "../lib/useSky.ts";
 import { pickConceptPlate } from "./v2/conceptPlates.ts";
 import { activeFestivalForm } from "./v2/live/nightSky.ts";
 import { ledger } from "./v2/ledger.ts";
+import { LANDMARK_OPENS } from "./v2/landmarkBindings.ts";
 import { landOf } from "./v2/worldModel.ts";
 import { riverRow, weatherRow } from "../lib/ledgerText.ts";
 import { landmarksFromFeatures } from "./v2/hud/LandmarkList.tsx";
@@ -174,11 +176,15 @@ export function ConceptFallback({ at }: { at?: string }): JSX.Element {
         <ul className="mt-2 flex flex-wrap gap-4">
           {landmarks.map((landmark) => (
             <li key={landmark.name}>
-              <Link to="/map" search={{ focus: landmark.name }} className="text-accent underline">
+              <Link to="/map" search={{ focus: LANDMARK_OPENS[landmark.name]?.target }} className="text-accent underline">
                 {landmark.name.replace(/[-_]/g, " ")}
               </Link>
               <ul className="mt-1 space-y-1 text-sm text-muted">
-                {landmark.facets.map((facet) => <li key={facet.id}>{facet.label}</li>)}
+                {landmark.facets.map((facet) => (
+                  <li key={facet.id}>
+                    {facet.label} <EvidenceChip file="ledger.ts" source="Landmark facets in the world ledger" cadence="undated" />
+                  </li>
+                ))}
               </ul>
             </li>
           ))}
@@ -186,8 +192,8 @@ export function ConceptFallback({ at }: { at?: string }): JSX.Element {
       </section>
       <section aria-label="Reality readings">
         <h2 className="font-display text-xl">Reality</h2>
-        <p data-ledger-row="weather" className="mt-2 text-sm text-muted">{weatherRow(weather.weather)}</p>
-        <p data-ledger-row="river" className="mt-2 text-sm text-muted">{riverRow(weather.river)}</p>
+        <p data-ledger-row="weather" className="mt-2 text-sm text-muted">{weatherRow(weather.weather)} <EvidenceChip file="weather" source="Open-Meteo" cadence="live" live={{ at: weather.weather?.at ?? null, ok: weather.state === "live" }} /></p>
+        <p data-ledger-row="river" className="mt-2 text-sm text-muted">{riverRow(weather.river)} <EvidenceChip file="river" source="GloFAS via Open-Meteo" cadence="modelled" stamp={weather.river?.date} /></p>
       </section>
     </div>
   );

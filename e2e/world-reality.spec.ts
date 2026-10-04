@@ -206,11 +206,8 @@ test.describe("the You row (sessionRipple, in-memory)", () => {
     await page.goto("/project/doori");
     await waitForHydration(page);
 
-    // Client-side, not page.goto: sessionRipple's `touched` list is a
-    // module-scope variable (src/lib/sessionRipple.ts's own doc comment),
-    // and a full navigation would reload the JS context and lose it — the
-    // acceptance line's own point. SiteFooter's registry-derived nav is the
-    // one link to /playground present on every route (SiteFooter.tsx).
+    // Client navigation preserves the module-scoped touched list. The
+    // public footer now opens v2, so the archive URL goes through history.
     await page.evaluate(() => {
       history.pushState({}, "", "/playground?world=v1");
       window.dispatchEvent(new PopStateEvent("popstate"));

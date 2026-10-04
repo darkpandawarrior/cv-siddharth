@@ -87,7 +87,7 @@ async function freshVisit(browser: Browser): Promise<number> {
   try {
     const page = await context.newPage();
     await stubListView(page);
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     return await doorTotal(page);
   } finally {
     await context.close();
@@ -108,12 +108,12 @@ test.describe("the visitor ledger", () => {
     const page = await context.newPage();
     await stubListView(page);
 
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     const counted = await doorTotal(page);
     expect(await plaqueText(page)).toMatch(/you are/i);
 
     for (let i = 0; i < 3; i++) {
-      await page.goto("/playground");
+      await page.goto("/playground?world=v1");
       expect(await doorTotal(page)).toBe(counted);
     }
     // Already counted, so the arrival is history rather than news.
@@ -127,12 +127,12 @@ test.describe("the visitor ledger", () => {
     const page = await context.newPage();
     await stubListView(page);
 
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     await doorTotal(page);
     const mine = await myNumber(page);
     expect(mine).toBeGreaterThan(0);
 
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     await doorTotal(page);
     expect(await myNumber(page)).toBe(mine);
 
@@ -169,7 +169,7 @@ test.describe("the visitor ledger", () => {
       });
     });
 
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     // The Playground has to survive it — a counter declining to count is never
     // permission to take the page down with it.
     await expect(page.getByRole("heading", { name: /this site is a live demo/i })).toBeVisible();
@@ -178,7 +178,7 @@ test.describe("the visitor ledger", () => {
     const before = await doorTotal(page);
     expect(await plaqueText(page)).toMatch(/so far/i);
 
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
     expect(await doorTotal(page)).toBe(before);
 
     await context.close();
@@ -201,7 +201,7 @@ test.describe("the visitor ledger", () => {
       });
     });
 
-    await page.goto("/playground");
+    await page.goto("/playground?world=v1");
 
     // The rooms are the page. Losing presence, counters and the wall is a
     // downgrade; losing the Playground is a bug.

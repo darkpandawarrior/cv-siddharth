@@ -4,6 +4,14 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import { districtAnchors } from "../src/world/v2/valley.ts";
 import { forceDeviceTier } from "./lib/deviceTier.ts";
 
+const noWebGLTest = test.extend({
+  browser: async ({ playwright }, run) => {
+    const browser = await playwright.chromium.launch({ args: ["--disable-webgl"] });
+    await run(browser);
+    await browser.close();
+  },
+});
+
 const LANE_DIR = process.env.P3_07_CAPTURE_DIR ?? "/tmp/agent-lanes/P3-07";
 const fixture = (name: string): unknown => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
 const CLEAR = fixture("weather-2026-09-24.json");
@@ -96,11 +104,8 @@ for (const width of [1440, 390]) {
     { name: "night", time: NIGHT, frame: "02-night-survey", wet: false },
     { name: "wet", time: NOON, frame: "03-monsoon", wet: true },
   ]) {
-    test(`no WebGL ${state.name} at ${width}`, async ({ playwright }) => {
-      const disabledBrowser = await playwright.chromium.launch({ args: ["--disable-webgl"] });
-      const context = await disabledBrowser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 } });
-      const page = await context.newPage();
-      await noWebGL(page);
+    noWebGLTest(`no WebGL ${state.name} at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
       await prepare(page, state.time, state.wet);
       const hydration: string[] = [];
       page.on("console", (message) => { if (/hydrat/i.test(message.text())) hydration.push(message.text()); });
@@ -115,8 +120,6 @@ for (const width of [1440, 390]) {
       await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
       await page.screenshot({ path: `${LANE_DIR}/fallback-${state.name}-${width}.png`, fullPage: true });
       expect(hydration).toEqual([]);
-      await context.close();
-      await disabledBrowser.close();
     });
   }
   test(`reduced motion waits for entry at ${width}`, async ({ page }) => {
