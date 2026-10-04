@@ -77,7 +77,8 @@ test("exact palette query", async ({ page }) => {
   await archived(page);
 });
 
-test("Konami sequence inside the world", async ({ page }) => {
+test("Konami sequence inside the world", { tag: "@gpu" }, async ({ page }) => {
+  await skipSoftwareRenderer(page);
   await world(page);
   for (const key of ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"]) await page.keyboard.press(key);
   await archived(page);

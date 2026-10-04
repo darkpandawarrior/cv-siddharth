@@ -23,7 +23,7 @@ import { deviceTier } from "./world/deviceTier.ts";
 
 // Load either world only after the visitor chooses it.
 // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
-const ArchivePlaque = lazy(() => import("./world/ArchivePlaque.tsx"));
+import ArchivePlaque from "./world/ArchivePlaque.tsx";
 // ponytail: archive(world-v1) until 2027-04-04; removal recipe in ARCHIVE.md#world-v1
 const World = lazy(() => import("./world/World.tsx"));
 const WorldV2 = lazy(() => import("./world/v2/WorldV2.tsx"));
@@ -271,7 +271,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
           </div>
         </nav>
       </header>
-      {isV1 && <Suspense fallback={null}><ArchivePlaque /></Suspense>}
+      {isV1 && <ArchivePlaque />}
 
       {/* The cover never participates in hit testing. */}
       <div

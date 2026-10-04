@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { shouldOpen, sourceSpringPosition, SOURCE_SPRING_ID, watchArchiveGate, registerArchiveNavigation } from "./archiveGate.ts";
 import { riverSpline } from "./valley.ts";
+import { createKonamiListener } from "./hud/KonamiArchive.tsx";
 import { LANDMARK_OPENS } from "./landmarkBindings.ts";
 
 const sample = (at: number, distance = 4, upstream = true) => ({ at, distance, upstream });
@@ -50,6 +51,29 @@ describe("archive hold timer", () => {
     vi.advanceTimersByTime(3000);
     expect(assign).toHaveBeenCalledExactlyOnceWith("/playground?world=v1");
     hold.stop();
+  });
+  it("the real Konami listener navigates only after the complete sequence", () => {
+    const onKey = createKonamiListener();
+    const keys = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+    for (const key of keys.slice(0, -1)) onKey({ key, repeat: false, target: null } as KeyboardEvent);
+    expect(assign).not.toHaveBeenCalled();
+    onKey({ key: "a", repeat: false, target: null } as KeyboardEvent);
+    expect(assign).toHaveBeenCalledExactlyOnceWith("/playground?world=v1");
+  });
+  it("a wrong key resets the real Konami sequence", () => {
+    const onKey = createKonamiListener();
+    for (const key of ["ArrowUp", "ArrowUp", "ArrowDown", "x", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"]) {
+      onKey({ key, repeat: false, target: null } as KeyboardEvent);
+    }
+    expect(assign).not.toHaveBeenCalled();
+  });
+  it("the real Konami listener ignores input fields and repeated keys", () => {
+    const keys = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+    for (const target of [{ tagName: "INPUT" }, { tagName: "TEXTAREA" }, null]) {
+      const onKey = createKonamiListener();
+      for (const key of keys) onKey({ key, repeat: target === null, target } as unknown as KeyboardEvent);
+    }
+    expect(assign).not.toHaveBeenCalled();
   });
   it("uses the mounted router callback without a document reload", () => {
     const navigate = vi.fn();
