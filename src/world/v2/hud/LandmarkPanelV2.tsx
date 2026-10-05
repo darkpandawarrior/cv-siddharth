@@ -7,6 +7,14 @@
  * panel and the Reality ledger never disagree about where a number comes
  * from.
  */
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useReducedMotion } from "../../../SceneActivity.tsx";
+import { useSplitText } from "../../../ui/motion/splitText.ts";
+import { useMagnetic } from "../../../ui/motion/useMagnetic.ts";
+import { LANDMARK_OPENS } from "../landmarkBindings.ts";
+import { prefersReducedMotion } from "../../reducedMotion.ts";
+import { navigateWithViewTransition } from "../../../lib/viewTransition.ts";
+import { setLandmarkEnter } from "../dissolve.glsl.ts";
 import type { Landmark } from "./LandmarkList.tsx";
 import type { LedgerRow } from "../grammar.ts";
 
@@ -27,6 +35,12 @@ export interface LandmarkPanelV2Props {
 }
 
 export function LandmarkPanelV2({ landmark, row, onClose }: LandmarkPanelV2Props) {
+  const title = useSplitText(displayName(landmark.name), "grapheme");
+  const enterRef = useMagnetic<HTMLAnchorElement>();
+  const reduced = useReducedMotion();
+  const navigate = useNavigate();
+  const destination = LANDMARK_OPENS[landmark.name];
+  const to = destination?.kind === "project" ? `/project/${destination.target}` : null;
   return (
     <div
       role="dialog"
@@ -35,7 +49,7 @@ export function LandmarkPanelV2({ landmark, row, onClose }: LandmarkPanelV2Props
       className="pointer-events-auto flex w-full max-w-sm flex-col gap-2 rounded-2xl border border-line bg-card/95 p-4 backdrop-blur"
     >
       <div className="flex items-center justify-between">
-        <span className="font-display text-base font-bold text-accent">{displayName(landmark.name)}</span>
+        <span className="font-display text-base font-bold text-accent">{title}</span>
         <button type="button" onClick={onClose} className="rounded-full border border-line px-2 py-0.5 text-xs text-zinc-400 hover:border-accent hover:text-accent">
           Close
         </button>
@@ -52,6 +66,20 @@ export function LandmarkPanelV2({ landmark, row, onClose }: LandmarkPanelV2Props
           );
         })}
       </ul>
+      {to && <Link ref={enterRef} to={to} className="ctrl self-start rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink"
+        onClick={(event) => {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          const go = () => {
+            const cut = prefersReducedMotion();
+            if (!cut && typeof document.startViewTransition !== "function") {
+              navigateWithViewTransition(() => { void navigate({ to, viewTransition: false }); }, false);
+              return Promise.resolve();
+            }
+            return navigate({ to, viewTransition: cut ? false : { types: ["altitude-down"] } });
+          };
+          if (reduced || !setLandmarkEnter({ navigate: go })) void go();
+        }}>Enter</Link>}
       {row && (
         <p className="border-t border-line pt-2 text-xs text-muted" data-cadence={row.cadence}>
           {row.label} · {row.cadence} · {row.sourceFile}
