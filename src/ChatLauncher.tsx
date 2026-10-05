@@ -33,39 +33,9 @@ export function ChatLauncher() {
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
   }, [pending]);
 
-  // /playground's own capture-hide (F13, moved from PlaygroundFloatingChat):
-  // the launcher must not sit on top of the HUD's corner controls while a
-  // visitor is actively driving the world. Gated on isWorldActive() &&
-  // isCaptured() rather than isCaptured() alone: captured defaults to true
-  // before the world ever mounts, so reading it alone would hide the
-  // launcher on the room-list view too, before anyone has touched a control.
-  //
-  // world/input.ts is dynamically imported, not a top-level import: it is
-  // /playground-only logic, and ChatLauncher is eager on every route (F12) —
-  // a static import here would have put the world's input module back in
-  // every route's initial bundle, the exact regression this component
-  // exists to avoid. `captured` (not `hide` itself) is what state tracks, so
-  // leaving /playground needs no reset effect — `hide` below just stops
-  // reading it.
+  // The playground has its own HUD controls, so the root launcher stays off it.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [captured, setCaptured] = useState(false);
-  const hide = pathname === "/playground" && captured;
-  useEffect(() => {
-    if (pathname !== "/playground") return;
-    let unsub: (() => void) | undefined;
-    let cancelled = false;
-    import("./world/input.ts").then(({ isCaptured, isWorldActive, subscribeCaptured }) => {
-      if (cancelled) return;
-      setCaptured(isWorldActive() && isCaptured());
-      unsub = subscribeCaptured((c) => setCaptured(isWorldActive() && c));
-    });
-    return () => {
-      cancelled = true;
-      unsub?.();
-    };
-  }, [pathname]);
-
-  if (hide) return null;
+  if (pathname === "/playground") return null;
 
   if (!pending) {
     return (
