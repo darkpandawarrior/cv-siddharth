@@ -44,6 +44,11 @@ const MOTION_ALLOWLIST = [
   { name: "status-pulse", seconds: 2.2, reason: "The status dot marks an available live contact or service." },
 ];
 
+// Pinned reading sizes pass only within the named source context and at the exact size.
+const TYPE_ALLOWLIST = [
+  { selector: ".piece-body", rem: 1.0625, reason: "Pinned prose size in src/readingMedium.test.ts, the reading floor." },
+];
+
 async function prepare(page: Page, path: string) {
   await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
   await page.route("**/api/**", (route) => route.fulfill({
@@ -61,7 +66,7 @@ async function prepare(page: Page, path: string) {
 }
 
 function audit(page: Page) {
-  return page.evaluate((allowlist) => {
+  return page.evaluate(({ allowlist, typeAllowlist }) => {
     const root = document.documentElement;
     const cs = getComputedStyle(root);
     const tokens = Object.fromEntries(Array.from(cs)
@@ -97,6 +102,8 @@ function audit(page: Page) {
     const seconds = (value: string) => parseFloat(value) / (value.trim().endsWith("ms") ? 1000 : 1);
     const durations = [0, ...["fast", "base", "slow"].map((name) => seconds(tokens[`--dur-${name}`] ?? ""))];
     const near = (a: number, b: number) => Math.abs(a - b) < 0.01;
+    const allowedType = (el: Element, size: number) => typeScale.some((allowed) => near(size, allowed))
+      || typeAllowlist.some((entry) => el.closest(entry.selector) && near(size, entry.rem * rootSize));
     const fail = (check: "font-size" | "duration" | "chip", el: Element, detail: string) => violations.push({ check, element: label(el), detail });
     for (const name of ["--text-hero", "--space-section-y", "--dur-fast", "--dur-base", "--dur-slow", "--ease-out-quart"]) {
       if (!tokens[name]) fail("duration", root, `missing design token ${name}`);
@@ -109,14 +116,14 @@ function audit(page: Page) {
       if (hasText) {
         textCount++;
         const size = parseFloat(style.fontSize);
-        if (!typeScale.some((allowed) => near(size, allowed))) fail("font-size", el, `${style.fontSize}: ${(el.textContent ?? "").trim().slice(0, 100)}`);
+        if (!allowedType(el, size)) fail("font-size", el, `${style.fontSize}: ${(el.textContent ?? "").trim().slice(0, 100)}`);
       }
       for (const pseudo of [null, "::before", "::after"]) {
         const motion = pseudo ? getComputedStyle(el, pseudo) : style;
         if (pseudo && (motion.content === "none" || motion.content === "normal")) continue;
         if (pseudo && motion.content !== '""' && motion.visibility === "visible" && Number(motion.opacity) > 0) {
           textCount++;
-          if (!typeScale.some((allowed) => near(parseFloat(motion.fontSize), allowed))) fail("font-size", el, `${pseudo} ${motion.fontSize}: ${motion.content}`);
+          if (!allowedType(el, parseFloat(motion.fontSize))) fail("font-size", el, `${pseudo} ${motion.fontSize}: ${motion.content}`);
         }
         const transitions = motion.transitionProperty.split(",").map((s) => s.trim());
         const animations = motion.animationName.split(",").map((s) => s.trim());
@@ -153,8 +160,8 @@ function audit(page: Page) {
       if (chip.tagName !== "A" || !/^\/ops#[^\s]+$/.test(chip.getAttribute("href") ?? "") || !chip.getAttribute("title")) fail("chip", chip, "expected a source link to /ops#file and a source tooltip");
       if (chip.getAttribute("data-suspect") === "true" && !chip.querySelector(".chip-evidence__ring")) fail("chip", chip, "SUSPECT chip has no hollow ring");
     }
-    return { tokens, rootSize, typeScale, durations, allowlist, textCount, motionCount, chipCount: chips.length, violations };
-  }, MOTION_ALLOWLIST);
+    return { tokens, rootSize, typeScale, typeAllowlist, durations, allowlist, textCount, motionCount, chipCount: chips.length, violations };
+  }, { allowlist: MOTION_ALLOWLIST, typeAllowlist: TYPE_ALLOWLIST });
 }
 
 for (const { vp, width, height } of VIEWPORTS) {
