@@ -32,7 +32,7 @@ export function ShippedTimeline() {
           const total = y.live + y.gone;
           return (
             <div key={y.year} className="flex flex-1 flex-col items-center gap-2">
-              <span className="font-mono text-[10px] tabular-nums text-muted">{total}</span>
+              <span className="font-mono text-xs tabular-nums text-muted">{total}</span>
               {/* One column, two stacked segments, height in % of the tallest
                   year. Heights are inline because they are data, not design. */}
               <div
@@ -50,7 +50,7 @@ export function ShippedTimeline() {
                   title={`${y.live} still on the store`}
                 />
               </div>
-              <span className="font-mono text-[10px] tabular-nums text-muted">{y.year}</span>
+              <span className="font-mono text-xs tabular-nums text-muted">{y.year}</span>
             </div>
           );
         })}

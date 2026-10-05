@@ -762,7 +762,7 @@ export default function AnomalyRail() {
                       background: isActive ? "var(--color-accent)" : "var(--color-accent2)",
                       opacity: isActive ? 1 : 0.45,
                       boxShadow: isActive ? "0 0 6px var(--color-accent)" : "none",
-                      transition: "width 0.2s, height 0.2s, opacity 0.2s",
+                      transition: "width var(--dur-fast), height var(--dur-fast), opacity var(--dur-fast)",
                     }}
                   />
                 </button>

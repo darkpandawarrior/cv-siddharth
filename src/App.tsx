@@ -266,7 +266,7 @@ function NavClock({ className = "" }: { className?: string }) {
     hour12: false,
   });
   return (
-    <span className={`items-center gap-2 font-mono text-[11px] tracking-wide text-muted ${className}`}>
+    <span className={`items-center gap-2 font-mono text-xs tracking-wide text-muted ${className}`}>
       <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" />
       <time dateTime={now.toISOString()}>{time} IST</time>
     </span>
@@ -536,7 +536,7 @@ function LiveTicker() {
   const latestPost = writing.lessons.find((l) => l.status === "published" && l.live);
   if (!latestShip && !latestPost) return null;
   return (
-    <div className="rise-in rise-in-3 mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-[11px] text-muted">
+    <div className="rise-in rise-in-3 mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 font-mono text-xs text-muted">
       <span className="flex items-center gap-1.5">
         <span className="status-pulse h-1.5 w-1.5 rounded-full bg-accent" /> live
       </span>
@@ -682,7 +682,7 @@ function CaseStudies() {
                   {LAB_OF[cs.slug] && (
                     <button
                       onClick={(e) => { e.stopPropagation(); openLab(LAB_OF[cs.slug]); navigate({ to: "/lab" }); }}
-                      className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
+                      className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-bold text-accent transition hover:bg-accent/20"
                     >
                       ▶ watch it work, live
                     </button>
@@ -761,7 +761,7 @@ function Projects() {
                       <Picture
                         src={media.src}
                         alt={media.alt}
-                        className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.03]"
+                        className="absolute inset-0 h-full w-full object-cover object-center transition duration-(--dur-slow) group-hover:scale-[1.03]"
                       />
                       <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/60 via-transparent to-transparent" />
                     </div>
@@ -784,7 +784,7 @@ function Projects() {
                   </div>
                   <p className="mt-3 text-sm font-medium text-accent">{p.tagline}</p>
                   {statLine && (
-                    <p className="mt-2 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-muted">
+                    <p className="mt-2 flex flex-wrap items-center gap-x-2 font-mono text-xs text-muted">
                       <span><span className="text-accent2">◇</span> {statLine}</span>
                       {p.slug in projectStats && (
                         <span onClick={(e) => e.stopPropagation()}>
@@ -803,7 +803,7 @@ function Projects() {
                         <span
                           key={label}
                           title={label}
-                          className="flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-1 text-[10px] font-medium text-zinc-400"
+                          className="flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-1 text-xs font-medium text-zinc-400"
                         >
                           <Icon size={11} />
                           {label}
@@ -812,7 +812,7 @@ function Projects() {
                       {isLive && (
                         <span
                           title="Playable web build"
-                          className="live-badge flex items-center gap-1 rounded-full border border-accent/40 px-2 py-1 text-[10px] font-semibold text-ink"
+                          className="live-badge flex items-center gap-1 rounded-full border border-accent/40 px-2 py-1 text-xs font-semibold text-ink"
                         >
                           <Play size={10} fill="currentColor" /> Live
                         </span>

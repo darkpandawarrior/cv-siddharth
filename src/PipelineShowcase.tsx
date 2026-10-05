@@ -27,12 +27,12 @@ export function PipelineShowcase({ slug }: { slug: string }) {
   // "confirmed empty" misread a zero would have given, just with no text at
   // all instead of no text with the wrong number.
   const unreachable = (
-    <p className="font-mono text-[11px] text-muted">Live CI/CD data isn&rsquo;t reachable right now.</p>
+    <p className="font-mono text-xs text-muted">Live CI/CD data isn&rsquo;t reachable right now.</p>
   );
   if (error && !data) return unreachable;
   if (!data) {
     return (
-      <p className="flex items-center gap-2 font-mono text-[11px] text-muted">
+      <p className="flex items-center gap-2 font-mono text-xs text-muted">
         <Loader2 size={12} className="animate-spin" /> reading the pipeline
       </p>
     );
@@ -61,12 +61,12 @@ export function PipelineShowcase({ slug }: { slug: string }) {
         <div className="panel flex flex-wrap items-baseline gap-x-6 gap-y-2 p-5">
           <span className="font-display text-2xl font-bold text-accent">{data.published.versionName}</span>
           <span className="font-mono text-sm text-zinc-400">{mb} MB</span>
-          <span className="font-mono text-[11px] text-muted">
+          <span className="font-mono text-xs text-muted">
             {data.published.antiFeatures.length
               ? data.published.antiFeatures.join(", ")
               : "no anti-features"}
           </span>
-          <span className="ml-auto font-mono text-[11px] text-muted">live on F-Droid</span>
+          <span className="ml-auto font-mono text-xs text-muted">live on F-Droid</span>
         </div>
       )}
 
@@ -88,7 +88,7 @@ export function PipelineShowcase({ slug }: { slug: string }) {
                   <a href={r.url} target="_blank" rel="noreferrer" className="flex-1 truncate text-sm text-zinc-300 hover:text-accent">
                     {r.name}
                   </a>
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted">
+                  <span className="shrink-0 font-mono text-xs tabular-nums text-muted">
                     {r.durationSec === null
                       ? ""
                       : r.durationSec >= 60
@@ -104,11 +104,11 @@ export function PipelineShowcase({ slug }: { slug: string }) {
 
       <div className="panel flex flex-col gap-2 p-5">
         <p className="kicker-accent">signing certificate</p>
-        <p className="break-all font-mono text-[11px] leading-relaxed text-zinc-400">{data.fingerprint}</p>
+        <p className="break-all font-mono text-xs leading-relaxed text-zinc-400">{data.fingerprint}</p>
         <p className="text-sm leading-relaxed text-zinc-400">
           Every published APK is signed with this certificate, and the live F-Droid index records it
           as each package&rsquo;s signer. Download the APK and run{" "}
-          <code className="font-mono text-[11px] text-accent">apksigner verify --print-certs</code> on
+          <code className="font-mono text-xs text-accent">apksigner verify --print-certs</code> on
           it: the SHA-256 should match this string exactly. That is the whole claim, and it is
           checkable without trusting anything on this page.
         </p>
@@ -116,7 +116,7 @@ export function PipelineShowcase({ slug }: { slug: string }) {
             the APK key made the chain look like one key doing two jobs; the
             separation is the actual security property worth showing. */}
         <p className="kicker-accent mt-3">index signing key</p>
-        <p className="break-all font-mono text-[11px] leading-relaxed text-zinc-400">{data.indexFingerprint}</p>
+        <p className="break-all font-mono text-xs leading-relaxed text-zinc-400">{data.indexFingerprint}</p>
         <p className="text-sm leading-relaxed text-zinc-400">
           A <em>different</em> key signs the repository index &mdash; the file that tells a device an
           update exists. The APK key lives in each app&rsquo;s own repo, so compromising the site that
@@ -128,7 +128,7 @@ export function PipelineShowcase({ slug }: { slug: string }) {
             href={data.release.url}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 inline-flex items-center gap-1 font-mono text-[11px] text-accent hover:underline"
+            className="mt-1 inline-flex items-center gap-1 font-mono text-xs text-accent hover:underline"
           >
             {data.release.tag} on GitHub <ArrowUpRight size={11} />
           </a>

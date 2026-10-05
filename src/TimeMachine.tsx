@@ -96,7 +96,7 @@ export default function TimeMachine() {
             by month. Pick one below to see what actually shipped that month, not a changelog written
             after the fact.
           </p>
-          <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mt-2 max-w-2xl font-mono text-xs leading-relaxed text-muted">
             Read from a static snapshot of `git log`. Nothing here shells out to git at request time;
             a deployed static site has no git binary to call.
           </p>
@@ -129,7 +129,7 @@ export default function TimeMachine() {
                     background: idx === i ? "var(--color-accent)" : "var(--color-line)",
                   }}
                 />
-                <span className={`font-mono text-[9px] ${idx === i ? "text-accent" : "text-muted"}`}>
+                <span className={`font-mono text-xs ${idx === i ? "text-accent" : "text-muted"}`}>
                   {m.ym.slice(2)}
                 </span>
               </button>
@@ -159,21 +159,21 @@ export default function TimeMachine() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="card-elevated rounded-2xl border border-line bg-surface p-4">
-            <p className="font-mono text-[10px] text-muted">commits this month</p>
+            <p className="font-mono text-xs text-muted">commits this month</p>
             {/* metric.value changes on every month click — a real state
                 transition, not fake ticking — and AnimatedMetric's own effect
                 depends on it, so the count-up retriggers each time. */}
             <AnimatedMetric className="mt-1" viz="none" metric={{ value: String(month.commits), label: "" }} />
           </div>
           <div className="card-elevated rounded-2xl border border-line bg-surface p-4">
-            <p className="font-mono text-[10px] text-muted">lines changed</p>
+            <p className="font-mono text-xs text-muted">lines changed</p>
             <p className="mt-1 font-display text-2xl font-bold tracking-tight">
               <span style={{ color: "var(--color-signal)" }}>+{month.insertions.toLocaleString("en-US")}</span>{" "}
               <span style={{ color: "var(--color-danger)" }}>-{month.deletions.toLocaleString("en-US")}</span>
             </p>
           </div>
           <div className="card-elevated rounded-2xl border border-line bg-surface p-4">
-            <p className="font-mono text-[10px] text-muted">total commits through this month</p>
+            <p className="font-mono text-xs text-muted">total commits through this month</p>
             <AnimatedMetric className="mt-1" viz="none" metric={{ value: String(month.cumulative.commits), label: "" }} />
           </div>
         </div>

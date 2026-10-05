@@ -147,7 +147,7 @@ export function WritingView() {
                   style={{ borderLeft: `3px solid ${accent}` }}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider" style={{ color: accent }}>
+                    <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider" style={{ color: accent }}>
                       {avatar && (
                         <img
                           src={heavy(avatar.src)}
@@ -160,7 +160,7 @@ export function WritingView() {
                       )}
                       {titleize(l.series) || l.pillar}
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${live ? "bg-accent/15 text-accent" : "border border-line text-muted"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${live ? "bg-accent/15 text-accent" : "border border-line text-muted"}`}>
                       {live ? "LIVE" : "SOON"}
                     </span>
                   </div>
@@ -169,7 +169,7 @@ export function WritingView() {
                   </h3>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {(l.tags || []).slice(0, 3).map((t) => (
-                      <span key={t} className="rounded border border-line px-2 py-0.5 text-[11px] text-zinc-400">{t}</span>
+                      <span key={t} className="rounded border border-line px-2 py-0.5 text-xs text-zinc-400">{t}</span>
                     ))}
                   </div>
                   <div className="mt-auto pt-4">
@@ -193,7 +193,7 @@ export function WritingView() {
                     {l.series && SERIES_PROJECT[l.series] && (
                       <a
                         href={SERIES_PROJECT[l.series].href}
-                        className="mt-2.5 inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-[11px] text-zinc-400 transition hover:border-accent/50 hover:text-accent"
+                        className="mt-2.5 inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400 transition hover:border-accent/50 hover:text-accent"
                       >
                         {SERIES_PROJECT[l.series].label} →
                       </a>
@@ -207,14 +207,14 @@ export function WritingView() {
           </div>
           {soon.length > 0 && (
             <details className="mt-5">
-              <summary className="cursor-pointer font-mono text-[11px] uppercase tracking-widest text-muted transition hover:text-accent">
+              <summary className="cursor-pointer font-mono text-xs uppercase tracking-widest text-muted transition hover:text-accent">
                 +{soon.length} more in progress
               </summary>
               <ul className="mt-3 flex flex-col divide-y divide-line">
                 {soon.map((l) => (
                   <li key={l.slug} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-                    <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-semibold text-muted">SOON</span>
-                    <span className="font-mono text-[11px] uppercase tracking-wider" style={{ color: accentOf(l.series) }}>
+                    <span className="rounded-full border border-line px-2 py-0.5 text-xs font-semibold text-muted">SOON</span>
+                    <span className="font-mono text-xs uppercase tracking-wider" style={{ color: accentOf(l.series) }}>
                       {titleize(l.series) || l.pillar}
                     </span>
                     <span className="text-sm text-zinc-300">{l.title}</span>

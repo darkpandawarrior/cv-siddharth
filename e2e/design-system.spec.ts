@@ -46,6 +46,8 @@ const MOTION_ALLOWLIST = [
 
 // Pinned reading sizes pass only within the named source context and at the exact size.
 const TYPE_ALLOWLIST = [
+  { selector: ".project-studio-monogram", rem: 14, reason: "decorative monogram glyph, art not text" },
+  { selector: ".project-studio-monogram", rem: 7, reason: "decorative monogram glyph, art not text" },
   { selector: ".piece-body", rem: 1.0625, reason: "Pinned prose size in src/readingMedium.test.ts, the reading floor." },
 ];
 
