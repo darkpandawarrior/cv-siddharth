@@ -148,7 +148,7 @@ function AnthologyRoute() {
       <div className="ink-world min-h-screen">
         <header className="border-b border-line">
           <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-            <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
+            <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
               <ArrowLeft size={16} /> The Ink
             </Link>
             <WorldSwitch current="ink" />
@@ -248,7 +248,7 @@ function AnthologyRoute() {
                     })
                   }
                   aria-pressed={layer === l.key}
-                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition duration-(--dur-fast) ${
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
                     layer === l.key
                       ? "border-accent bg-accent/15 text-accent"
                       : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -266,7 +266,7 @@ function AnthologyRoute() {
                   of the things this row is choosing between any more. */}
               <Link
                 to="/canon"
-                className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-400 transition duration-(--dur-fast) hover:border-accent/40 hover:text-zinc-200"
+                className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-400 transition hover:border-accent/40 hover:text-zinc-200"
               >
                 The Canon
               </Link>
@@ -335,7 +335,7 @@ function EntryCard({ entry: e, index }: { entry: AnthologyEntry; index: number }
     // paper, and because every child below reads the same var() names, none
     // of them need to know that happened.
     <div
-      className={`card-elevated group flex h-full flex-col overflow-hidden border bg-card transition duration-(--dur-fast) ${t.card}`}
+      className={`card-elevated group flex h-full flex-col overflow-hidden border bg-card transition ${t.card}`}
       style={{ ...t.vars, ...(rot ? { transform: `rotate(${rot}deg)` } : null) } as ThemeVars}
     >
       <Link to="/read/$slug" params={{ slug: e.slug }} className="flex flex-1 flex-col">
@@ -384,7 +384,7 @@ function EntryCard({ entry: e, index }: { entry: AnthologyEntry; index: number }
               four layers and fails under 4.5:1, so a fourth instance is caught
               by a measurement rather than by someone looking at the page. */}
           <h2
-            className="font-display mt-2 text-lg font-bold leading-snug transition duration-(--dur-fast) group-hover:text-accent"
+            className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent"
             style={{ color: "var(--color-text)" }}
           >
             {e.title}
@@ -673,7 +673,7 @@ function UnfiledTab() {
               <Link
                 to="/read/$slug"
                 params={{ slug: p.slug }}
-                className="group flex h-full flex-col rounded-none border border-line bg-card p-5 transition duration-(--dur-fast) hover:border-accent/60"
+                className="group flex h-full flex-col rounded-none border border-line bg-card p-5 transition hover:border-accent/60"
               >
                 {/* The designation, printed exactly as the frontmatter carries
                     it. The corpus uses square brackets for a value a form
@@ -687,7 +687,7 @@ function UnfiledTab() {
                     asserted at 1.00 by lighthouserc.json. Colour stated, not
                     inherited: see the note on EntryCard's h2. */}
                 <h3
-                  className="font-display mt-2 text-lg font-bold leading-snug transition duration-(--dur-fast) group-hover:text-accent"
+                  className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent"
                   style={{ color: "var(--color-text)" }}
                 >
                   {p.title}
@@ -743,7 +743,7 @@ function SiblingTab() {
                 <Link
                   to="/read/$slug"
                   params={{ slug: e.slug }}
-                  className="group flex h-full flex-col rounded-none border border-line bg-card p-5 transition duration-(--dur-fast) hover:border-accent/60"
+                  className="group flex h-full flex-col rounded-none border border-line bg-card p-5 transition hover:border-accent/60"
                 >
                   {e.plate && (
                     <img
@@ -762,7 +762,7 @@ function SiblingTab() {
                       h2: a scoped theme only reaches elements that read the
                       token, and this repo has shipped 1.08:1 that way. */}
                   <h3
-                    className="font-display mt-2 text-lg font-bold leading-snug transition duration-(--dur-fast) group-hover:text-accent"
+                    className="font-display mt-2 text-lg font-bold leading-snug transition group-hover:text-accent"
                     style={{ color: "var(--color-text)" }}
                   >
                     {e.title}
@@ -831,7 +831,7 @@ function SeasonRoll({ season, title }: { season: number; title: string }) {
   );
 }
 
-const ROLL_CARD = "card-elevated group flex h-full flex-col overflow-hidden rounded-lg border bg-card transition duration-(--dur-fast)";
+const ROLL_CARD = "card-elevated group flex h-full flex-col overflow-hidden rounded-lg border bg-card transition";
 
 function TellerCard({ witness: w }: { witness: AnthologyWitness }) {
   // Resolved from the record's own entry keys rather than by scanning the

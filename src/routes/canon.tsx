@@ -167,7 +167,7 @@ function CanonRoute() {
         <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
           <Link
             to="/anthology"
-            className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent"
+            className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent"
           >
             <ArrowLeft size={16} /> The Morkinstar Journals
           </Link>
@@ -342,7 +342,7 @@ function CanonRoute() {
                           <Link
                             to="/read/$slug"
                             params={{ slug: at.slug }}
-                            className="text-sm text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
+                            className="text-sm text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
                           >
                             {at.label}
                           </Link>
@@ -422,7 +422,7 @@ function CanonRoute() {
                         <Link
                           to="/read/$slug"
                           params={{ slug: r.slug }}
-                          className="mt-3 inline-block text-sm text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
+                          className="mt-3 inline-block text-sm text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
                         >
                           read the entry
                         </Link>
@@ -461,7 +461,7 @@ function CanonRoute() {
                 <Link
                   to="/anthology"
                   search={{ layer: "tellers" }}
-                  className="text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
+                  className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
                 >
                   The tellers are on the roll
                 </Link>

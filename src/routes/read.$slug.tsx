@@ -363,7 +363,7 @@ function ReadPiece() {
           here, "Skip to content" went nowhere and the a11y gate timed out
           waiting for the selector. */}
       <main id="main-content" tabIndex={-1} className="section-y mx-auto max-w-2xl px-6">
-        <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
+        <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
           <ArrowLeft size={16} /> The Ink
         </Link>
 
@@ -468,7 +468,7 @@ function ReadPiece() {
               <Link
                 to="/excelsior"
                 search={{ year: Number(piece.year), page: piece.page }}
-                className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition duration-(--dur-fast) hover:bg-accent/10"
+                className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10"
               >
                 <BookOpen size={15} /> See it in print — page {piece.page}
               </Link>
@@ -480,7 +480,7 @@ function ReadPiece() {
                 href={piece.url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition duration-(--dur-fast) hover:bg-accent/10"
+                className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10"
               >
                 <BookOpen size={15} /> Read it where it ran{piece.published ? ` — ${piece.published}` : ""}
               </a>
@@ -492,7 +492,7 @@ function ReadPiece() {
             // to know or care about that landing order.
             <a
               href="/anthology"
-              className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition duration-(--dur-fast) hover:bg-accent/10"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10"
             >
               <BookOpen size={15} /> Back to The Morkinstar Journals
             </a>
@@ -665,7 +665,7 @@ function ReadPiece() {
                   .map((p) => (
                     <li key={p.slug}>
                       <Link to="/read/$slug" params={{ slug: p.slug }} className="group flex items-baseline justify-between gap-4 py-3">
-                        <span className="font-display text-base font-bold transition duration-(--dur-fast) group-hover:text-accent">{p.title}</span>
+                        <span className="font-display text-base font-bold transition group-hover:text-accent">{p.title}</span>
                         <span className="shrink-0 font-mono text-xs" style={{ color: "var(--color-muted)" }}>
                           {p.year ? `'${p.year.slice(2)} · ` : ""}{p.words.toLocaleString()}w
                         </span>
@@ -685,7 +685,7 @@ function ReadPiece() {
                   .map((e) => (
                     <li key={e.slug}>
                       <Link to="/read/$slug" params={{ slug: e.slug }} className="group flex items-baseline justify-between gap-4 py-3">
-                        <span className="font-display text-base font-bold transition duration-(--dur-fast) group-hover:text-accent">{e.title}</span>
+                        <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
                         <span className="shrink-0 font-mono text-xs tabular-nums" style={{ color: "var(--color-muted)" }}>
                           {String(e.idx).padStart(2, "0")}
                         </span>
@@ -712,7 +712,7 @@ function ReadPiece() {
                   .map((e) => (
                     <li key={e.slug}>
                       <Link to="/read/$slug" params={{ slug: e.slug }} className="group flex items-baseline justify-between gap-4 py-3">
-                        <span className="font-display text-base font-bold transition duration-(--dur-fast) group-hover:text-accent">{e.title}</span>
+                        <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
                         {/* Each row wears its OWN season's short form, not
                             this page's: #12, p.30, p.7 ✕, kept. */}
                         <span className="shrink-0 font-mono text-xs" style={{ color: "var(--color-muted)" }}>
@@ -890,7 +890,7 @@ function LessonRead({ piece }: { piece: Extract<ReadView, { kind: "lesson" }> })
   return (
     <div className="min-h-screen">
       <main id="main-content" tabIndex={-1} className="section-y mx-auto max-w-2xl px-6">
-        <Link to="/loopdown" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
+        <Link to="/loopdown" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
           <ArrowLeft size={16} /> The Loopdown
         </Link>
         <p className="kicker-accent mt-8">{titleize(piece.series) || piece.pillar || "Field note"}</p>
@@ -910,7 +910,7 @@ function LessonRead({ piece }: { piece: Extract<ReadView, { kind: "lesson" }> })
             href={piece.href}
             target="_blank"
             rel="noreferrer"
-            className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition duration-(--dur-fast) hover:bg-accent/10"
+            className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/40 px-4 py-2 text-sm font-semibold text-accent transition hover:bg-accent/10"
           >
             <BookOpen size={15} /> Read it where it ran
           </a>
