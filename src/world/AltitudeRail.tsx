@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { altitudeFor, focusHandoffUrl, type Altitude } from "./altitude.ts";
-import { prefersReducedMotion } from "./reducedMotion.ts";
-import { navigateWithViewTransition } from "../lib/viewTransition.ts";
+import { useReducedMotion } from "../SceneActivity.tsx";
+import "./altitude.css";
 
 const STOPS: { altitude: Altitude; label: string }[] = [
   { altitude: "street", label: "STREET" },
@@ -9,23 +9,7 @@ const STOPS: { altitude: Altitude; label: string }[] = [
   { altitude: "globe", label: "GLOBE" },
 ];
 
-/**
- * The three-stop altitude switcher (living-ledger-spec.md#6.2): STREET
- * (`/playground`), ORBIT (`/map`) and GLOBE (`/globe`), with the focus
- * hand-off table (altitude.ts) deciding where the camera arrives.
- *
- * Mounted two ways, never duplicated:
- *   - `RoomFrame` (rooms.tsx) renders it directly for /map and /globe.
- *   - `AltitudeRailV2.tsx` re-exports it as a STREET-side world-v2 HUD layer
- *     (P2-19's `hud/*.tsx` glob), so Playground's world-v2 HUD gets the same
- *     rail without either file editing the other.
- *
- * Navigation prefers `document.startViewTransition` (Chromium), falls back
- * to a plain 180 ms opacity swap done with inline styles (no shared CSS file
- * is owned by this lane), and cuts instantly under reduced motion: exactly
- * the three-tier contract the spec names, and the one place it is decided so
- * neither mount duplicates it.
- */
+/** One rail for STREET, ORBIT and GLOBE, with directional route snapshots. */
 export function AltitudeRail() {
   const location = useRouterState({ select: (s) => s.location });
   const pathname = location.pathname;
@@ -33,12 +17,28 @@ export function AltitudeRail() {
   const candidate = pathname.startsWith("/playground") ? search.at : search.focus;
   const slug = typeof candidate === "string" ? candidate : undefined;
   const navigate = useNavigate();
+  const reduced = useReducedMotion();
   const here = altitudeFor(pathname);
 
   function go(target: Altitude) {
     if (target === here) return;
     const to = focusHandoffUrl(here, target, slug);
-    navigateWithViewTransition(() => navigate({ to }), prefersReducedMotion());
+    const type = STOPS.findIndex((s) => s.altitude === target) > STOPS.findIndex((s) => s.altitude === here)
+      ? "altitude-up" : "altitude-down";
+    if (reduced || typeof document.startViewTransition === "function") {
+      void navigate({ to, viewTransition: reduced ? false : { types: [type] } });
+      return;
+    }
+    const root = document.documentElement;
+    const duration = Number.parseFloat(getComputedStyle(root).getPropertyValue("--dur-fast")) * 1000;
+    const animation = root.animate([{ opacity: 1 }, { opacity: 0 }], { duration, fill: "forwards" });
+    void animation.finished.then(async () => {
+      try { await navigate({ to, viewTransition: false }); }
+      finally {
+        animation.cancel();
+        root.animate([{ opacity: 0 }, { opacity: 1 }], { duration });
+      }
+    });
   }
 
   return (
@@ -53,6 +53,7 @@ export function AltitudeRail() {
             key={stop.altitude}
             to={focusHandoffUrl(here, stop.altitude, slug)}
             onClick={(e) => {
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
               e.preventDefault();
               go(stop.altitude);
             }}

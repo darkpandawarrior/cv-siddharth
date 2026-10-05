@@ -21,6 +21,7 @@ import { pickOutcomeMetric, excludeOutcomeScreenshot } from "./lib/caseSpine.ts"
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
 import { heavy } from "./lib/assetBase.ts";
 import "./hero-studio.css";
+import { useSplitText } from "./ui/motion/splitText.ts";
 import { resourceRows } from "./data/resourceDirectory.ts";
 import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
@@ -355,6 +356,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
   const project = projects.find((p) => p.slug === slug);
+  const heroTitle = useSplitText(project?.name ?? "");
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
   const items: { src: string; caption: string }[] = project?.screens?.length
     ? project.screens.map((s) => ({ src: heavy(`/projects/${slug}/screenshots/${s.file}`), caption: s.caption }))
@@ -493,13 +495,13 @@ export function ProjectDetail({ slug }: { slug: string }) {
               <p className="rise-in text-xs font-semibold uppercase tracking-widest text-accent">// project</p>
               {/* Shared-element morph target: the home projects-grid card title of
                   the same `project-title-<slug>` name lifts into this hero heading
-                  on card→detail navigation (View Transitions). rise-in stays for
-                  direct loads, where no morph occurs. */}
+                  on card to detail navigation (View Transitions). Word stagger
+                  handles direct loads, where no morph occurs. */}
               <h1
-                className="rise-in rise-in-1 font-display mt-2 text-hero font-bold tracking-tight text-balance"
+                className="font-display mt-2 text-hero font-bold tracking-tight text-balance"
                 style={{ viewTransitionName: `project-title-${slug}` }}
               >
-                {project.name}
+                {heroTitle}
               </h1>
               <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
               <p className="rise-in rise-in-2 mt-4 text-lg text-accent">{project.tagline}</p>

@@ -10,6 +10,7 @@ import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
 import { profile, metrics } from "../data/profile/core.ts";
 import { caseStudies } from "../data/profile/caseStudies.ts";
 import { projectCards } from "../data/profile/projectCards.ts";
+import { useMagnetic } from "../ui/motion/useMagnetic.ts";
 import { roomHead } from "../lib/routeHead.ts";
 import { useNow } from "../lib/useSky.ts";
 import { skyState } from "../lib/sky.ts";
@@ -73,6 +74,7 @@ function PuneClocks() {
 }
 
 function HirePage() {
+  const primaryCta = useMagnetic<HTMLAnchorElement>();
   const featured = caseStudies.slice(0, 3);
   return (
     <>
@@ -124,6 +126,7 @@ function HirePage() {
               off — html{overflow-x:hidden} clips rather than scrolls, so there
               was no way to see the rest of it. */}
           <a
+            ref={primaryCta}
             href={`mailto:${profile.email}`}
             className="flex max-w-full items-center gap-2 break-all rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
           >
