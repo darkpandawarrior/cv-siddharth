@@ -656,7 +656,7 @@ function ReadPiece() {
         <nav className="mt-16 border-t border-line pt-8">
           {piece.kind === "printed" ? (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+              <p className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from the archive
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -666,7 +666,7 @@ function ReadPiece() {
                     <li key={p.slug}>
                       <Link to="/read/$slug" params={{ slug: p.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{p.title}</span>
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
+                        <span className="shrink-0 font-mono text-xs" style={{ color: "var(--color-muted)" }}>
                           {p.year ? `'${p.year.slice(2)} · ` : ""}{p.words.toLocaleString()}w
                         </span>
                       </Link>
@@ -676,7 +676,7 @@ function ReadPiece() {
             </>
           ) : piece.kind === "sibling" ? (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+              <p className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from {piece.series.title}
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -686,7 +686,7 @@ function ReadPiece() {
                     <li key={e.slug}>
                       <Link to="/read/$slug" params={{ slug: e.slug }} className="group flex items-baseline justify-between gap-4 py-3">
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
-                        <span className="shrink-0 font-mono text-[11px] tabular-nums" style={{ color: "var(--color-muted)" }}>
+                        <span className="shrink-0 font-mono text-xs tabular-nums" style={{ color: "var(--color-muted)" }}>
                           {String(e.idx).padStart(2, "0")}
                         </span>
                       </Link>
@@ -703,7 +703,7 @@ function ReadPiece() {
             null
           ) : (
             <>
-              <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+              <p className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                 More from {anthology.seasons.find((s) => s.n === piece.season)?.title}
               </p>
               <ul className="mt-4 divide-y divide-line">
@@ -715,7 +715,7 @@ function ReadPiece() {
                         <span className="font-display text-base font-bold transition group-hover:text-accent">{e.title}</span>
                         {/* Each row wears its OWN season's short form, not
                             this page's: #12, p.30, p.7 ✕, kept. */}
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: "var(--color-muted)" }}>
+                        <span className="shrink-0 font-mono text-xs" style={{ color: "var(--color-muted)" }}>
                           {entryTheme(e).short}
                         </span>
                       </Link>

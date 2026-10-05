@@ -75,7 +75,7 @@ function ExcelsiorRoute() {
     >
       <span aria-hidden>{m.kind === "wrote" ? "✎" : m.kind === "about" ? "❝" : "✦"}</span>
       {m.label}
-      <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+      <span className="font-mono text-xs text-muted">'{m.year.slice(2)}</span>
     </Link>
   ));
 
@@ -149,7 +149,7 @@ function ExcelsiorRoute() {
                   params={{ slug: m.readSlug! }}
                   className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
                 >
-                  {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+                  {m.label} <span className="font-mono text-xs text-muted">'{m.year.slice(2)}</span>
                 </Link>
               ))}
             </StaggerReveal>
