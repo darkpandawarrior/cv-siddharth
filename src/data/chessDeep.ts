@@ -2,7 +2,7 @@
 // Second-pass mining of fields the first pass never read: how the game was
 // found, which time control, how it ended, and when the opening book ran out.
 export const chessDeep = {
-  "generatedAt": "2026-10-04T13:12:52.026Z",
+  "generatedAt": "2026-10-05T15:29:53.920Z",
   "lastSeenOnLichess": "2026-09-07",
   "sampleSize": 14119,
   "bySource": [
