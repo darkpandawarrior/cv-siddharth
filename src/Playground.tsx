@@ -87,20 +87,20 @@ const worldLoadingFallback = <div className="flex h-full items-center justify-ce
 
 const VIEW_KEY = "playground:view";
 
-// localStorage throws in private-mode Safari (see AnomalyRail.tsx's
-// hasSweptBefore/markSwept for the same guard), losing the remembered view
-// is a minor annoyance, never worth crashing the hub over.
-function loadViewPref(): "world" | "list" | null {
+// Keep the v2 choice for this tab's session so lazy-provider remounts do not
+// undo explicit entry. The archived v1 preference still survives browser restarts.
+// Storage can throw in private browsing; a missing preference must not crash the hub.
+function loadViewPref(isV1: boolean): "world" | "list" | null {
   try {
-    const v = localStorage.getItem(VIEW_KEY);
+    const v = (isV1 ? localStorage : sessionStorage).getItem(VIEW_KEY);
     return v === "world" || v === "list" ? v : null;
   } catch {
     return null;
   }
 }
-function saveViewPref(view: "world" | "list"): void {
+function saveViewPref(view: "world" | "list", isV1: boolean): void {
   try {
-    localStorage.setItem(VIEW_KEY, view);
+    (isV1 ? localStorage : sessionStorage).setItem(VIEW_KEY, view);
   } catch {
     // best-effort only, worst case the choice doesn't survive a reload
   }
@@ -155,9 +155,9 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
   // being handled as a fallback render inside the boundary itself.
   const [worldFailed, setWorldFailed] = useState(false);
   useEffect(() => {
-    const saved = loadViewPref();
+    const saved = loadViewPref(isV1);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setForcedList(isV1 ? (saved ? saved === "list" : reducedMotion) : reducedMotion);
+    setForcedList(saved ? saved === "list" : reducedMotion);
     const webgl = hasWebGL();
     if (isV1) {
       setWorldCapable(webgl);
@@ -179,8 +179,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
 
   // The World's HUD calls this (via onShowList) to drop back to the grid;
   // the grid view's own "3D world" button below calls its counterpart to
-  // go the other way. Same localStorage key either direction, so the choice
-  // survives a reload.
+  // go the other way. Both choices survive a reload in their storage scope.
   /**
    * Switching views is a WIPE, not a cut.
    *
@@ -212,9 +211,9 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
   const showList = useCallback(() => {
     runTransition(() => {
       setForcedList(true);
-      saveViewPref("list");
+      saveViewPref("list", isV1);
     });
-  }, [runTransition]);
+  }, [runTransition, isV1]);
   const showWorld = useCallback(() => {
     runTransition(() => {
     setForcedList(false);
@@ -224,9 +223,9 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
     // instead" button below would render, but wantsWorld could never go
     // true again and the button would silently do nothing.
     setWorldFailed(false);
-    saveViewPref("world");
+    saveViewPref("world", isV1);
     });
-  }, [runTransition]);
+  }, [runTransition, isV1]);
 
   return (
     <div

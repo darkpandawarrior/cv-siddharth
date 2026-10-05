@@ -45,7 +45,7 @@ function Bar({ count, max, tint }: { count: number; max: number; tint: string })
   return (
     <span className="relative block h-1.5 w-full overflow-hidden rounded-full bg-line/60">
       <span
-        className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-700"
+        className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-(--dur-slow)"
         style={{ width: `${max > 0 ? Math.max((count / max) * 100, count > 0 ? 3 : 0) : 0}%`, background: tint }}
       />
     </span>
