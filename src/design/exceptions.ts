@@ -45,4 +45,3 @@ export const TYPE_ALLOWLIST: TypeException[] = [
   { selector: ".project-studio-monogram", rem: 7, reason: "decorative monogram glyph, art not text" },
   { selector: ".piece-body", rem: 1.0625, reason: "Pinned prose size in src/readingMedium.test.ts, the reading floor." },
 ];
-
