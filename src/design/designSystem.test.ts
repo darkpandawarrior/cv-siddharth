@@ -22,7 +22,7 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { MOTION_ALLOWLIST } from "./exceptions.ts";
+import { MOTION_ALLOWLIST, SCENE_RIG_ALLOWLIST } from "./exceptions.ts";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const SRC = path.join(ROOT, "src");
@@ -41,6 +41,13 @@ const LIGHT_NEW_RE = /new THREE\.\w*Light\b/g;
 function isRigAllowlisted(file: string): boolean {
   const rel = path.relative(SRC, file);
   return rel.startsWith(`world${path.sep}`) || path.basename(file) === "StudioRig.tsx";
+}
+
+function lightDrift(file: string, content: string): number {
+  if (isRigAllowlisted(file)) return 0;
+  const lights = (content.match(LIGHT_JSX_RE) ?? []).length + (content.match(LIGHT_NEW_RE) ?? []).length;
+  const allowance = SCENE_RIG_ALLOWLIST.find((entry) => entry.file === path.relative(ROOT, file))?.lights ?? 0;
+  return Math.max(0, lights - allowance);
 }
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -91,10 +98,7 @@ function countFile(file: string): number {
     count += rawCssDrift(content);
   }
 
-  if (!file.endsWith(".css") && !isRigAllowlisted(file)) {
-    count += (content.match(LIGHT_JSX_RE) ?? []).length;
-    count += (content.match(LIGHT_NEW_RE) ?? []).length;
-  }
+  if (!file.endsWith(".css")) count += lightDrift(file, content);
 
   return count;
 }
@@ -111,6 +115,21 @@ function computeCounts(): Record<string, number> {
 
 const WRITE = process.env.DS_WRITE_BASELINE === "1";
 const STRICT = process.env.DS_STRICT === "1";
+
+describe("standalone scene rig limits", () => {
+  it("counts an extra light beyond every exact scene allowance", () => {
+    expect(new Set(SCENE_RIG_ALLOWLIST.map((entry) => entry.file)).size).toBe(SCENE_RIG_ALLOWLIST.length);
+    for (const entry of SCENE_RIG_ALLOWLIST) {
+      const file = path.join(ROOT, entry.file);
+      const content = fs.readFileSync(file, "utf8");
+      expect((content.match(LIGHT_JSX_RE) ?? []).length + (content.match(LIGHT_NEW_RE) ?? []).length).toBe(entry.lights);
+      expect(lightDrift(file, content)).toBe(0);
+      expect(lightDrift(file, `${content}\n<pointLight />`)).toBe(1);
+      expect(lightDrift(file, `${content}\nnew THREE.PointLight()`)).toBe(1);
+    }
+    expect(lightDrift(path.join(SRC, "UnlistedScene.tsx"), "<ambientLight />")).toBe(1);
+  });
+});
 
 describe("shared source timing exceptions", () => {
   it("accepts exact named timings and the reduced-motion pattern", () => {

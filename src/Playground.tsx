@@ -379,7 +379,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <Link
               to="/pulse"
-              className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
+              className="inline-flex items-center gap-1.5 font-mono text-xs text-muted transition hover:text-accent"
             >
               <Activity size={12} /> see what everyone else has been touching →
             </Link>
@@ -391,7 +391,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
               <button
                 type="button"
                 onClick={showWorld}
-                className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
+                className="inline-flex items-center gap-1.5 font-mono text-xs text-muted transition hover:text-accent"
               >
                 <Gamepad2 size={12} /> drive the 3D world instead →
               </button>
@@ -441,7 +441,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
             <DeferredGuestWall />
           </section>
 
-          <p className="mt-10 font-mono text-[11px] text-muted">
+          <p className="mt-10 font-mono text-xs text-muted">
             tip: press <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">⌘K</kbd> or{" "}
             <kbd className="rounded border border-line px-1.5 py-0.5 text-zinc-400">`</kbd> to jump anywhere.
           </p>

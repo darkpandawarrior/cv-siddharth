@@ -139,12 +139,12 @@ export function ClockLab() {
             <span className="text-accent2">lost (dashed) — {pct(here.loss)} left</span>
             <span className="text-muted"> · gap {pts(here.gap)}</span>
           </span>
-          <Link to="/chess" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
+          <Link to="/chess" className="ml-auto font-mono text-xs text-muted transition hover:text-accent">
             the full clock thesis → the chess room
           </Link>
         </div>
       </div>
-      <p className="mt-3 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+      <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-muted">
         Scope: the {sampleSize.toLocaleString("en-US")} games whose PGN carried per-move clock
         annotations — not the whole {chess.totals.games.toLocaleString("en-US")}-game archive.
       </p>

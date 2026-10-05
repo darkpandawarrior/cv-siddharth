@@ -154,7 +154,7 @@ const SECTION_ROUTES: Record<string, { hash: string; label: string }> = {
  * "#hash | url | sentinel" shape). */
 function A({ dest, children, ext }: { dest: string; children: ReactNode; ext?: boolean }) {
   const { goToSection } = useSectionNav();
-  const cls = "text-[var(--t-accent)] underline decoration-dotted underline-offset-2 hover:decoration-solid";
+  const cls = "text-(--t-accent) underline decoration-dotted underline-offset-2 hover:decoration-solid";
   if (ext) {
     return (
       <a href={dest} target="_blank" rel="noreferrer" className={cls}>
@@ -179,7 +179,7 @@ function A({ dest, children, ext }: { dest: string; children: ReactNode; ext?: b
   );
 }
 const Dim = ({ children }: { children: ReactNode }) => <span className="text-muted">{children}</span>;
-const Hi = ({ children }: { children: ReactNode }) => <span className="text-[var(--t-accent)]">{children}</span>;
+const Hi = ({ children }: { children: ReactNode }) => <span className="text-(--t-accent)">{children}</span>;
 
 /* The `chess` command's formatters. Explicit "en-US" for the same reason
  * ChessFindings.tsx uses it: /terminal is server-rendered, and a visitor whose
@@ -315,7 +315,7 @@ function GraphBlock({ jump }: { jump: Go }) {
         <Hi>work → writing</Hi> <Dim>— the field notes grew out of the work</Dim>
         {Object.entries(extras.RELATED_SERIES).map(([slug, series]) => (
           <div key={slug} className="ml-3">
-            <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-[var(--t-accent)]">
+            <button onClick={() => jump(`#project/${slug}`)} className="text-zinc-200 hover:text-(--t-accent)">
               {slug}
             </button>
             <Dim> → {series.map(extras.titleize).join(" · ")}</Dim>
@@ -368,7 +368,7 @@ function SitemapBlock({ jump }: { jump: Go }) {
     <div className="grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
       {Object.entries(SECTION_ROUTES).map(([k, v]) => (
         <div key={k}>
-          <button onClick={() => jump(v.hash)} className="text-left text-[var(--t-accent)] hover:underline">
+          <button onClick={() => jump(v.hash)} className="text-left text-(--t-accent) hover:underline">
             {v.hash}
           </button>{" "}
           <Dim>{v.label}</Dim>
@@ -378,7 +378,7 @@ function SitemapBlock({ jump }: { jump: Go }) {
         .filter((p) => p.detail)
         .map((p) => (
           <div key={p.slug}>
-            <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-[var(--t-accent)] hover:underline">
+            <button onClick={() => jump(`#project/${p.slug}`)} className="text-left text-(--t-accent) hover:underline">
               #project/{p.slug}
             </button>
           </div>
@@ -462,7 +462,7 @@ function buildCommands(jump: Go): Cmd[] {
           <div className="space-y-1">
             <div className="flex flex-wrap gap-x-5 gap-y-0.5">
               {files.map((f) => (
-                <span key={f} className="text-[var(--t-accent)]">{f}</span>
+                <span key={f} className="text-(--t-accent)">{f}</span>
               ))}
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-0.5">
@@ -526,7 +526,7 @@ function buildCommands(jump: Go): Cmd[] {
               <div key={p.slug}>
                 <button
                   onClick={() => jump(`#project/${p.slug}`)}
-                  className="text-left font-semibold text-[var(--t-accent)] hover:underline"
+                  className="text-left font-semibold text-(--t-accent) hover:underline"
                 >
                   {p.name}
                 </button>{" "}
@@ -686,7 +686,7 @@ function buildCommands(jump: Go): Cmd[] {
             <Dim> · </Dim>
             <A dest="#resume">résumé</A>
             <Dim> · </Dim>
-            <button onClick={() => openChat("Why should we hire Siddharth for a senior Android role?")} className="text-[var(--t-accent)] underline decoration-dotted underline-offset-2 hover:decoration-solid">ask the AI</button>
+            <button onClick={() => openChat("Why should we hire Siddharth for a senior Android role?")} className="text-(--t-accent) underline decoration-dotted underline-offset-2 hover:decoration-solid">ask the AI</button>
           </div>
         </div>
       ),
@@ -827,7 +827,7 @@ function buildCommands(jump: Go): Cmd[] {
       name: "matrix",
       hidden: true,
       help: "",
-      run: () => <span className="text-[var(--t-accent)]">Wake up, Neo… the crashes are down 80%. There is no spoon, only structured concurrency.</span>,
+      run: () => <span className="text-(--t-accent)">Wake up, Neo… the crashes are down 80%. There is no spoon, only structured concurrency.</span>,
     },
     {
       name: "coffee",
@@ -1068,7 +1068,7 @@ function AskBlock({ question }: { question: string }) {
           handed back to the log once the answer has settled. */}
       <div
         aria-live={done ? "polite" : "off"}
-        className={`max-w-2xl leading-relaxed text-zinc-200 [&_a]:text-[var(--t-accent)] [&_strong]:text-[var(--t-accent)] [&_ul]:list-disc [&_ul]:pl-4 ${
+        className={`max-w-2xl leading-relaxed text-zinc-200 [&_a]:text-(--t-accent) [&_strong]:text-(--t-accent) [&_ul]:list-disc [&_ul]:pl-4 ${
           done ? "" : "chat-streaming"
         }`}
       >
@@ -1324,7 +1324,7 @@ function Neofetch() {
   ];
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-      <pre className="shrink-0 whitespace-pre text-xs leading-tight text-[var(--t-accent)]">{BANNER}</pre>
+      <pre className="shrink-0 whitespace-pre text-xs leading-tight text-(--t-accent)">{BANNER}</pre>
       <div className="min-w-0 space-y-0.5">
         {rows.map(([k, v]) => (
           <div key={k}>
@@ -1634,12 +1634,12 @@ export function Terminal() {
             RoomFrame's launcher. */}
         <span className="flex items-center gap-2">
           <LauncherButton />
-          <button type="button" onClick={() => goToSection("top")} className="ctrl flex items-center gap-2 text-xs text-zinc-400 hover:text-[var(--t-accent)]">
+          <button type="button" onClick={() => goToSection("top")} className="ctrl flex items-center gap-2 text-xs text-zinc-400 hover:text-(--t-accent)">
             <ArrowLeft size={14} /> <span className="label-wide">Back to portfolio</span>
           </button>
         </span>
         <span className="kicker flex items-center gap-2">
-          <TerminalSquare size={13} className="text-[var(--t-accent)]" />
+          <TerminalSquare size={13} className="text-(--t-accent)" />
           {PROMPT_USER}@{PROMPT_HOST} — /bin/sh
         </span>
         <span className="flex items-center gap-1.5" aria-hidden>
@@ -1716,7 +1716,7 @@ function PromptLine({ text }: { text: string }) {
 function Caret() {
   return (
     <span className="mr-2 shrink-0 select-none whitespace-pre">
-      <span className="text-[var(--t-accent)]">{PROMPT_USER}@{PROMPT_HOST}</span>
+      <span className="text-(--t-accent)">{PROMPT_USER}@{PROMPT_HOST}</span>
       <span className="text-muted">:~$</span>
     </span>
   );

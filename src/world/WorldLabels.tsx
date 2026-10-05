@@ -157,8 +157,8 @@ export function WorldLabels({ targetTo }: { targetTo: string | null }): JSX.Elem
             // rectangular — nothing else in this world is a rounded pill.
             className={`whitespace-nowrap rounded-[2px] border backdrop-blur ${
               label.kind === "room"
-                ? "px-3 py-1 font-mono text-[11px] uppercase tracking-[0.22em]"
-                : "px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest"
+                ? "px-3 py-1 font-mono text-xs uppercase tracking-widest"
+                : "px-2 py-0.5 font-mono text-xs uppercase tracking-widest"
             }`}
           >
             {label.text}

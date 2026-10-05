@@ -128,7 +128,7 @@ export function CorridorPlate(): JSX.Element {
         <span
           key={y.year}
           aria-hidden="true"
-          className="absolute top-1 -translate-x-1/2 font-mono text-[10px] text-text/80 sm:text-xs"
+          className="absolute top-1 -translate-x-1/2 font-mono text-xs text-text/80 sm:text-xs"
           style={{ left: `${y.xFraction * 100}%` }}
         >
           {y.year}
@@ -140,7 +140,7 @@ export function CorridorPlate(): JSX.Element {
         <span
           key={l.key}
           aria-hidden="true"
-          className="absolute left-1 -translate-y-1/2 rounded border border-line/60 bg-ink/70 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest sm:text-xs"
+          className="absolute left-1 -translate-y-1/2 rounded border border-line/60 bg-ink/70 px-1.5 py-0.5 font-mono text-xs uppercase tracking-widest sm:text-xs"
           style={{ top: `${l.yFraction * 100}%`, color: l.color }}
         >
           {l.label}

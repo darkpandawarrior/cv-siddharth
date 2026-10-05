@@ -42,7 +42,7 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
       >
         {lane.label}
       </span>
-      <div className="grid min-w-0 flex-1 gap-[2px]" style={{ gridTemplateColumns: COLUMNS }}>
+      <div className="grid min-w-0 flex-1 gap-0.5" style={{ gridTemplateColumns: COLUMNS }}>
         {laneMonths.map((m) => {
           const v = lane.months[m] ?? 0;
           const t = v === 0 ? 0 : 0.22 + 0.78 * (v / max);
@@ -157,7 +157,7 @@ export default function Lanes() {
                   tip={lane.key === tipLaneKey && newestPush ? { repo: newestPush.repo, message: newestPush.message } : undefined}
                 />
               ))}
-              <div className="grid gap-[2px] pl-[124px] pr-3" style={{ gridTemplateColumns: COLUMNS }}>
+              <div className="grid gap-0.5 pl-[124px] pr-3" style={{ gridTemplateColumns: COLUMNS }}>
                 {laneMonths.map((m) => (
                   // In-flow height: an overflow-x region clips y too, so a label hung
                   // below a zero-height row was cut in half.

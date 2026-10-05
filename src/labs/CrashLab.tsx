@@ -153,7 +153,7 @@ export function CrashLab() {
           {triage && (
             <span className="font-mono text-xs text-accent">top 2 clusters = {stats.top}% of all crashes</span>
           )}
-          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
+          <Link to="/loopdown" className="ml-auto font-mono text-xs text-muted transition hover:text-accent">
             the full story → the coroutine court
           </Link>
         </div>

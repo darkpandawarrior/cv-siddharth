@@ -105,10 +105,10 @@ export function ChessArc({
       {bands.map((b) => (
         <div key={b.platform} className="mb-4 last:mb-0">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
+            <span className="font-mono text-xs font-semibold uppercase tracking-wider text-zinc-200">
               {b.platform}
             </span>
-            <span className="font-mono text-[11px] text-muted">
+            <span className="font-mono text-xs text-muted">
               own scale · {b.rMin}–{b.rMax}
             </span>
           </div>
@@ -147,7 +147,7 @@ export function ChessArc({
           </svg>
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
             {b.lines.map((l) => (
-              <span key={l.format} className="flex items-center gap-1.5 font-mono text-[11px] text-zinc-400">
+              <span key={l.format} className="flex items-center gap-1.5 font-mono text-xs text-zinc-400">
                 <svg width="20" height="6" aria-hidden className="shrink-0">
                   <line
                     x1="0"
@@ -166,7 +166,7 @@ export function ChessArc({
         </div>
       ))}
 
-      <div className="mt-3 flex justify-between font-mono text-[11px] text-muted">
+      <div className="mt-3 flex justify-between font-mono text-xs text-muted">
         <span>{day(tMin)}</span>
         <span>{day(tMax)}</span>
       </div>

@@ -102,7 +102,7 @@ export function Waypoint({
           </svg>
         </span>
         <span className="flex flex-col leading-tight">
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted">
+          <span className="font-mono text-xs uppercase tracking-widest text-muted">
             {auto ? "auto · driving to" : "next stop"}
           </span>
           <span className="font-display text-sm font-bold" style={{ color: target.tint }}>
@@ -160,7 +160,7 @@ export function Minimap({ visited, targetTo }: { visited: ReadonlySet<string>; t
 
   return (
     <div aria-hidden="true" className="pointer-events-none flex flex-col items-center gap-1">
-      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-muted">2017</span>
+      <span className="font-mono text-xs uppercase tracking-widest text-muted">2017</span>
       <svg
         viewBox={`${-MAP_HALF_WIDTH - MAP_PAD} ${MAP_Z0 - MAP_PAD} ${(MAP_HALF_WIDTH + MAP_PAD) * 2} ${MAP_Z1 - MAP_Z0 + MAP_PAD * 2}`}
         className="h-[136px] w-[52px] rounded-lg border border-line bg-void/70 backdrop-blur"
@@ -207,7 +207,7 @@ export function Minimap({ visited, targetTo }: { visited: ReadonlySet<string>; t
           <polygon points="0,5 -3.6,-3.4 3.6,-3.4" className="fill-accent" />
         </g>
       </svg>
-      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-muted">now</span>
+      <span className="font-mono text-xs uppercase tracking-widest text-muted">now</span>
     </div>
   );
 }
@@ -285,7 +285,7 @@ export function Gauges({
       aria-hidden="true"
       className="pointer-events-none w-44 rounded-xl border border-line bg-card/80 px-3 py-2 backdrop-blur"
     >
-      <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+      <div className="flex items-baseline justify-between font-mono text-xs uppercase tracking-widest text-muted">
         <span>
           <span ref={numRef} className="text-base text-zinc-200">
             0
@@ -302,7 +302,7 @@ export function Gauges({
       </div>
 
       {rooms !== undefined && totalRooms !== undefined && (
-        <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+        <div className="mt-1.5 flex items-baseline justify-between font-mono text-xs uppercase tracking-widest text-muted">
           <span>rooms opened</span>
           <span>
             <span className="text-accent">{rooms}</span> / {totalRooms}
@@ -310,14 +310,14 @@ export function Gauges({
         </div>
       )}
       {collected !== undefined && artifactTotal !== undefined && (
-        <div className="flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+        <div className="flex items-baseline justify-between font-mono text-xs uppercase tracking-widest text-muted">
           <span>things found</span>
           <span>
-            <span className="text-[var(--color-signal)]">{collected}</span> / {artifactTotal}
+            <span className="text-signal">{collected}</span> / {artifactTotal}
           </span>
         </div>
       )}
-      <div className="mt-1.5 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-widest text-muted">
+      <div className="mt-1.5 flex items-baseline justify-between font-mono text-xs uppercase tracking-widest text-muted">
         <span>city drawn</span>
         <span ref={resolveNumRef} className="text-accent">
           0%
@@ -395,7 +395,7 @@ export function Onboarding({ onTour }: { onTour: () => void }): JSX.Element | nu
           before this fix (only Escape/the two buttons below dismiss it). */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-ink/55" />
       <div className="pointer-events-auto relative w-full max-w-md rounded-2xl border border-line bg-card p-6 text-center">
-        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent/70">// the playground</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-accent/70">// the playground</p>
         <h2 className="font-display mt-2 text-2xl font-bold">Eight rooms, one road.</h2>
         <p className="mt-2 text-sm leading-relaxed text-zinc-400">
           Every interactive thing on this site is a building on this street, and the street is a
@@ -435,18 +435,18 @@ export function Onboarding({ onTour }: { onTour: () => void }): JSX.Element | nu
             .onboarding-touch-hint { display: block; }
           }
         `}</style>
-        <p className="onboarding-key-hint mt-4 font-mono text-[10px] leading-relaxed text-muted">
+        <p className="onboarding-key-hint mt-4 font-mono text-xs leading-relaxed text-muted">
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">W A S D</kbd> drive ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">shift</kbd> boost ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">enter</kbd> go in ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">T</kbd> auto ·{" "}
           <kbd className="rounded border border-line px-1 py-0.5 text-zinc-300">R</kbd> unstick
         </p>
-        <p className="onboarding-touch-hint mt-4 font-mono text-[10px] leading-relaxed text-muted">
+        <p className="onboarding-touch-hint mt-4 font-mono text-xs leading-relaxed text-muted">
           drag the stick, bottom left, to steer and drive · tap <b className="text-zinc-300">Enter</b> to
           go in · <b className="text-zinc-300">Drive me there</b>, above, for auto
         </p>
-        <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted">
+        <p className="mt-2 font-mono text-xs uppercase tracking-widest text-muted">
           or take the plain grid — List view, bottom left
         </p>
       </div>
@@ -485,7 +485,7 @@ export function Toasts({ items }: { items: Toast[] }): JSX.Element {
           style={{ borderColor: `${t.tint}66` }}
         >
           <span
-            className="font-mono text-[9px] uppercase tracking-[0.2em]"
+            className="font-mono text-xs uppercase tracking-widest"
             style={{ color: t.tint }}
           >
             {t.kind === "find" ? "found" : "unlocked"}
@@ -494,7 +494,7 @@ export function Toasts({ items }: { items: Toast[] }): JSX.Element {
             <span className="font-display text-sm font-bold" style={{ color: t.tint }}>
               {t.title}
             </span>
-            <span className="text-[11px] leading-snug text-zinc-400">{t.detail}</span>
+            <span className="text-xs leading-snug text-zinc-400">{t.detail}</span>
           </span>
         </div>
       ))}
@@ -534,9 +534,9 @@ export function StuckNotice(): JSX.Element {
       role="status"
       aria-live="polite"
       style={{ display: "none" }}
-      className="pointer-events-none rounded-xl border border-[var(--color-warn)]/50 bg-card/90 px-4 py-2 text-center font-mono text-[11px] uppercase tracking-widest text-muted backdrop-blur"
+      className="pointer-events-none rounded-xl border border-[var(--color-warn)]/50 bg-card/90 px-4 py-2 text-center font-mono text-xs uppercase tracking-widest text-muted backdrop-blur"
     >
-      upside down — <span className="text-[var(--color-warn)]">R</span> to recover
+      upside down, <span className="text-warn">R</span> to recover
     </div>
   );
 }

@@ -105,7 +105,7 @@ export function PresenceBadge({ className = "" }: { className?: string }) {
   if (presences.size < 2) return null;
   return (
     <span
-      className={`flex items-center gap-1.5 rounded-full border border-accent2/40 bg-accent2/10 px-2.5 py-1 font-mono text-[11px] text-accent2 ${className}`}
+      className={`flex items-center gap-1.5 rounded-full border border-accent2/40 bg-accent2/10 px-2.5 py-1 font-mono text-xs text-accent2 ${className}`}
       title="People exploring this room right now — move your mouse and they can see it too"
     >
       <Users size={12} /> {presences.size} here now

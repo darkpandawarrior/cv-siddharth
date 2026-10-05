@@ -232,7 +232,7 @@ export function ReplayLab() {
           <Link
             to="/project/$slug"
             params={{ slug: "stutter" }}
-            className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
+            className="ml-auto font-mono text-xs text-muted transition hover:text-accent"
           >
             the full story → Stutter's determinism gate
           </Link>

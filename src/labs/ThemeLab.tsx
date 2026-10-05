@@ -72,11 +72,11 @@ function HeroPreview({ client, brand }: { client: string; brand: BrandToken }) {
           <div className="flex gap-5">
             <div>
               <div className="text-lg font-bold" style={{ color: brand.color }}>150+</div>
-              <div className="font-mono text-[10px] text-muted">clients, one token</div>
+              <div className="font-mono text-xs text-muted">clients, one token</div>
             </div>
             <div>
               <div className="text-lg font-bold" style={{ color: brand.color }}>80%</div>
-              <div className="font-mono text-[10px] text-muted">faster delivery</div>
+              <div className="font-mono text-xs text-muted">faster delivery</div>
             </div>
           </div>
         </div>
@@ -116,7 +116,7 @@ export function ThemeLab() {
                   style={{ transition: `border-color 0.4s ${i * 90}ms`, borderColor: `${brand.color}44` }}
                 >
                   <div
-                    className="px-3 py-2 text-[11px] font-bold text-ink"
+                    className="px-3 py-2 text-xs font-bold text-ink"
                     style={{ background: brand.color, fontFamily: brand.font, transition: `background 0.4s ${i * 90}ms` }}
                   >
                     {c}
@@ -125,7 +125,7 @@ export function ThemeLab() {
                     <div className="h-1.5 w-4/5 rounded bg-zinc-700" />
                     <div className="h-1.5 w-3/5 rounded bg-zinc-700" />
                     <div
-                      className="mt-3 rounded-full px-2 py-1 text-center text-[10px] font-bold text-ink"
+                      className="mt-3 rounded-full px-2 py-1 text-center text-xs font-bold text-ink"
                       style={{ background: brand.color, transition: `background 0.4s ${i * 90}ms` }}
                     >
                       Book now
@@ -140,12 +140,12 @@ export function ThemeLab() {
               ))}
             </div>
             <div className="border-t border-line px-5 py-3">
-              <p className="mb-2 font-mono text-[10px] text-muted">+16 more clients on the same brand token</p>
+              <p className="mb-2 font-mono text-xs text-muted">+16 more clients on the same brand token</p>
               <div className="flex flex-wrap gap-1.5">
                 {MORE_CLIENTS.map((code, i) => (
                   <span
                     key={code}
-                    className="inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-mono text-[10px] text-zinc-400"
+                    className="inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-mono text-xs text-zinc-400"
                     style={{ borderColor: `${brand.color}33`, transition: `border-color 0.4s ${i * 20}ms` }}
                   >
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: brand.color, transition: `background 0.4s ${i * 20}ms` }} />
@@ -158,13 +158,13 @@ export function ThemeLab() {
         ) : (
           <>
             <div className="flex flex-wrap gap-2 border-b border-line px-5 py-3">
-              <span className="font-mono text-[10px] text-muted">preview client:</span>
+              <span className="font-mono text-xs text-muted">preview client:</span>
               {CLIENTS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setHeroClient(c)}
                   aria-pressed={heroClient === c}
-                  className={`rounded-full border px-2.5 py-1 font-mono text-[10px] transition ${
+                  className={`rounded-full border px-2.5 py-1 font-mono text-xs transition ${
                     heroClient === c ? "border-accent text-accent" : "border-line text-muted hover:text-zinc-300"
                   }`}
                 >
@@ -178,21 +178,21 @@ export function ThemeLab() {
 
         {/* Static — anchors the 80% claim in the actual before/after, not just the label. */}
         <div className="border-t border-line px-5 py-4">
-          <p className="mb-2 font-mono text-[10px] text-muted">delivery time, per client</p>
+          <p className="mb-2 font-mono text-xs text-muted">delivery time, per client</p>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="w-14 shrink-0 font-mono text-[10px] text-muted">manual</span>
+              <span className="w-14 shrink-0 font-mono text-xs text-muted">manual</span>
               <div className="h-2 flex-1 rounded-full bg-zinc-800">
                 <div className="h-2 rounded-full bg-zinc-600" style={{ width: "100%" }} />
               </div>
-              <span className="w-16 shrink-0 text-right font-mono text-[10px] text-zinc-400">~3 weeks</span>
+              <span className="w-16 shrink-0 text-right font-mono text-xs text-zinc-400">~3 weeks</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-14 shrink-0 font-mono text-[10px] text-muted">pipeline</span>
+              <span className="w-14 shrink-0 font-mono text-xs text-muted">pipeline</span>
               <div className="h-2 flex-1 rounded-full bg-zinc-800">
                 <div className="h-2 rounded-full" style={{ width: "14%", background: brand.color }} />
               </div>
-              <span className="w-16 shrink-0 text-right font-mono text-[10px] text-accent">~3 days</span>
+              <span className="w-16 shrink-0 text-right font-mono text-xs text-accent">~3 days</span>
             </div>
           </div>
         </div>
@@ -215,7 +215,7 @@ export function ThemeLab() {
                 onClick={() => pickBrand(b)}
                 aria-label={`Theme ${b.label}`}
                 aria-pressed={brand.name === b.name}
-                className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] transition hover:scale-105"
+                className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-xs transition hover:scale-105"
                 style={{
                   borderColor: brand.name === b.name ? b.color : "transparent",
                   color: brand.name === b.name ? b.color : "#a1a1aa",
@@ -232,7 +232,7 @@ export function ThemeLab() {
               {flips} {flips === 1 ? "change" : "changes"} · {flips * (CLIENTS.length + MORE_CLIENTS.length)} client updates · 0 forks
             </span>
           )}
-          <button type="button" onClick={() => goToSection("work")} className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
+          <button type="button" onClick={() => goToSection("work")} className="ml-auto font-mono text-xs text-muted transition hover:text-accent">
             the full story → 150+ clients, one pipeline
           </button>
         </div>

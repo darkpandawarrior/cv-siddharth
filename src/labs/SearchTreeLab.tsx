@@ -243,9 +243,9 @@ function SimulatedSearchTree() {
                 key={t.label}
                 onClick={() => setTierIndex(i)}
                 aria-pressed={tierIndex === i}
-                className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition ${
+                className={`rounded-full border px-2.5 py-1 font-mono text-xs transition ${
                   tierIndex === i
-                    ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-[var(--lab-gold)]"
+                    ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-(--lab-gold)"
                     : "border-line text-zinc-400 hover:border-[var(--lab-gold)]/40 hover:text-zinc-200"
                 }`}
               >
@@ -255,7 +255,7 @@ function SimulatedSearchTree() {
           </div>
           <button
             onClick={runSearch}
-            className="rounded-full border border-[var(--lab-gold)]/50 bg-[var(--lab-gold)]/10 px-3 py-1 font-mono text-[11px] font-semibold text-[var(--lab-gold)] transition hover:bg-[var(--lab-gold)]/20"
+            className="rounded-full border border-[var(--lab-gold)]/50 bg-[var(--lab-gold)]/10 px-3 py-1 font-mono text-xs font-semibold text-(--lab-gold) transition hover:bg-[var(--lab-gold)]/20"
           >
             run search
           </button>
@@ -263,14 +263,14 @@ function SimulatedSearchTree() {
             iterations: {display.iterations} / {display.target} · difficulty: {display.tier}
           </span>
           {result && (
-            <span style={{ fontFamily: HEADING_FONT }} className="text-sm text-[var(--lab-gold)]">
+            <span style={{ fontFamily: HEADING_FONT }} className="text-sm text-(--lab-gold)">
               role: {result.role}, chosen
             </span>
           )}
           <Link
             to="/project/$slug"
             params={{ slug: "gaddi" }}
-            className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
+            className="ml-auto font-mono text-xs text-muted transition hover:text-accent"
           >
             the full story → Gaddi's ISMCTS AI
           </Link>
@@ -311,7 +311,7 @@ export function SearchTreesLab() {
           onClick={() => setSource("simulated")}
           className={`rounded-full border px-3 py-1.5 font-mono text-xs transition ${
             source === "simulated"
-              ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-[var(--lab-gold)]"
+              ? "border-[var(--lab-gold)] bg-[var(--lab-gold)]/15 text-(--lab-gold)"
               : "border-line text-zinc-400 hover:border-[var(--lab-gold)]/40 hover:text-zinc-200"
           }`}
         >

@@ -100,14 +100,14 @@ export default function GuessTheMove({
                 setGuess(null);
                 setIndex((i) => nextIndex(i, positions.length));
               }}
-              className="mt-3 rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-[11px] font-semibold text-accent transition hover:bg-accent/20"
+              className="mt-3 rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs font-semibold text-accent transition hover:bg-accent/20"
             >
               next position
             </button>
           )}
 
           {score.asked > 0 && (
-            <p className="mt-3 font-mono text-[11px] text-muted">
+            <p className="mt-3 font-mono text-xs text-muted">
               {score.right} of {score.asked} called correctly
             </p>
           )}
