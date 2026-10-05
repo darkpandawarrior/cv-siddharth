@@ -94,10 +94,10 @@ export const historyMonths: HistoryMonth[] = [
   },
   {
     "ym": "2026-10",
-    "commits": 25,
-    "insertions": 59232,
-    "deletions": 3835,
-    "filesChanged": 986,
+    "commits": 28,
+    "insertions": 59584,
+    "deletions": 4139,
+    "filesChanged": 1033,
     "subjects": [
       "feat(globe): the living earth, with real imagery, live feeds and places (#133)",
       "fix(globe): production polish for chrome, imagery, feeds and assets (#134)",
@@ -107,13 +107,13 @@ export const historyMonths: HistoryMonth[] = [
       "fix(refresh): repair the daily data refresh and land a full refresh (#138)"
     ],
     "cumulative": {
-      "commits": 1250,
-      "insertions": 313818,
-      "deletions": 54719
+      "commits": 1253,
+      "insertions": 314170,
+      "deletions": 55023
     }
   }
 ] as const;
-export const historyGeneratedAt = "2026-10-04";
+export const historyGeneratedAt = "2026-10-05";
 export const historyFrom = "2026-06";
 export const historyTo = "2026-10";
-export const totalCommits = 1250;
+export const totalCommits = 1253;
