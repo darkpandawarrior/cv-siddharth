@@ -192,7 +192,7 @@ export default function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, aut
       }
     }}>
       <summary className="pointer-events-auto flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full glass-panel px-3 font-mono text-xs text-zinc-300">Controls</summary>
-      <div data-globe-overflow className="pointer-events-auto">{weather}{controls}</div>
+      <div data-globe-overflow className="pointer-events-none">{weather}{controls}</div>
     </details> : controls}
   </>;
 }
