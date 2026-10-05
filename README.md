@@ -53,6 +53,37 @@ the fix is a smaller prompt, not a reordered list.
 
 **TypeScript 7.0.2 compatibility note:** The repo runs TypeScript 7.0.2 for compilation (`npx tsc --version` confirms it). Because `typescript-eslint` doesn't support TS 7's compiler API yet (support lands in 7.1), `package.json` uses Microsoft's documented side-by-side pattern: `@typescript/native` (real TS 7.0.2) + `@typescript/typescript6` (TS 6.0-API shim for lint). If lint ever fails with "typescript-eslint does not support TS 7.0" after an `npm install`, check `npx tsc --version` first. If it is not 7.0.2, run `npm install` again to resolve the `tsc` binary race.
 
+## Design system
+
+The `@theme` block in [src/index.css](src/index.css) defines the site's
+`--text-*`, `--space-*`, `--dur-*` and `--ease-*` tokens alongside Tailwind's
+scales. Rendered text and motion are checked at desktop and mobile widths by
+`e2e/design-system.spec.ts`. Missing tokens, off-scale sizes, raw durations
+and invalid evidence chips fail with `DS_STRICT=1`.
+
+[src/design](src/design) holds the source ratchet. `designSystem.test.ts`
+counts arbitrary type, spacing and motion values, raw CSS timings and lights
+outside the scene rigs. A file fails when its count exceeds
+`ds-baseline.json`; a file absent from the baseline starts at zero. Lower the
+baseline after removing drift. `DS_STRICT=1` requires zero source drift.
+Named timing exceptions preserve status indicators and ambient loops. The
+`chapter-drift` exception requires an `auto` duration on a scroll or view
+timeline. Submitted Kotlin font sizes are accepted only inside
+`[data-compose-preview]`. Pinned reading sizes keep their exact values.
+The break-it fixture checks that off-scale text and raw or invalid `auto`
+durations still fail outside those contexts.
+
+[src/spine/registry.ts](src/spine/registry.ts) lists shared components and
+their route, height and trailing-space budgets. `src/spine/registry.test.ts`
+fails for missing registrations, missing landmark tags or invalid entries.
+`e2e/spine.spec.ts` checks the rendered budgets at both widths.
+`SPINE_STRICT=1` enforces entries that still carry a debt marker.
+
+[ARCHIVE.md](ARCHIVE.md) records retained features and their removal recipes.
+`src/archive/registry.test.ts` fails when markers and rows disagree, or a row
+points at missing files. The doctor flags overdue review dates.
+`e2e/archive-v1.spec.ts` checks the hidden entrances to the retained world.
+
 ## Quick start
 
 ```bash
@@ -458,7 +489,7 @@ behind the thing it mirrors, with every test green. The gates exist for that
 specific shape:
 
 ```bash
-npm test          # 3799 unit tests across 391 files (vitest)
+npm test          # 3801 unit tests across 391 files (vitest)
 npm run test:e2e  # 1199 Playwright tests across 130 files, every registry route
 npm run lint
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale

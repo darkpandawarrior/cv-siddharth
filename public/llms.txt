@@ -135,6 +135,13 @@ Each answer links the page that proves it, and it isn't restated anywhere else.
 - kmp-toolkit: A vendored KMP toolkit: the tiny (State, Event) → Effects mvi-core base (the reducer/store contract the payment state machine is built on), plus shared feedback/common modules. https://github.com/darkpandawarrior/kmp-toolkit
 - career-ops (upstream, open source at https://github.com/career-ops-hq/career-ops): 25 merged PRs. Most recent: fix(deps): make js-yaml imports work on both 4.x and 5.x; fix(scan): take the shared lock for scan-history.tsv appends; fix(agent-inbox): concurrent adds silently dropped queued requests.
 
+## Design system sources
+
+- src/index.css: the @theme type, spacing, duration and easing tokens, alongside Tailwind's scales. DS_STRICT=1 e2e/design-system.spec.ts fails for missing tokens, off-scale text, raw durations or invalid evidence chips.
+- src/design: the source ratchet and its baseline. A file fails when drift grows past ds-baseline.json; DS_STRICT=1 requires zero source drift. Shared exceptions in exceptions.ts preserve named status and ambient timing, scroll-driven chapter-drift, pinned reading sizes and submitted Kotlin font sizes inside [data-compose-preview]. The break-it fixture must still reject off-scale text and raw durations elsewhere.
+- src/spine/registry.ts: shared component registrations and rendered route, height and trailing-space budgets. registry.test.ts fails for missing registrations or landmark tags; e2e/spine.spec.ts checks the rendered budgets. SPINE_STRICT=1 enforces entries with debt markers.
+- ARCHIVE.md: retained features and their removal recipes. src/archive/registry.test.ts checks rows against markers and files; the doctor flags overdue review dates. e2e/archive-v1.spec.ts checks the hidden world entrances.
+
 ## Notes for agents
 
 - Every URL above is a real path, server-rendered, and readable without running any JavaScript. The older /#section and ?project=<slug> forms still resolve, but only after client-side JavaScript runs, so prefer the paths listed here.
