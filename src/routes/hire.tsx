@@ -10,6 +10,7 @@ import { ArrowUpRight, FileText, Mail, Github, Linkedin } from "lucide-react";
 import { profile, metrics } from "../data/profile/core.ts";
 import { caseStudies } from "../data/profile/caseStudies.ts";
 import { projectCards } from "../data/profile/projectCards.ts";
+import { useMagnetic } from "../ui/motion/useMagnetic.ts";
 import { roomHead } from "../lib/routeHead.ts";
 import { useNow } from "../lib/useSky.ts";
 import { skyState } from "../lib/sky.ts";
@@ -123,12 +124,7 @@ function HirePage() {
               call to action on the hiring page had its last few characters cut
               off — html{overflow-x:hidden} clips rather than scrolls, so there
               was no way to see the rest of it. */}
-          <a
-            href={`mailto:${profile.email}`}
-            className="flex max-w-full items-center gap-2 break-all rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
-          >
-            <Mail size={17} className="shrink-0" /> {profile.email}
-          </a>
+          <PrimaryCta />
           <Link
             to="/resume"
             className="flex items-center gap-2 rounded-full border border-line px-6 py-3 font-semibold text-zinc-100 transition hover:border-accent hover:text-accent"
@@ -209,5 +205,18 @@ function HirePage() {
       </div>
     </main>
     </>
+  );
+}
+
+function PrimaryCta() {
+  const primaryCta = useMagnetic<HTMLAnchorElement>();
+  return (
+    <a
+      ref={primaryCta}
+      href={`mailto:${profile.email}`}
+      className="flex max-w-full items-center gap-2 break-all rounded-full bg-accent px-6 py-3 font-semibold text-ink transition hover:bg-accent-dim"
+    >
+      <Mail size={17} className="shrink-0" /> {profile.email}
+    </a>
   );
 }

@@ -1,0 +1,31 @@
+/* Route snapshots share the site's duration and easing tokens. */
+:root:active-view-transition-type(altitude-up)::view-transition-old(root) {
+  animation: altitude-recede var(--dur-base) var(--ease-out-expo) both;
+}
+:root:active-view-transition-type(altitude-up)::view-transition-new(root) {
+  animation: altitude-arrive var(--dur-base) var(--ease-out-expo) both;
+}
+:root:active-view-transition-type(altitude-down)::view-transition-old(root) {
+  animation: altitude-rise var(--dur-base) var(--ease-out-expo) both;
+}
+:root:active-view-transition-type(altitude-down)::view-transition-new(root) {
+  animation: altitude-descend var(--dur-base) var(--ease-out-expo) both;
+}
+@keyframes altitude-recede { to { transform: scale(0.9); opacity: 0; } }
+@keyframes altitude-arrive { from { transform: scale(1.1); opacity: 0; } }
+@keyframes altitude-rise { to { transform: scale(1.1); opacity: 0; } }
+@keyframes altitude-descend { from { transform: scale(0.9); opacity: 0; } }
+.motion-segment {
+  display: inline-block;
+  animation: altitude-text var(--dur-base) var(--ease-out-quart) both;
+  animation-delay: calc(var(--i) * var(--dur-fast) / 10);
+}
+@keyframes altitude-text {
+  from { opacity: 0; transform: translateY(0.15em); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root), .motion-segment {
+    animation: none !important;
+  }
+}
