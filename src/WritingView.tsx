@@ -1,3 +1,4 @@
+import { SiteHeader } from "./SiteHeader.tsx";
 import { ArrowUpRight, Github, PenLine, Rss } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { writing, writingGeneratedAt } from "./data/writing.ts";
@@ -53,18 +54,15 @@ export function WritingView() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur">
-        {/* Wraps. "Back to portfolio" plus the Ask pill is wider than a 320px
-            window — a Fold's cover screen — and with html{overflow-x:hidden}
-            the page does not scroll, it just loses the right-hand button. */}
+      <SiteHeader>
         <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4">
           {/* loopdown-no-worldswitch: this was a bespoke "Back to portfolio"
               button whose copy disagreed with every other world page's own
               back link ("The Build" on /ink, "The Ink" on /anthology). This
               is the only navigation the docstring above calls constant
               across both worlds, and /loopdown was the one page missing it. */}
-          <WorldSwitch current="build" />
-          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
+          <div className="shrink-0"><WorldSwitch current="build" /></div>
+          <div className="flex flex-wrap items-center justify-end gap-x-5 gap-y-2 max-md:min-w-0 max-md:flex-nowrap max-md:justify-start max-md:overflow-x-auto max-md:whitespace-nowrap max-md:[&>*]:shrink-0">
             {/* loopdown-no-worldswitch: these three carried `hidden sm:block`
                 with no menu replacement, so a 390px phone lost Projects,
                 Storyboard and Résumé outright — there was no way to reach
@@ -92,7 +90,7 @@ export function WritingView() {
             </button>
           </div>
         </nav>
-      </header>
+      </SiteHeader>
 
       <main id="main-content" tabIndex={-1} className="mx-auto max-w-5xl px-6">
         {/* hero */}
