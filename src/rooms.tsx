@@ -1,3 +1,4 @@
+import { SiteHeader } from "./SiteHeader.tsx";
 import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { ArrowLeft, Gauge, LayoutGrid, FlaskConical, Smartphone, Compass, Boxes, Sparkles, TerminalSquare, Crown, Tv, Briefcase, FileText, Store, Activity, PenLine, BookOpen, ScrollText, Orbit, Scale, Hammer, Rows3, History, Globe as GlobeIcon, type LucideIcon } from "lucide-react";
@@ -188,7 +189,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
   const showAltitudeRail = altitudeFor(pathname) !== "street";
   return (
     <div className="flex min-h-screen flex-col bg-void">
-      <header data-spine="route-header" className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+      <SiteHeader>
         <nav className="mx-auto flex max-w-7xl flex-nowrap items-center justify-between gap-1 px-2 py-1 sm:gap-3 sm:px-6">
           <div className="flex shrink-0 items-center gap-1 sm:gap-3">
             {/* Was a link to /playground - the hub that lists the rooms. The
@@ -220,7 +221,7 @@ export function RoomFrame({ title, tagline, children }: { title: string; tagline
             </button>
           </div>
         </nav>
-      </header>
+      </SiteHeader>
       <main id="main-content" tabIndex={-1} className="min-h-0 flex-1">
         {/* Every room route is single-purpose full-screen chrome (no scrollable
             page around it), so it never gets its own visible <h1> - this one

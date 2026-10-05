@@ -1,3 +1,4 @@
+import { SiteHeader } from "./SiteHeader.tsx";
 import { useState } from "react";
 import {ArrowLeft, Activity } from "lucide-react";
 import { ClientOnly } from "@tanstack/react-router";
@@ -267,7 +268,7 @@ function PulseInner() {
 
   return (
     <div className="flex min-h-screen flex-col bg-void">
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+      <SiteHeader>
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
             {/* This was a Link to /playground wearing LauncherButton's exact
@@ -307,7 +308,7 @@ function PulseInner() {
             </button>
           </div>
         </nav>
-      </header>
+      </SiteHeader>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-5xl flex-1 px-6">
         <p className="section-eyebrow mb-2">// the pulse</p>

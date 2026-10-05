@@ -1,3 +1,4 @@
+import { SiteHeader } from "./SiteHeader.tsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Hydrate } from "@tanstack/react-start";
 import { visible } from "@tanstack/react-start/hydration";
@@ -297,7 +298,7 @@ function Nav() {
   const { progressRef, active } = useScrollSpy();
   const { goToSection } = useSectionNav();
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-ink/80 backdrop-blur print:hidden">
+    <SiteHeader>
       {/* max-w-6xl, not the page's max-w-5xl: at 5xl the link row was already
           exactly at capacity (976px of space for 976px of links), so adding
           "Fit check" squeezed two labels onto two lines. A nav bar sitting a
@@ -356,7 +357,7 @@ function Nav() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px" aria-hidden>
         <div ref={progressRef} className="nav-progress h-full" style={{ width: 0 }} />
       </div>
-    </header>
+    </SiteHeader>
   );
 }
 

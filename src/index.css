@@ -319,18 +319,6 @@ body {
   .chat-launcher { top: 12px; }
 }
 
-/* F8: seven hand-rolled `header.sticky` copies (App.tsx, WritingView.tsx,
-   Pulse.tsx, TimeMachine.tsx, Lanes.tsx, rooms.tsx, Playground.tsx) pin
-   126-145px at the top of an 844px viewport — 15-17%, on top of the 80px
-   mobile utility row already reserved above. One rule un-sticks all seven
-   at once instead of editing each file (fix later: a shared compact header,
-   SP-20). */
-@media (max-width: 767px) {
-  header.sticky {
-    position: relative;
-  }
-}
-
 /* F5: the chat-lane clearance is only earned space at 768-1279px, where the
    fixed chat FAB and palette trigger genuinely sit inside the content
    column. At >= 1280 the crawl measured max-w-6xl content ending at x=1296
