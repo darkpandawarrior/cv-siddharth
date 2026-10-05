@@ -126,7 +126,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-const LINK_CLASS = "group inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent";
+const LINK_CLASS = "group inline-flex items-center gap-1 text-sm text-zinc-400 transition duration-(--dur-fast) hover:text-accent";
 
 /**
  * The real Pune weather, read once by useWeather() (the one shared
@@ -285,6 +285,7 @@ export function SiteFooter() {
           gets mobile back under the spine budget (spine F4); break-inside-
           avoid keeps each column's heading glued to its own list. `sm:grid`
           overrides `columns-2` outright once there is room for a real grid. */}
+      <h2 className="sr-only">Site navigation</h2>
       <div className="mx-auto max-w-5xl columns-2 gap-6 px-6 py-8 sm:grid sm:gap-8 sm:py-10 sm:grid-cols-4 lg:grid-cols-5">
         {COLUMNS.map((col) => (
           <div key={col.title} className="break-inside-avoid">
@@ -316,7 +317,7 @@ export function SiteFooter() {
                   {l.kind === "external" && (
                     <a href={l.href} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
                       {l.label}
-                      <ArrowUpRight size={11} className="opacity-0 transition group-hover:opacity-100" />
+                      <ArrowUpRight size={11} className="opacity-0 transition duration-(--dur-fast) group-hover:opacity-100" />
                     </a>
                   )}
                 </li>

@@ -49,7 +49,7 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
   return (
     <div
       style={client.color ? { borderLeftColor: client.color, borderLeftWidth: 2 } : undefined}
-      className={`flex h-full flex-col rounded-2xl border border-line p-4 transition hover:border-zinc-600 ${
+      className={`flex h-full flex-col rounded-2xl border border-line p-4 transition duration-(--dur-fast) hover:border-zinc-600 ${
         past ? "border-dashed" : "bg-card/50"
       }`}
     >
@@ -95,7 +95,7 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
               target="_blank"
               rel="noopener noreferrer"
               title={app.name ?? app.id}
-              className="group flex items-baseline gap-2 rounded-lg px-2 py-1.5 transition hover:bg-white/[0.04]"
+              className="group flex items-baseline gap-2 rounded-lg px-2 py-1.5 transition duration-(--dur-fast) hover:bg-white/[0.04]"
             >
               <span className="kicker w-[52px] shrink-0">
                 {SIDE_LABEL[app.side ?? ""] ?? "App"}
@@ -112,7 +112,7 @@ export function ShippedClient({ client, past = false }: { client: Client; past?:
               </span>
               <ArrowUpRight
                 size={12}
-                className="shrink-0 text-zinc-700 transition group-hover:text-accent"
+                className="shrink-0 text-zinc-700 transition duration-(--dur-fast) group-hover:text-accent"
                 aria-hidden
               />
             </a>

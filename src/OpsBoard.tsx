@@ -705,7 +705,7 @@ const runWeb = (el: SVGSVGElement) => {
      useArrival never calls this, so there is nothing to guard in CSS. Each edge
      leaves 25ms after the one before, so the last of 17 finishes at ~700ms. */
   el.querySelectorAll<SVGLineElement>(".ops-web__edge").forEach((ln, i) => {
-    ln.style.transition = `stroke-dashoffset 300ms linear ${i * 25}ms`;
+    ln.style.transition = `stroke-dashoffset var(--dur-base) linear ${i * 25}ms`;
     ln.style.strokeDashoffset = "0";
   });
 };
@@ -1799,7 +1799,7 @@ export function OpsBoard() {
             back button is the failure surfaces.test.ts calls the loopdown bug,
             and it would be a poor joke on a page about noticing things. */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <Link to="/" className="kicker-accent transition hover:opacity-80">← Back to portfolio</Link>
+          <Link to="/" className="kicker-accent transition duration-(--dur-fast) hover:opacity-80">← Back to portfolio</Link>
           <LauncherButton />
         </div>
         <h1 className="font-display mb-3 text-h2 font-bold tracking-tight">Still true, or only once true</h1>

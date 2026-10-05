@@ -107,7 +107,7 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
             type="button"
             onClick={() => { const el = video.current; if (el) { el.currentTime = 0; el.play().catch(() => {}); } }}
             aria-label="Replay tour"
-            className="rounded-full border border-line bg-ink/80 p-2.5 text-zinc-200 backdrop-blur transition hover:border-accent hover:text-accent"
+            className="rounded-full border border-line bg-ink/80 p-2.5 text-zinc-200 backdrop-blur transition duration-(--dur-fast) hover:border-accent hover:text-accent"
           >
             <RotateCcw size={16} />
           </button>
@@ -117,7 +117,7 @@ export function ShowcaseFilm({ slug, title }: { slug: string; title: string }) {
           onClick={() => setMuted((m) => !m)}
           aria-label={muted ? "Unmute voiceover" : "Mute voiceover"}
           aria-pressed={!muted}
-          className="rounded-full border border-line bg-ink/80 p-2.5 text-zinc-200 backdrop-blur transition hover:border-accent hover:text-accent"
+          className="rounded-full border border-line bg-ink/80 p-2.5 text-zinc-200 backdrop-blur transition duration-(--dur-fast) hover:border-accent hover:text-accent"
         >
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>

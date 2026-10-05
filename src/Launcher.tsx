@@ -71,7 +71,7 @@ function Tile({ surface, current, onGo }: { surface: Surface; current: boolean; 
       to={surface.to}
       onClick={onGo}
       aria-current={current ? "page" : undefined}
-      className={`group flex items-start gap-3 rounded-xl border p-3 transition ${
+      className={`group flex items-start gap-3 rounded-xl border p-3 transition duration-(--dur-fast) ${
         current
           ? "border-accent/60 bg-accent/5"
           : "border-line bg-card hover:border-accent/40"
@@ -85,7 +85,7 @@ function Tile({ surface, current, onGo }: { surface: Surface; current: boolean; 
         {Icon && <Icon size={15} />}
       </span>
       <span className="min-w-0">
-        <span className="block font-display text-sm font-bold text-zinc-100 transition group-hover:text-accent">
+        <span className="block font-display text-sm font-bold text-zinc-100 transition duration-(--dur-fast) group-hover:text-accent">
           {surface.label}
           {current && <span className="kicker-accent ml-2">here</span>}
         </span>
@@ -155,7 +155,7 @@ export function Launcher() {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close"
-            className="rounded-full border border-line p-2 text-zinc-400 transition hover:border-accent hover:text-accent"
+            className="rounded-full border border-line p-2 text-zinc-400 transition duration-(--dur-fast) hover:border-accent hover:text-accent"
           >
             <X size={15} />
           </button>
