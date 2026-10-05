@@ -220,7 +220,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
             type="button"
             onClick={() => setPresetId(p.id)}
             aria-pressed={presetId === p.id}
-            className={`rounded-full border px-3 py-1 font-mono text-xs transition duration-(--dur-fast) ${
+            className={`rounded-full border px-3 py-1 font-mono text-xs transition ${
               presetId === p.id
                 ? "border-accent bg-accent/15 text-accent"
                 : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -251,7 +251,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
             <button
               type="button"
               onClick={newGame}
-              className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs font-semibold text-accent transition duration-(--dur-fast) hover:bg-accent/20"
+              className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs font-semibold text-accent transition hover:bg-accent/20"
             >
               new game
             </button>
@@ -259,7 +259,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
               type="button"
               onClick={resign}
               disabled={over}
-              className="rounded-full border border-line px-3 py-1 font-mono text-xs text-zinc-400 transition duration-(--dur-fast) hover:text-zinc-200 disabled:opacity-40"
+              className="rounded-full border border-line px-3 py-1 font-mono text-xs text-zinc-400 transition hover:text-zinc-200 disabled:opacity-40"
             >
               resign
             </button>
@@ -310,7 +310,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
               openLab("search-trees");
               navigate({ to: "/lab" });
             }}
-            className="mt-2 font-mono text-xs text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-accent-dim"
+            className="mt-2 font-mono text-xs text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
           >
             Watch this exact search build its tree, live →
           </button>

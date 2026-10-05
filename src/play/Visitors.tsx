@@ -382,7 +382,7 @@ export function VisitorPlaque() {
                 · <Globe2 size={11} /> {zones.length} time zone{zones.length === 1 ? "" : "s"}
               </span>
             )}
-            <Link to="/pulse" className="transition duration-(--dur-fast) hover:text-accent">
+            <Link to="/pulse" className="transition hover:text-accent">
               · the full ledger →
             </Link>
           </p>

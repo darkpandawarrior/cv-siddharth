@@ -127,7 +127,7 @@ export function ChessFindings({
             <button
               type="button"
               onClick={() => onNavigate("rhythm")}
-              className="text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-accent-dim"
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
             >
               the hour I play tracks the hour I commit →
             </button>
@@ -135,7 +135,7 @@ export function ChessFindings({
             <button
               type="button"
               onClick={() => onNavigate("arc")}
-              className="text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-accent-dim"
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
             >
               see it
             </button>
@@ -225,7 +225,7 @@ export function ChessFindings({
                 <button
                   type="button"
                   onClick={onPlayTheEngine}
-                  className="mt-4 self-start font-mono text-xs text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-accent-dim"
+                  className="mt-4 self-start font-mono text-xs text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
                 >
                   Play the bot tuned to repeat this habit →
                 </button>
@@ -386,11 +386,11 @@ export function ChessFindings({
               href={p.url}
               target="_blank"
               rel="noreferrer"
-              className="panel card-elevated group flex flex-col p-5 transition duration-(--dur-fast) hover:border-accent/50"
+              className="panel card-elevated group flex flex-col p-5 transition hover:border-accent/50"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-display text-sm font-bold text-zinc-100">{p.id}</span>
-                <ArrowUpRight size={14} className="text-muted transition duration-(--dur-fast) group-hover:text-accent" />
+                <ArrowUpRight size={14} className="text-muted transition group-hover:text-accent" />
               </div>
               <p className="mt-2 font-mono text-xs text-muted">
                 {num(p.games)} games · joined {p.joined} · last game {p.lastActive}
@@ -430,7 +430,7 @@ export function ChessFindings({
           <h3 className="font-display text-xl font-bold tracking-tight">The cast</h3>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
             Over in{" "}
-            <Link to="/loopdown" className="text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-accent-dim">
+            <Link to="/loopdown" className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim">
               the Loopdown
             </Link>{" "}
             I give recurring production bugs names and personalities, because a bug you can
