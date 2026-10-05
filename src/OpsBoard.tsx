@@ -705,7 +705,7 @@ const runWeb = (el: SVGSVGElement) => {
      useArrival never calls this, so there is nothing to guard in CSS. Each edge
      leaves 25ms after the one before, so the last of 17 finishes at ~700ms. */
   el.querySelectorAll<SVGLineElement>(".ops-web__edge").forEach((ln, i) => {
-    ln.style.transition = `stroke-dashoffset 300ms linear ${i * 25}ms`;
+    ln.style.transition = `stroke-dashoffset var(--dur-base) linear ${i * 25}ms`;
     ln.style.strokeDashoffset = "0";
   });
 };

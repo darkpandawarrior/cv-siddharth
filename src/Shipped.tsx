@@ -107,7 +107,7 @@ export function Shipped() {
                     {app.name}
                   </span>
                   <span className="mt-1 text-sm leading-relaxed text-zinc-400">{app.role}</span>
-                  <span className="mt-4 flex items-center gap-4 font-mono text-[11px] text-muted">
+                  <span className="mt-4 flex items-center gap-4 font-mono text-xs text-muted">
                     {app.rating !== null && (
                       <span className="flex items-center gap-1.5">
                         <Star size={12} className="text-accent" aria-hidden />
@@ -260,14 +260,14 @@ export function Shipped() {
               },
             ].map((step, i) => (
               <li key={step.h} className="rounded-2xl border border-line bg-card/40 p-5">
-                <span className="font-mono text-[11px] text-accent">0{i + 1}</span>
+                <span className="font-mono text-xs text-accent">0{i + 1}</span>
                 <h3 className="font-display mt-1 text-base font-bold">{step.h}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-zinc-400">{step.p}</p>
               </li>
             ))}
           </ol>
 
-          <p className="mt-8 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mt-8 max-w-2xl font-mono text-xs leading-relaxed text-muted">
             <span className="inline-block h-1.5 w-1.5 translate-y-[-1px] rounded-full bg-accent align-middle" />{" "}
             marks the {fleetStats.setUpByHim + delisted.filter((a) => a.setUpByHim).length} I set up
             myself. {fleetStats.carryingHisCommits} of the {fleetStats.live} live ones are builds of
