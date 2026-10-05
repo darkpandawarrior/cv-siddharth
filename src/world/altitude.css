@@ -26,6 +26,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root), .motion-segment {
-    animation: none;
+    animation: none !important;
   }
 }

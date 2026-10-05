@@ -7,7 +7,7 @@ export function splitText(text: string, granularity: "word" | "grapheme" = "word
   if (reduced) return text;
   let index = 0;
   const segments = [...new Intl.Segmenter(undefined, { granularity }).segment(text)];
-  return createElement("span", null,
+  return createElement("span", { key: text },
     createElement("span", { className: "sr-only" }, text),
     createElement("span", { "aria-hidden": true }, segments.map(({ segment }, key) =>
       /^\s+$/.test(segment) ? segment : createElement("span", {

@@ -128,8 +128,8 @@ test("landmark Enter to a project has no black screencast frame", { tag: "@gpu" 
   const cdp = await page.context().newCDPSession(page);
   const frames: Promise<number>[] = [];
   cdp.on("Page.screencastFrame", ({ data, sessionId }) => {
-    void cdp.send("Page.screencastFrameAck", { sessionId });
-    frames.push(sharp(Buffer.from(data, "base64")).grayscale().raw().toBuffer()
+    void cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {});
+    frames.push(sharp(Buffer.from(data, "base64")).removeAlpha().grayscale().raw().toBuffer()
       .then((pixels) => pixels.reduce((sum, value) => sum + value, 0) / pixels.length));
   });
   try {
