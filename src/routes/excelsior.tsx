@@ -65,7 +65,7 @@ function ExcelsiorRoute() {
       // a page, they do not change what page you are on.
       viewTransition={false}
       title={m.note}
-      className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${
+      className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition duration-(--dur-fast) ${
         m.kind === "wrote"
           ? "border-accent/40 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10"
           : m.kind === "about"
@@ -75,7 +75,7 @@ function ExcelsiorRoute() {
     >
       <span aria-hidden>{m.kind === "wrote" ? "✎" : m.kind === "about" ? "❝" : "✦"}</span>
       {m.label}
-      <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+      <span className="font-mono text-xs text-muted">'{m.year.slice(2)}</span>
     </Link>
   ));
 
@@ -91,7 +91,7 @@ function ExcelsiorRoute() {
             not the world this page belongs to. The writing moved to /ink; the
             back link did not follow it. */}
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+          <Link to="/ink" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
             <ArrowLeft size={16} /> The Ink
           </Link>
           {/* excelsior-missing-footer-and-switch: the only Ink-world leaf
@@ -116,7 +116,7 @@ function ExcelsiorRoute() {
             <Link
               to="/excelsior"
               search={{ year: 2021, page: 5 }}
-              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
             >
               page 5 of '21
             </Link>
@@ -147,9 +147,9 @@ function ExcelsiorRoute() {
                   key={m.readSlug}
                   to="/read/$slug"
                   params={{ slug: m.readSlug! }}
-                  className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition hover:border-accent hover:bg-accent/10"
+                  className="rounded-full border border-accent/40 bg-accent/5 px-3.5 py-1.5 text-sm text-accent transition duration-(--dur-fast) hover:border-accent hover:bg-accent/10"
                 >
-                  {m.label} <span className="font-mono text-[10px] text-muted">'{m.year.slice(2)}</span>
+                  {m.label} <span className="font-mono text-xs text-muted">'{m.year.slice(2)}</span>
                 </Link>
               ))}
             </StaggerReveal>
@@ -164,7 +164,7 @@ function ExcelsiorRoute() {
             up, where the fold isn't the constraint, it's the plain row it
             always was. */}
         <details className="mt-4 sm:hidden">
-          <summary className="cursor-pointer text-sm text-zinc-300 transition hover:text-accent">
+          <summary className="cursor-pointer text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
             Jump to a page
           </summary>
           <div className="mt-2 flex flex-wrap gap-2">{jumpChips}</div>

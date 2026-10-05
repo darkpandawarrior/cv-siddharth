@@ -31,7 +31,7 @@ function InkRoute() {
     <div className="ink-world min-h-screen">
       <header className="border-b border-line">
         <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
             <ArrowLeft size={16} /> The Build
           </Link>
           <WorldSwitch current="ink" />
@@ -70,7 +70,7 @@ function InkRoute() {
               or care what order the two land in. */}
           <a
             href="/anthology"
-            className="panel group mt-8 flex max-w-2xl items-center justify-between gap-4 p-5 transition hover:border-accent/50"
+            className="panel group mt-8 flex max-w-2xl items-center justify-between gap-4 p-5 transition duration-(--dur-fast) hover:border-accent/50"
           >
             <p className="leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
               <span className="font-display font-bold text-zinc-100">The Morkinstar Journals.</span>{" "}
@@ -81,7 +81,7 @@ function InkRoute() {
               {anthology.seasons.length} seasons, a galactic field reporter filing what he finds
               until he stops filing.
             </p>
-            <ArrowRight size={18} className="shrink-0 text-accent transition group-hover:translate-x-1" />
+            <ArrowRight size={18} className="shrink-0 text-accent transition duration-(--dur-fast) group-hover:translate-x-1" />
           </a>
         </div>
         <WritingSection />

@@ -115,7 +115,7 @@ function MakingRoute() {
     <div className="min-h-screen bg-ink">
       <header className="border-b border-line">
         <nav className="mx-auto flex max-w-5xl items-center px-6 py-4">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition hover:text-accent">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-zinc-300 transition duration-(--dur-fast) hover:text-accent">
             <ArrowLeft size={16} /> Portfolio
           </Link>
         </nav>
@@ -405,7 +405,7 @@ function MakingRoute() {
                     href={r.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+                    className="text-sm text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
                   >
                     {r.label}
                   </a>
