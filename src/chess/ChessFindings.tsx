@@ -122,7 +122,7 @@ export function ChessFindings({
 
       {onNavigate && (
         <Reveal delay={40}>
-          <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 font-mono text-[11px]">
+          <p className="mt-3 flex flex-wrap items-baseline gap-x-1.5 gap-y-1 font-mono text-xs">
             <span className="text-muted">Same clock, two curves:</span>
             <button
               type="button"
@@ -152,7 +152,7 @@ export function ChessFindings({
                 <span className="kicker-accent flex items-center gap-2">
                   <Clock size={13} /> Clock remaining, by game progress
                 </span>
-                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold text-accent">
+                <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
                   THE THESIS
                 </span>
               </div>
@@ -182,12 +182,12 @@ export function ChessFindings({
                   vectorEffect="non-scaling-stroke"
                 />
               </svg>
-              <div className="mt-1.5 flex gap-4 font-mono text-[11px]">
+              <div className="mt-1.5 flex gap-4 font-mono text-xs">
                 <span className="text-accent2">— wins</span>
                 <span className="text-accent">— losses</span>
               </div>
               <div className="mt-4 overflow-x-auto">
-                <table className="w-full border-collapse text-left font-mono text-[11.5px] tabular-nums">
+                <table className="w-full border-collapse text-left font-mono text-xs tabular-nums">
                   <caption className="mb-3 caption-bottom text-left text-xs leading-relaxed text-muted">
                     Mean fraction of the starting clock still on my clock, from{" "}
                     {num(thesis.sampleSize)} blitz games carrying per-move clock annotations. The
@@ -195,7 +195,7 @@ export function ChessFindings({
                     spent long before any late blunder.
                   </caption>
                   <thead>
-                    <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
+                    <tr className="border-b border-line text-xs uppercase tracking-wider text-muted">
                       <th scope="col" className="py-1.5 pr-3 font-semibold">Progress</th>
                       <th scope="col" className="py-1.5 pr-3 text-right font-semibold">Wins</th>
                       <th scope="col" className="py-1.5 pr-3 text-right font-semibold">Losses</th>
@@ -225,7 +225,7 @@ export function ChessFindings({
                 <button
                   type="button"
                   onClick={onPlayTheEngine}
-                  className="mt-4 self-start font-mono text-[11px] text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
+                  className="mt-4 self-start font-mono text-xs text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
                 >
                   Play the bot tuned to repeat this habit →
                 </button>
@@ -327,14 +327,14 @@ export function ChessFindings({
             {/* min-w so the wrapper's overflow-x-auto actually scrolls on a
                 phone instead of crushing five columns of opening names into
                 four-line wraps and clipping the last one. */}
-            <table className="w-full min-w-[38rem] border-collapse text-left text-[12.5px] tabular-nums">
+            <table className="w-full min-w-[38rem] border-collapse text-left text-xs tabular-nums">
               <caption className="mb-3 caption-bottom text-left text-xs leading-relaxed text-muted">
                 The Scandinavian column sums only the Scandinavian lines that made that year&rsquo;s
                 top five replies, so it is a floor rather than an exact share; an em dash means none
                 of them did, not that it was never played.
               </caption>
               <thead>
-                <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
+                <tr className="border-b border-line text-xs uppercase tracking-wider text-muted">
                   <th scope="col" className="py-1.5 pr-3 font-semibold">Year</th>
                   <th scope="col" className="py-1.5 pr-3 text-right font-semibold">lichess</th>
                   <th scope="col" className="py-1.5 pr-3 text-right font-semibold">chess.com</th>
@@ -348,7 +348,7 @@ export function ChessFindings({
                     <th scope="row" className="py-1.5 pr-3 font-mono text-xs font-normal text-zinc-300">
                       {r.year}
                       {handoff?.year === r.year && (
-                        <span className="ml-2 rounded-full border border-accent2/50 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-accent2">
+                        <span className="ml-2 rounded-full border border-accent2/50 px-1.5 py-0.5 text-xs uppercase tracking-wider text-accent2">
                           handoff
                         </span>
                       )}
@@ -360,7 +360,7 @@ export function ChessFindings({
                       {r.activity ? num(r.activity.chesscom) : "—"}
                     </td>
                     <td className="whitespace-nowrap py-1.5 pr-3 text-zinc-200">
-                      {r.top.name} <span className="font-mono text-[11px] text-muted">{pct(r.top.share)}</span>
+                      {r.top.name} <span className="font-mono text-xs text-muted">{pct(r.top.share)}</span>
                     </td>
                     <td className="py-1.5 text-right font-mono text-xs">
                       {r.scandinavian > 0 ? (
@@ -392,10 +392,10 @@ export function ChessFindings({
                 <span className="font-display text-sm font-bold text-zinc-100">{p.id}</span>
                 <ArrowUpRight size={14} className="text-muted transition group-hover:text-accent" />
               </div>
-              <p className="mt-2 font-mono text-[11px] text-muted">
+              <p className="mt-2 font-mono text-xs text-muted">
                 {num(p.games)} games · joined {p.joined} · last game {p.lastActive}
               </p>
-              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-zinc-400">
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-zinc-400">
                 {p.peaks.map((k) => (
                   <li key={k.format}>
                     {k.format} peak <span className="text-zinc-200">{k.rating}</span>
@@ -461,7 +461,7 @@ export function ChessFindings({
                   win rate by game nine of one sitting, against {pct(firstGame?.winRate ?? 0)} on
                   game one. He should have stopped at eight.
                 </p>
-                <p className="mt-2 font-mono text-[10px] text-muted">
+                <p className="mt-2 font-mono text-xs text-muted">
                   {plural(ninth.n, "game")} — a thin tail, shown with its n
                 </p>
                 <ReactionRow surface="chess" itemId="the-ninth-game" className="mt-3" />
@@ -569,7 +569,7 @@ export function ChessFindings({
             </div>
           </div>
 
-          <p className="mt-5 font-mono text-[11px] text-muted">
+          <p className="mt-5 font-mono text-xs text-muted">
             {chessDeep.sampleSize.toLocaleString()} lichess games ·{" "}
             <span className="text-zinc-400">scripts/gen-chess-deep.mjs</span>
           </p>

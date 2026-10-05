@@ -54,7 +54,7 @@ export function ReactionRowView({
             disabled={!onReact}
             title={meta.label}
             aria-label={`${meta.label}${n ? `, ${n} so far` : ""}`}
-            className="flex items-center gap-1 rounded-full border border-line px-2 py-0.5 font-mono text-[11px] text-muted transition hover:border-accent/50 hover:text-accent disabled:opacity-70"
+            className="flex items-center gap-1 rounded-full border border-line px-2 py-0.5 font-mono text-xs text-muted transition hover:border-accent/50 hover:text-accent disabled:opacity-70"
           >
             <span aria-hidden>{meta.emoji}</span>
             {n > 0 && <span className="tabular-nums">{n}</span>}

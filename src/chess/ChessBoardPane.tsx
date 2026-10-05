@@ -251,7 +251,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
             <button
               type="button"
               onClick={newGame}
-              className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-[11px] font-semibold text-accent transition hover:bg-accent/20"
+              className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs font-semibold text-accent transition hover:bg-accent/20"
             >
               new game
             </button>
@@ -259,11 +259,11 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
               type="button"
               onClick={resign}
               disabled={over}
-              className="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-zinc-400 transition hover:text-zinc-200 disabled:opacity-40"
+              className="rounded-full border border-line px-3 py-1 font-mono text-xs text-zinc-400 transition hover:text-zinc-200 disabled:opacity-40"
             >
               resign
             </button>
-            <span className="font-mono text-[11px] text-muted">promotions auto-queen</span>
+            <span className="font-mono text-xs text-muted">promotions auto-queen</span>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
             </ol>
           )}
 
-          <p className="mt-4 max-w-md font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mt-4 max-w-md font-mono text-xs leading-relaxed text-muted">
             Both bots are named after real ratings: {PRESETS.sid2019.rating} is what he held on{" "}
             {chess.bestUpset.at}, the day he beat a {chess.bestUpset.opRating} on{" "}
             {chess.bestUpset.platform} — a +{chess.bestUpset.gap} upset. {PRESETS.sid2026.rating} is
@@ -310,7 +310,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
               openLab("search-trees");
               navigate({ to: "/lab" });
             }}
-            className="mt-2 font-mono text-[11px] text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
+            className="mt-2 font-mono text-xs text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim"
           >
             Watch this exact search build its tree, live →
           </button>

@@ -77,7 +77,7 @@ export function MarginNotesView({
         </button>
       </form>
       {error && (
-        <p className="mt-2 font-mono text-[11px] text-red-400" role="status">
+        <p className="mt-2 font-mono text-xs text-red-400" role="status">
           {error}
         </p>
       )}

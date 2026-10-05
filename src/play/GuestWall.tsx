@@ -99,7 +99,7 @@ export function GuestWall() {
           <button
             type="button"
             onClick={() => setWall((d) => void (d.notes = []))}
-            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-[11px] text-muted transition hover:border-red-500/50 hover:text-red-400"
+            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-xs text-muted transition hover:border-red-500/50 hover:text-red-400"
           >
             <Eraser size={12} /> clear the wall
           </button>
@@ -131,12 +131,12 @@ export function GuestWall() {
           <MessageSquarePlus size={14} /> pin it
         </button>
       </form>
-      <p className="mt-2 min-h-[1.25rem] font-mono text-[11px] text-red-400" role="status">
+      <p className="mt-2 min-h-[1.25rem] font-mono text-xs text-red-400" role="status">
         {error}
       </p>
 
       {notes.length === 0 ? (
-        <p className="mt-4 font-mono text-[11px] text-muted">nothing on the wall yet — be the first.</p>
+        <p className="mt-4 font-mono text-xs text-muted">nothing on the wall yet. Be the first.</p>
       ) : (
         <ul className="mt-4 flex flex-wrap gap-3">
           {[...notes].reverse().map((n) => (
