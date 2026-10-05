@@ -85,7 +85,7 @@ export function SkillsOrbit({ active, onSelect }: { active: string | null; onSel
             key={p.slug}
             to="/project/$slug"
             params={{ slug: p.slug }}
-            className="rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-mono text-[10px] text-accent/90 transition hover:border-accent hover:text-accent"
+            className="rounded-full border border-accent/30 bg-accent/5 px-2 py-0.5 font-mono text-xs text-accent/90 transition hover:border-accent hover:text-accent"
           >
             {p.name}
           </Link>

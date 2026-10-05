@@ -213,7 +213,7 @@ function ResetButton() {
       }}
       className={`pointer-events-auto flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm backdrop-blur transition ${
         armed
-          ? "border-[var(--color-warn)] bg-card text-[var(--color-warn)]"
+          ? "border-[var(--color-warn)] bg-card text-warn"
           : "border-line bg-card/80 text-zinc-400 hover:border-accent hover:text-accent"
       }`}
     >
@@ -312,7 +312,7 @@ function PromptCard({
           />
         </svg>
       </span>
-      <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+      <span className="font-mono text-xs uppercase tracking-widest text-muted">
         hold to {verb} · press Enter
       </span>
       <button
@@ -603,7 +603,7 @@ export function Hud(props: {
             className="pointer-events-auto flex w-full max-w-sm flex-col items-center gap-2 rounded-2xl border border-line bg-card/90 px-5 py-4 text-center backdrop-blur"
           >
             <span className="font-display text-base font-bold text-accent">Controls released</span>
-            <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+            <span className="font-mono text-xs uppercase tracking-widest text-muted">
               press a driving key or tap the world to resume
             </span>
             <button
@@ -725,7 +725,7 @@ export function Hud(props: {
             {/* The atlas legend, same markup as /map's own (StoryMap.tsx) so
                 "solid = measured, dashed = declared" reads as one convention
                 across all three altitudes rather than three different keys. */}
-            <div className="flex items-center gap-3 rounded-full border border-line bg-card/80 px-3 py-1 text-[10px] text-muted backdrop-blur">
+            <div className="flex items-center gap-3 rounded-full border border-line bg-card/80 px-3 py-1 text-xs text-muted backdrop-blur">
               <span className="flex items-center gap-1">
                 <svg width="12" height="2" aria-hidden><line x1="0" y1="1" x2="12" y2="1" stroke="currentColor" strokeWidth="1.5" /></svg>
                 measured

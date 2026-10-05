@@ -26,7 +26,7 @@ export function ErrorPanel({
     <main id="main-content" tabIndex={-1} className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-24">
       <AmbientBackground />
       <div className="glass-panel relative w-full max-w-lg rounded-2xl px-8 py-10 text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent2/80">{code}</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-accent2/80">{code}</p>
         <h1 className="font-display mt-3 text-2xl font-bold text-white sm:text-3xl">{title}</h1>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">{message}</p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

@@ -310,7 +310,7 @@ function FrameBackdrop({ frame }: { frame: (typeof FRAMES)[number] }) {
     <>
       <Line points={corners} color={readToken("--color-signal", "#3ddc84")} lineWidth={0.6} transparent opacity={0.2} />
       <Html position={[lx, ly, z + 0.15]} style={{ pointerEvents: "none" }}>
-        <span className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.3em] text-zinc-400/70">{frame.name}</span>
+        <span className="whitespace-nowrap font-mono text-xs uppercase tracking-widest text-zinc-400/70">{frame.name}</span>
       </Html>
     </>
   );
@@ -552,7 +552,7 @@ function Scene({
           <Comet color={readToken("--color-danger", "#ff5c5c")} radius={7} speed={1.3} tilt={0} />
           <Html fullscreen style={{ pointerEvents: "none" }}>
             <div className="flex h-full items-start justify-center pt-6">
-              <span className="animate-pulse rounded-full border border-accent2/60 bg-black/70 px-4 py-1 font-mono text-xs uppercase tracking-[0.4em] text-accent2">
+              <span className="animate-pulse rounded-full border border-accent2/60 bg-black/70 px-4 py-1 font-mono text-xs uppercase tracking-widest text-accent2">
                 legend mode
               </span>
             </div>

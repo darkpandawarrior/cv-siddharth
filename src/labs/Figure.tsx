@@ -22,7 +22,7 @@ export function Figure({ label, value, sub, tone }: { label: string; value: stri
     <div className="bg-void/70 px-5 py-3">
       <p className="kicker">{label}</p>
       <p className={`font-display text-xl font-bold ${TONE_CLASS[tone]}`}>{value}</p>
-      <p className="font-mono text-[11px] text-muted">{sub}</p>
+      <p className="font-mono text-xs text-muted">{sub}</p>
     </div>
   );
 }

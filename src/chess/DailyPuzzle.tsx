@@ -143,7 +143,7 @@ export default function DailyPuzzle({ builtAt, reduced }: { builtAt: string; red
             <button
               type="button"
               onClick={restart}
-              className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-[11px] font-semibold text-accent transition hover:bg-accent/20"
+              className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs font-semibold text-accent transition hover:bg-accent/20"
             >
               restart
             </button>
@@ -151,7 +151,7 @@ export default function DailyPuzzle({ builtAt, reduced }: { builtAt: string; red
               type="button"
               onClick={() => setRevealed(true)}
               disabled={revealed || solved}
-              className="rounded-full border border-line px-3 py-1 font-mono text-[11px] text-zinc-400 transition hover:text-zinc-200 disabled:opacity-40"
+              className="rounded-full border border-line px-3 py-1 font-mono text-xs text-zinc-400 transition hover:text-zinc-200 disabled:opacity-40"
             >
               show the line
             </button>

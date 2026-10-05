@@ -133,7 +133,7 @@ export function ModuleGraphLab() {
             {otherDots.map((d, i) => (
               <circle key={`o-${i}`} cx={d.x} cy={d.y} r={2} fill={CYAN} opacity={0.18} />
             ))}
-            <text x={CX} y={CY + OUTER_R + 22} textAnchor="middle" className="font-mono text-[10px]" fill="#71717a">
+            <text x={CX} y={CY + OUTER_R + 22} textAnchor="middle" className="font-mono text-xs" fill="#71717a">
               +{N_OTHER} shared &amp; composed modules
             </text>
 
@@ -176,7 +176,7 @@ export function ModuleGraphLab() {
                     x={lp.x}
                     y={lp.y}
                     textAnchor={lp.anchor as "start" | "end" | "middle"}
-                    className="font-mono text-[9.5px]"
+                    className="font-mono text-xs"
                     fill={f.named ? CYAN : "#71717a"}
                     opacity={f.named ? 0.95 : 0.65}
                   >
@@ -187,7 +187,7 @@ export function ModuleGraphLab() {
             })}
 
             <circle cx={CX} cy={CY} r={16} fill={CYAN} />
-            <text x={CX} y={CY + 4} textAnchor="middle" className="font-mono text-[10px] font-bold" fill="#05070a">
+            <text x={CX} y={CY + 4} textAnchor="middle" className="font-mono text-xs font-bold" fill="#05070a">
               :app
             </text>
           </svg>
@@ -206,7 +206,7 @@ export function ModuleGraphLab() {
           <Link
             to="/project/$slug"
             params={{ slug: "doori" }}
-            className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent"
+            className="ml-auto font-mono text-xs text-muted transition hover:text-accent"
           >
             the full story → Doori's {TOTAL} modules
           </Link>

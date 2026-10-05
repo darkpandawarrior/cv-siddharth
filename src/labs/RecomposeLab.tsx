@@ -66,7 +66,7 @@ export function RecomposeLab() {
           <span className="font-mono text-xs text-muted">
             avg cells touched: naive {avgTouched.naive} · optimized {avgTouched.optimized}
           </span>
-          <Link to="/loopdown" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
+          <Link to="/loopdown" className="ml-auto font-mono text-xs text-muted transition hover:text-accent">
             the full story → ghosts in the recomposition
           </Link>
         </div>

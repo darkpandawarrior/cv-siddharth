@@ -302,7 +302,7 @@ export function ChessVsCommits({ hours }: { hours: Corpus["hours"] }) {
         </div>
       </div>
 
-      <p className="mt-3 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+      <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-muted">
         Scope: every one of the {gameTotal.toLocaleString("en-US")} games in the corpus against{" "}
         {commitSample.n.toLocaleString("en-US")} of the {commitSample.total.toLocaleString("en-US")}{" "}
         commits matching the same search since {commitSample.from}. The commit half is a sample and the

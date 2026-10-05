@@ -6,6 +6,18 @@ export type TypeException = { selector: string; reason: string } & (
   { rem: number; submittedSize?: never } | { submittedSize: true; rem?: never }
 );
 
+// Standalone Canvas scenes retain their tuned rigs. Extra lights still count as drift.
+export const SCENE_RIG_ALLOWLIST: { file: string; lights: number; reason: string }[] = [
+  { file: "src/Blueprint3D.tsx", lights: 3, reason: "Standalone blueprint Canvas uses hemisphere fill and two hologram lights." },
+  { file: "src/FoundationGraphScene.tsx", lights: 4, reason: "Standalone foundation Canvas uses hemisphere fill, a key and two constellation lights." },
+  { file: "src/StoryMapScene.tsx", lights: 4, reason: "Standalone story Canvas uses hemisphere fill, a key and two constellation lights." },
+  { file: "src/blueprintHologram.tsx", lights: 3, reason: "Standalone hologram Canvas uses ambient fill and two token-coloured lights." },
+  { file: "src/Starmap.tsx", lights: 2, reason: "Standalone starmap Canvas uses ambient fill and a distant warm light." },
+  { file: "src/chess/ChessArcScene.tsx", lights: 2, reason: "Standalone rating Canvas uses ambient fill and a probe light." },
+  { file: "src/chess/GraveyardScene.tsx", lights: 2, reason: "Standalone chessboard Canvas uses ambient fill and a neutral light." },
+  { file: "src/chess/RepertoireTreeScene.tsx", lights: 2, reason: "Standalone repertoire Canvas uses ambient fill and a neutral light." },
+];
+
 // Entries name status indicators, ambient loops or scroll progress and explain their timing.
 export const MOTION_ALLOWLIST: MotionException[] = [
   { name: "chapter-drift", scrollDriven: true, reason: "scroll progress, not a wall-clock cycle" },

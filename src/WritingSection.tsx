@@ -69,7 +69,7 @@ export function WritingSection() {
               // rather than styling identically to an in-page anchor — same
               // "two colours before you click" idea WorldSwitch already uses,
               // spent here as a one-line hover tint instead of a new component.
-              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)] hover:decoration-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)]"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent hover:decoration-accent"
             >
               The Loopdown
             </Link>

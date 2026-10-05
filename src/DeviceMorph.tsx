@@ -474,7 +474,7 @@ export function DeviceMorph() {
                 title={`Your window is ${viewport.w}dp — ${classOf(viewport.w).label}`}
               >
                 <span aria-hidden className="h-3.5 w-px bg-zinc-400" />
-                <span className="font-mono-os mt-0.5 whitespace-nowrap text-[9px] uppercase tracking-wider text-muted">
+                <span className="font-mono-os mt-0.5 whitespace-nowrap text-xs uppercase tracking-wider text-muted">
                   you · {viewport.w}
                 </span>
               </span>
@@ -510,7 +510,7 @@ export function DeviceMorph() {
                   type="button"
                   onClick={() => applyForm(f)}
                   aria-pressed={active}
-                  className={`font-mono-os rounded-md border px-2.5 py-1 text-[11px] font-semibold transition ${
+                  className={`font-mono-os rounded-md border px-2.5 py-1 text-xs font-semibold transition ${
                     active
                       ? "border-accent bg-accent/10 text-accent"
                       : "border-line text-muted hover:border-zinc-600 hover:text-zinc-200"

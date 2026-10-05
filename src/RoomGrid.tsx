@@ -191,7 +191,7 @@ function WallChip({ r }: { r: Room }) {
     // Words, not just a dashed border: the chip has to carry its meaning to
     // someone who cannot see that it is drawn differently.
     <span
-      className="rounded-full border border-dashed border-line px-2 py-0.5 font-mono text-[10px] text-muted"
+      className="rounded-full border border-dashed border-line px-2 py-0.5 font-mono text-xs text-muted"
       title={WALL_NOTE[r.to].why}
     >
       {WALL_NOTE[r.to].chip}
@@ -273,7 +273,7 @@ function RoomCard({ r, i, previews }: { r: Room; i: number; previews: boolean })
       <h3 className="font-display mt-4 text-lg font-bold transition group-hover:text-accent">{r.label}</h3>
       <p className="mt-2 grow text-sm leading-relaxed text-zinc-400">{r.blurb}</p>
       <span
-        className="mt-4 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] font-semibold"
+        className="mt-4 flex flex-wrap items-center justify-between gap-2 font-mono text-xs font-semibold"
         style={{ color: r.tint }}
       >
         enter →
@@ -380,7 +380,7 @@ export function RoomGrid({ previews = true }: { previews?: boolean } = {}) {
           </div>
         </section>
       ))}
-      <div className="mt-8 space-y-2 font-mono text-[11px] leading-relaxed text-muted">
+      <div className="mt-8 space-y-2 font-mono text-xs leading-relaxed text-muted">
         {/* Says out loud why six cards show one number and two show two, so the
             odd pair reads as "these rooms have more to count" rather than as an
             inconsistency. Both halves are derived: which rooms, from the same
@@ -520,7 +520,7 @@ function LeadCard({ r, previews }: { r: Room; previews: boolean }) {
           actually counts.
         </p>
         <span
-          className="mt-4 flex items-center justify-between gap-2 font-mono text-[11px] font-semibold"
+          className="mt-4 flex items-center justify-between gap-2 font-mono text-xs font-semibold"
           style={{ color: r.tint }}
         >
           open the editor →

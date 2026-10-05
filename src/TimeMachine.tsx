@@ -182,7 +182,7 @@ export default function TimeMachine() {
           <div className="mt-8">
             <p className="kicker mb-3">what shipped</p>
             <ul className="flex flex-col gap-2">
-              <StaggerReveal as="li" step={40} className="rounded-lg border border-line bg-card/60 px-3 py-2 font-mono text-[12px] leading-relaxed text-zinc-300">
+              <StaggerReveal as="li" step={40} className="rounded-lg border border-line bg-card/60 px-3 py-2 font-mono text-xs leading-relaxed text-zinc-300">
                 {month.subjects.map((s) => (
                   <Fragment key={s}>{s}</Fragment>
                 ))}

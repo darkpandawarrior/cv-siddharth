@@ -256,7 +256,7 @@ export function ChessSearchLab() {
                 key={p.id}
                 onClick={() => setPresetId(p.id)}
                 aria-pressed={presetId === p.id}
-                className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition ${
+                className={`rounded-full border px-2.5 py-1 font-mono text-xs transition ${
                   presetId === p.id
                     ? "border-accent bg-accent/15 text-accent"
                     : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -285,7 +285,7 @@ export function ChessSearchLab() {
           <button
             onClick={run}
             disabled={busy}
-            className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-[11px] font-semibold text-accent transition hover:bg-accent/20 disabled:opacity-40"
+            className="rounded-full border border-accent/50 bg-accent/10 px-3 py-1 font-mono text-xs font-semibold text-accent transition hover:bg-accent/20 disabled:opacity-40"
           >
             {busy ? "searching…" : "run search"}
           </button>
@@ -301,7 +301,7 @@ export function ChessSearchLab() {
               </span>
             </>
           )}
-          <Link to="/chess" className="ml-auto font-mono text-[11px] text-muted transition hover:text-accent">
+          <Link to="/chess" className="ml-auto font-mono text-xs text-muted transition hover:text-accent">
             play the engine → the chess room
           </Link>
         </div>

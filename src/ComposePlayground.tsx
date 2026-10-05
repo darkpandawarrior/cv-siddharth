@@ -975,7 +975,7 @@ export default function ComposePlayground() {
           </div>
         </div>
         {aiNote && (
-          <p className="mx-auto max-w-7xl px-4 pb-2 font-mono text-xs text-[#ff8f8f] sm:px-6">{aiNote}</p>
+          <p className="mx-auto max-w-7xl px-4 pb-2 font-mono text-xs text-danger sm:px-6">{aiNote}</p>
         )}
       </div>
 
@@ -992,7 +992,7 @@ export default function ComposePlayground() {
               className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-relaxed text-muted"
             >
               {Array.from({ length: lineCount }, (_, i) => (
-                <div key={i} className={i + 1 === errorLine ? "text-[#ff8f8f]" : undefined}>{i + 1}</div>
+                <div key={i} className={i + 1 === errorLine ? "text-danger" : undefined}>{i + 1}</div>
               ))}
             </div>
             <textarea
@@ -1089,7 +1089,7 @@ export default function ComposePlayground() {
                         aria-live="assertive"
                         className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
                       >
-                        <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
+                        <span className="font-mono text-xs text-danger">compile error</span>
                         <span className="font-mono text-xs leading-relaxed text-muted">{error}</span>
                       </div>
                     ) : program ? (

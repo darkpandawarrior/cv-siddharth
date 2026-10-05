@@ -257,7 +257,7 @@ export function DayBars({
   const today = last?.day;
   return (
     <div
-      className={`flex items-end gap-[2px] ${className}`}
+      className={`flex items-end gap-0.5 ${className}`}
       role="img"
       /* The "N today" clause is the live edge's accessible half, so it is on the
          same flag the glow is. The plaque on /playground shares this component
@@ -348,7 +348,7 @@ export function VisitorPlaque() {
       aria-label="Visitor count"
     >
       <div className="min-w-0">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
+        <p className="font-mono text-xs uppercase tracking-widest text-muted">
           {myNumber ? (visit?.fresh ? "you are" : "you were") : "so far"}
         </p>
         <p className="font-display mt-1 text-4xl font-bold tabular-nums tracking-tight text-accent">
