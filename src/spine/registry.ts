@@ -92,6 +92,7 @@ export const SPINE: SpineEntry[] = [
   // already-budgeted row (src/rooms.tsx's RoomFrame), never a block of its
   // own. altitudeFor() only shows it on /map (ORBIT) and /globe (GLOBE); its
   // high reach comes from RoomFrame being every room route's shared wrapper.
+  { id: "scene-activity", file: "src/SceneActivity.tsx", kind: "primitive", internal: true, why: "shared live reduced-motion source" },
   { id: "altitude-rail", file: "src/world/AltitudeRail.tsx", kind: "primitive", why: "ORBIT/GLOBE altitude switcher, folded into route-header on /map and /globe (living-ledger-spec.md#6.2)" },
   { id: "evidence-chip", file: "src/EvidenceChip.tsx", kind: "primitive", why: "the evidence-chip primitive; mounted directly in 5 route files (16 files overall), unregistered when the spine audit's dry run was taken" },
   { id: "global-css", file: "src/index.css", kind: "css", bytes: 188_913, why: "one sheet on every route; owns the z-stack, body clearances, print, focus ring" },
