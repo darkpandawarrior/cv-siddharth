@@ -26,7 +26,7 @@ export function SceneActivity() {
   return null;
 }
 
-import { useReducedMotion as useMotionPreference } from "./lib/useReducedMotion.ts";
+import { useReducedMotion as useMotionPreference } from "./world/reducedMotion.ts";
 
 export function useReducedMotion(): boolean {
   return useMotionPreference();

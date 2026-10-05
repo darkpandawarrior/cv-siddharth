@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { altitudeFor, focusHandoffUrl, type Altitude } from "./altitude.ts";
-import { useReducedMotion } from "../lib/useReducedMotion.ts";
+import { prefersReducedMotion } from "./reducedMotion.ts";
 import altitudeStyles from "./altitude.css?url";
 
 const STOPS: { altitude: Altitude; label: string }[] = [
@@ -17,7 +17,6 @@ export function AltitudeRail() {
   const candidate = pathname.startsWith("/playground") ? search.at : search.focus;
   const slug = typeof candidate === "string" ? candidate : undefined;
   const navigate = useNavigate();
-  const reduced = useReducedMotion();
   const here = altitudeFor(pathname);
 
   function go(target: Altitude) {
@@ -25,6 +24,7 @@ export function AltitudeRail() {
     const to = focusHandoffUrl(here, target, slug);
     const type = STOPS.findIndex((s) => s.altitude === target) > STOPS.findIndex((s) => s.altitude === here)
       ? "altitude-up" : "altitude-down";
+    const reduced = prefersReducedMotion();
     if (reduced || typeof document.startViewTransition === "function") {
       void navigate({ to, viewTransition: reduced ? false : { types: [type] } });
       return;

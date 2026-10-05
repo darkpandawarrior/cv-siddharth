@@ -7,7 +7,7 @@ let search: Record<string, unknown> = {};
 let reduced = false;
 type Navigation = { to: string; viewTransition: false | { types: string[] } };
 const navigateCalls: Navigation[] = [];
-vi.mock("../lib/useReducedMotion.ts", () => ({ useReducedMotion: () => reduced }));
+vi.mock("./reducedMotion.ts", () => ({ prefersReducedMotion: () => reduced }));
 
 vi.mock("@tanstack/react-router", () => ({
   useRouterState: () => ({ pathname, search }),

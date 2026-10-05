@@ -1,5 +1,5 @@
 import { createElement, type CSSProperties, type ReactNode } from "react";
-import { useReducedMotion } from "../../lib/useReducedMotion.ts";
+import { useReducedMotion } from "../../world/reducedMotion.ts";
 import altitudeStyles from "../../world/altitude.css?url";
 
 /** Keep whitespace intact and expose the unsplit title once to assistive tools. */
