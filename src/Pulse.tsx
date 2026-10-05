@@ -453,11 +453,11 @@ function PulseInner() {
               <p className="w-full font-mono text-[11px] text-muted">reading the live counter…</p>
             )}
           </div>
-          <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted">
+          <div className="mt-1.5 flex justify-between font-mono text-xs text-muted">
             <span>{days[0]?.day}</span>
             <span className="text-accent2">today</span>
           </div>
-          <p className="mt-2 font-mono text-[10px] text-muted">
+          <p className="mt-2 font-mono text-xs text-muted">
             one browser, one line per day — refresh maths, not analytics.
           </p>
 
