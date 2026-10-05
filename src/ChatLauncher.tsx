@@ -33,9 +33,9 @@ export function ChatLauncher() {
     return () => window.removeEventListener(OPEN_CHAT_EVENT, onOpen);
   }, [pending]);
 
-  // The playground has its own HUD controls, so the root launcher stays off it.
+  // The playground keeps its own Ask control; only its floating launcher is hidden.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  if (pathname === "/playground") return null;
+  if (!pending && pathname === "/playground") return null;
 
   if (!pending) {
     return (

@@ -812,7 +812,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
           SiteFooter's first band (spine F1, F2, F14) — this component no
           longer renders it. FloatingChat keeps only the launcher and the
           panel below. */}
-      {!open && launcherRoot && createPortal(
+      {!open && pathname !== "/playground" && launcherRoot && createPortal(
         <button
           onClick={() => setOpen(true)}
           aria-label="Open chat"
