@@ -317,6 +317,7 @@ function PulseInner() {
           live · this moves while you are looking at it
         </p>
         <h1 className="font-display text-hero font-bold tracking-tight">
+          <span className="sr-only">The pulse, live site activity</span>
           {/* aria-hidden on the figures only: the <h1> keeps its heading role
               and its place in the document outline, while the numbers are
               announced once by the status region above instead of twice. */}
@@ -393,7 +394,7 @@ function PulseInner() {
           Every room on this site writes to one shared counter. This is the whole of it — what gets opened,
           what gets played with, and what nobody has touched yet.
         </p>
-        <p className="mt-3 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+        <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-muted">
           Counted per browser, not per person, and forgeable by anyone with a console — the full accounting is
           at the foot of the page.
         </p>
@@ -413,7 +414,7 @@ function PulseInner() {
             <h2 id="pulse-trace" className="font-display text-lg font-bold tracking-tight">
               The last 60 days
             </h2>
-            <span className="font-mono text-[11px] text-muted">{visits.toLocaleString()} in the window</span>
+            <span className="font-mono text-xs text-muted">{visits.toLocaleString()} in the window</span>
           </div>
 
           <div className="kicker mt-4 flex items-baseline justify-between gap-3">
@@ -450,7 +451,7 @@ function PulseInner() {
                  the shared ledger, not that the window is confirmed empty —
                  the ledger is the same document every visitor reads, so
                  "quiet" here was a guess dressed as a fact. */
-              <p className="w-full font-mono text-[11px] text-muted">reading the live counter…</p>
+              <p className="w-full font-mono text-xs text-muted">reading the live counter…</p>
             )}
           </div>
           <div className="mt-1.5 flex justify-between font-mono text-xs text-muted">
@@ -467,11 +468,11 @@ function PulseInner() {
               sixty rows a screen reader does, and a hidden table is a DOM cost
               paid by one audience for the benefit of another. */}
           <details className="mt-4">
-            <summary className="cursor-pointer font-mono text-[11px] text-muted transition hover:text-accent">
+            <summary className="cursor-pointer font-mono text-xs text-muted transition hover:text-accent">
               See every day
             </summary>
             <div className="mt-3 max-h-72 overflow-y-auto">
-              <table className="w-full max-w-sm border-collapse text-left font-mono text-[11px]">
+              <table className="w-full max-w-sm border-collapse text-left font-mono text-xs">
                 <thead>
                   <tr className="text-muted">
                     <th scope="col" className="border-b border-line py-1 font-normal">
@@ -511,7 +512,7 @@ function PulseInner() {
             <h2 id="pulse-doing" className="font-display text-lg font-bold tracking-tight">
               What people actually do
             </h2>
-            <span className="font-mono text-[11px] text-muted">{total.toLocaleString()} in all</span>
+            <span className="font-mono text-xs text-muted">{total.toLocaleString()} in all</span>
           </div>
 
           {/* This sentence is the accessible content for the strip below it —
@@ -545,7 +546,7 @@ function PulseInner() {
               <ol className="mt-3 space-y-3">
                 {top5.map((r, i) => (
                   <li key={r.event} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1.5">
-                    <span className="font-mono text-[11px] text-muted">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="font-mono text-xs text-muted">{String(i + 1).padStart(2, "0")}</span>
                     <span className="text-sm text-zinc-300">{r.label}</span>
                     <span className="font-mono text-sm tabular-nums text-signal">
                       <LiveNumber value={r.count.toLocaleString()} />
@@ -565,7 +566,7 @@ function PulseInner() {
               page starts flattering itself. What moved is only the default:
               nobody now scrolls a wall of zeroes to reach the trace. */}
           <details className="mt-10">
-            <summary className="cursor-pointer font-mono text-[11px] text-muted transition hover:text-accent">
+            <summary className="cursor-pointer font-mono text-xs text-muted transition hover:text-accent">
               See all {EVENT_COUNT}, including what nobody has touched yet
             </summary>
             <div className="mt-6 space-y-10">
@@ -578,7 +579,7 @@ function PulseInner() {
                       <h2 id={`pulse-${gi}`} className="font-display text-lg font-bold tracking-tight">
                         {g.group}
                       </h2>
-                      <span className="font-mono text-[11px] text-muted">{subtotal.toLocaleString()} total</span>
+                      <span className="font-mono text-xs text-muted">{subtotal.toLocaleString()} total</span>
                     </div>
                     <ul className="mt-4 space-y-3">
                       {g.rows.map((r) => (
@@ -661,7 +662,7 @@ function PulseInner() {
               </div>
             ))}
           </div>
-          <p className="mt-6 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mt-6 max-w-2xl font-mono text-xs leading-relaxed text-muted">
             {sentenceList(DOOR_ONLY_ROOMS.map((room) => room.label))} only know that you walked in. That is a
             gap in what gets measured, not a room nobody uses.
           </p>
@@ -673,7 +674,7 @@ function PulseInner() {
               in the disclosure above still carry every zero, which is where a
               zero belongs. */}
           {alsoHappening.length > 0 && (
-            <p className="mt-3 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+            <p className="mt-3 max-w-2xl font-mono text-xs leading-relaxed text-muted">
               Also happening, with no door event to measure it against:{" "}
               {/* The registry's own labels rather than nouns written for this
                   sentence. They read as verb phrases, so the tally trails them —
@@ -693,7 +694,7 @@ function PulseInner() {
               <h2 id="pulse-world" className="font-display text-lg font-bold tracking-tight">
                 Where in the world
               </h2>
-              <span className="font-mono text-[11px] text-muted">
+              <span className="font-mono text-xs text-muted">
                 {zones.length} time zone{zones.length === 1 ? "" : "s"}
               </span>
             </div>
@@ -703,7 +704,7 @@ function PulseInner() {
             </p>
 
             {regions.length === 1 ? (
-              <p className="mt-6 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+              <p className="mt-6 max-w-2xl font-mono text-xs leading-relaxed text-muted">
                 Every zone recorded so far is in {regions[0].region} — not enough spread yet to call this a
                 map.
               </p>
@@ -723,7 +724,7 @@ function PulseInner() {
                 {/* Shares of the zones this page shows. topZones caps at forty,
                     so on a site that ever collects more than that these are a
                     share of the shown forty, not of every zone ever seen. */}
-                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 font-mono text-[11px] text-muted">
+                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 font-mono text-xs text-muted">
                   {regions.map((r, i) => (
                     <li key={r.region} className="flex items-center gap-2">
                       <span
@@ -756,7 +757,7 @@ function PulseInner() {
                       className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-xs text-zinc-300"
                     >
                       {z.place}
-                      <span className="font-mono text-[10px] text-muted">{z.count}</span>
+                      <span className="font-mono text-xs text-muted">{z.count}</span>
                     </li>
                   ))}
                 </ul>
@@ -765,13 +766,13 @@ function PulseInner() {
           </section>
         )}
 
-        <p className="mt-12 max-w-2xl border-l-2 border-line pl-4 font-mono text-[11px] leading-relaxed text-muted">
+        <p className="mt-12 max-w-2xl border-l-2 border-line pl-4 font-mono text-xs leading-relaxed text-muted">
           How this works: every counted action writes to one shared CRDT document over a websocket, so these
           numbers move live and outlive the tab that made them. They are also stored client-side, which makes
           them forgeable by anyone who opens a console — a deliberate trade for having no backend to run. Treat
           them as a sign of life, not as analytics.
         </p>
-        <p className="mt-4 max-w-2xl border-l-2 border-line pl-4 font-mono text-[11px] leading-relaxed text-muted">
+        <p className="mt-4 max-w-2xl border-l-2 border-line pl-4 font-mono text-xs leading-relaxed text-muted">
           What the visitor count is: one number per browser that has opened a room, kept apart from the
           interaction counts above. A person counts once, on a flag in their own browser — so clearing site
           data or opening a private window counts again, and a phone and a laptop count twice. It is a floor

@@ -153,7 +153,7 @@
 
 /* Product photography, architectural metalwork and editorial type share one stage. */
 .hero-studio { padding-top: clamp(2.5rem, 5vw, 5rem); }
-.hero-studio h1 { font-size: clamp(2.65rem, 4.65vw, 4.6rem); line-height: 1.025; letter-spacing: -.055em; }
+.hero-studio h1 { font-size: var(--text-hero); line-height: 1.025; letter-spacing: -.055em; }
 .hero-studio-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: .7rem;
   min-height: 46px; padding: .8rem 1.35rem; border-radius: 999px;
@@ -189,7 +189,6 @@
 @media (max-width: 639px) {
   .hero-studio { gap: 2.5rem; }
   .hero-studio-watermark { font-size: var(--text-6xl); }
-  .hero-studio h1 { font-size: clamp(2.45rem, 10.5vw, 3.8rem); }
   .hero-studio-stage { padding: .9rem; }
   .hero-studio-object { padding: .75rem 0 1.2rem; }
   .hero-studio-caption { bottom: 0; }
@@ -197,13 +196,7 @@
 }
 
 
-/* ponytail: matches the design-system h1 scale (clamp(2.5rem, 6vw, 3.5rem)) instead
-   of the old clamp(3.5rem, 6vw, 6rem)/-.06em pair. That larger size overflowed its
-   two-col grid cell for any name close to "PaymentsLab-KMP" length: the only valid
-   break (the hyphen) still didn't fit, so the line overflowed behind the neighbouring
-   preview panel and the hyphen rendered hidden. Smaller scale, add a size ceiling if a
-   future name is even longer. */
-.project-studio-heading h1 { font-size: clamp(2.5rem, 6vw, 3.5rem); }
+.project-studio-heading h1 { font-size: var(--text-hero); }
 .project-studio-preview {
   position: relative; display: grid; place-items: center; min-height: 370px;
   width: 100%; padding: 2rem; overflow: hidden; isolation: isolate;

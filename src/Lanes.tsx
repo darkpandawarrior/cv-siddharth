@@ -37,7 +37,7 @@ function Grid({ lane, tip }: { lane: (typeof lanes)[number]; tip?: { repo: strin
   return (
     <div className="flex items-center gap-3">
       <span
-        className="w-28 shrink-0 text-right font-mono text-[11px] font-semibold"
+        className="w-28 shrink-0 text-right font-mono text-xs font-semibold"
         style={{ color: `var(${lane.hueVar})` }}
       >
         {lane.label}
@@ -131,7 +131,7 @@ export default function Lanes() {
             2019. Listed separately they read as four interests. Run in parallel they read as what
             they were: the same {years.length} years, moving on every lane at once.
           </p>
-          <p className="mt-2 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+          <p className="mt-2 max-w-2xl font-mono text-xs leading-relaxed text-muted">
             Same grid this profile's README already draws (github.com/darkpandawarrior), rendered
             live here instead of as a fetched image. Hover a cell for its month and count.
           </p>
@@ -163,7 +163,7 @@ export default function Lanes() {
                   // below a zero-height row was cut in half.
                   <span key={m} className="relative mt-1 h-3">
                     {m.endsWith("-01") && (
-                      <span className="absolute left-0 top-0 whitespace-nowrap font-mono text-[9px] leading-3 text-muted">
+                      <span className="absolute left-0 top-0 whitespace-nowrap font-mono text-xs leading-3 text-muted">
                         {m.slice(0, 4)}
                       </span>
                     )}
@@ -184,7 +184,7 @@ export default function Lanes() {
           <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {lanes.map((lane) => (
               <div key={lane.key} className="card-elevated rounded-2xl border border-line bg-surface p-4">
-                <p className="font-mono text-[10px] font-semibold" style={{ color: `var(${lane.hueVar})` }}>
+                <p className="font-mono text-xs font-semibold" style={{ color: `var(${lane.hueVar})` }}>
                   {lane.label}
                 </p>
                 <AnimatedMetric
@@ -201,7 +201,7 @@ export default function Lanes() {
           </div>
         </Reveal>
 
-        <p className="mt-6 max-w-2xl font-mono text-[11px] leading-relaxed text-muted">
+        <p className="mt-6 max-w-2xl font-mono text-xs leading-relaxed text-muted">
           {years.length} calendar years on one axis. Each lane states its own unit because they are not
           the same kind of count: {lanes.map((l) => l.unit).join(", ")}. The writing lane is plotted at
           year resolution, most pieces carry a year but no month, so read it by year rather than by

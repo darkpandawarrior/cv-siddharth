@@ -579,7 +579,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
             {LAB_OF[slug] && (
               <button
                 onClick={() => { openLab(LAB_OF[slug]); navigate({ to: "/lab" }); }}
-                className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-bold text-accent transition hover:bg-accent/20"
+                className="flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-bold text-accent transition hover:bg-accent/20"
               >
                 Open in Lab Bench →
               </button>
@@ -677,7 +677,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                           href={dep.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 font-mono text-[11px] text-accent underline-offset-2 hover:underline"
+                          className="inline-flex items-center gap-1 font-mono text-xs text-accent underline-offset-2 hover:underline"
                         >
                           open <ArrowUpRight size={11} />
                         </a>
