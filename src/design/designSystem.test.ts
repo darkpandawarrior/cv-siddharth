@@ -16,11 +16,13 @@
 //    Run this, review the diff, commit it; the orchestrator reconciles it
 //    across lanes the same way it reconciles src/data/repoStats.ts (M30).
 //  - DS_STRICT=1: any non-zero count anywhere fails, printing the per-file
-//    counts as the phase-5 (Phase U) worklist.
+//    counts as the phase-5 (Phase U) worklist. Named timings and the 1ms
+//    reduced-motion pattern share the rendered audit's exception list.
 import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { MOTION_ALLOWLIST } from "./exceptions.ts";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const SRC = path.join(ROOT, "src");
@@ -50,6 +52,35 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+function rawCssDrift(css: string): number {
+  const source = css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/@theme\s*\{[\s\S]*?\n\}/, "");
+  const reducedRanges = [...source.matchAll(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/g)].map((match) => {
+    let depth = 1, end = match.index! + match[0].length;
+    while (end < source.length && depth) {
+      if (source[end] === "{") depth++;
+      if (source[end] === "}") depth--;
+      end++;
+    }
+    return [match.index!, end];
+  });
+  return [...source.matchAll(RAW_CSS_RE)].filter((match) => {
+    const start = match.index!;
+    const declaration = source.slice(start).replace(/^[\s;{]+/, "").split(/[;{}]/, 1)[0].trim();
+    if (reducedRanges.some(([from, to]) => start >= from && start < to)
+      && /^(?:animation|transition)-duration:\s*1ms$/.test(declaration)) return false;
+    if (!declaration.startsWith("animation:")) return true;
+    // Split animation lists without splitting timing functions such as steps(1, end).
+    return !declaration.slice("animation:".length).split(/,(?![^()]*\))/).every((part) => {
+      const raw = part.match(/\b\d+(?:\.\d+)?(?:ms|s)\b/g) ?? [];
+      if (raw.length === 0) return true;
+      const animation = /^\s*([\w-]+)\s+(\d+(?:\.\d+)?)(ms|s)\b/.exec(part);
+      if (!animation || raw.length !== 1) return false;
+      const duration = Number(animation[2]) / (animation[3] === "ms" ? 1000 : 1);
+      return MOTION_ALLOWLIST.some((entry) => entry.name === animation[1] && entry.seconds === duration);
+    });
+  }).length;
+}
+
 function countFile(file: string): number {
   const content = fs.readFileSync(file, "utf8");
   let count = 0;
@@ -57,8 +88,7 @@ function countFile(file: string): number {
   count += (content.match(ARBITRARY_RE) ?? []).length;
 
   if (file.endsWith(".css")) {
-    const withoutTheme = content.replace(/@theme\s*\{[\s\S]*?\n\}/, "");
-    count += (withoutTheme.match(RAW_CSS_RE) ?? []).length;
+    count += rawCssDrift(content);
   }
 
   if (!file.endsWith(".css") && !isRigAllowlisted(file)) {
@@ -81,6 +111,27 @@ function computeCounts(): Record<string, number> {
 
 const WRITE = process.env.DS_WRITE_BASELINE === "1";
 const STRICT = process.env.DS_STRICT === "1";
+
+describe("shared source timing exceptions", () => {
+  it("accepts exact named timings and the reduced-motion pattern", () => {
+    for (const entry of MOTION_ALLOWLIST) {
+      if (entry.seconds !== undefined) expect(rawCssDrift(`.status { animation: ${entry.name} ${entry.seconds}s linear infinite; }`)).toBe(0);
+    }
+    expect(rawCssDrift("@media (prefers-reduced-motion: reduce) { .status { transition-duration: 1ms; } }")).toBe(0);
+    expect(rawCssDrift(".status { animation: ops-node-in var(--dur-fast) both, ops-pulse 1.6s infinite; }")).toBe(0);
+    expect(rawCssDrift(".status{opacity:1;animation:spin 1s infinite}")).toBe(0);
+  });
+
+  it("rejects raw durations outside the named and reduced-motion contexts", () => {
+    expect(rawCssDrift(".status { transition: opacity 137ms; }")).toBe(1);
+    expect(rawCssDrift(".status { animation: unknown 1s infinite; }")).toBe(1);
+    expect(rawCssDrift(".status { animation: spin 1.37s infinite; }")).toBe(1);
+    expect(rawCssDrift(".status { animation: spin 1s infinite, unknown 2s infinite; }")).toBe(1);
+    expect(rawCssDrift(".status { transition-duration: 1ms; }")).toBe(1);
+    expect(rawCssDrift("@media (prefers-reduced-motion: reduce) { .status { transition-duration: 2ms; } }")).toBe(1);
+    expect(rawCssDrift("@media not (prefers-reduced-motion: reduce) { .status { transition-duration: 1ms; } }")).toBe(1);
+  });
+});
 
 describe("globe glass surfaces", () => {
   it("uses the glass token rather than private opacity and blur pairs", () => {

@@ -3,6 +3,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 import { surfaces } from "../src/data/surfaces.ts";
 import { projects } from "../src/data/profile.ts";
+import { MOTION_ALLOWLIST, TYPE_ALLOWLIST } from "../src/design/exceptions.ts";
 
 // Keep this expression identical to spine.spec.ts without registering its tests twice.
 const ROUTES = [...new Set(["/", ...surfaces.map((s) => s.to), ...projects.map((p) => `/project/${p.slug}`), "/read/deadline", "/does-not-exist"])];
@@ -11,45 +12,6 @@ const VIEWPORTS = [
   { vp: "390", width: 390, height: 844 },
 ];
 const STRICT = process.env.DS_STRICT === "1";
-
-// These animations are status indicators or ambient infinite loops, never a one-shot UI transition.
-// Entries name an animation, its duration and the reason for the exception.
-const MOTION_ALLOWLIST = [
-  { name: "spin", seconds: 1, reason: "Tailwind loading indicator completes one rotation per second." },
-  { name: "pulse", seconds: 2, reason: "Tailwind pending status breathes once every two seconds." },
-  { name: "hud-dwell", seconds: 1, reason: "Entry progress encodes the one-second hold threshold." },
-  { name: "screen-marquee", seconds: 90, reason: "Ambient infinite carousel loop; a 0.6s cycle would make screenshots unreadable." },
-  { name: "aurora-shift", seconds: 16, reason: "Ambient infinite background loop; a 0.6s cycle would read as flicker." },
-  { name: "phone-float", seconds: 5, reason: "Ambient infinite phone float; a 0.6s cycle would read as shaking." },
-  { name: "float-soft", seconds: 6, reason: "Ambient infinite media float; a 0.6s cycle would read as shaking." },
-  { name: "hero-shimmer", seconds: 9, reason: "Ambient infinite hero sheen; a 0.6s cycle would read as flicker." },
-  { name: "sheen", seconds: 3.2, reason: "Ambient infinite cover sheen; a 0.6s cycle would read as flicker." },
-  { name: "sheen", seconds: 3.5, reason: "Ambient infinite underline sheen; a 0.6s cycle would read as flicker." },
-  { name: "cta-breathe", seconds: 3.2, reason: "Ambient infinite CTA glow; a 0.6s cycle would read as flashing." },
-  { name: "nav-wiggle", seconds: 2.4, reason: "Ambient infinite navigation illustration; a 0.6s cycle would read as shaking." },
-  { name: "glow-pulse", seconds: 4.5, reason: "Ambient infinite featured-media glow; a 0.6s cycle would read as flashing." },
-  { name: "term-sweep", seconds: 7, reason: "Ambient infinite terminal sweep; a 0.6s cycle would read as flicker." },
-  { name: "breathe", seconds: 2.6, reason: "Ambient infinite staggered dot loop; a 0.6s cycle would read as flashing." },
-  { name: "circuit-run", seconds: 8, reason: "Ambient infinite telemetry trace; a 0.6s cycle would outrun its station offsets." },
-  { name: "circuit-node-pulse", seconds: 8, reason: "Ambient infinite telemetry stations stay aligned with the eight-second trace." },
-  { name: "gps-draw", seconds: 4, reason: "Ambient infinite route illustration; a 0.6s cycle would obscure the track." },
-  { name: "gps-pulse", seconds: 1.6, reason: "Ambient infinite location marker; a 0.6s cycle would read as flashing." },
-  { name: "boot-caret", seconds: 1, reason: "The boot cursor marks a live build that is still loading." },
-  { name: "chat-caret", seconds: 1.05, reason: "The reply cursor marks text that is still streaming." },
-  { name: "voice-live", seconds: 1.2, reason: "The microphone or playback indicator marks active audio." },
-  { name: "spin", seconds: 4, reason: "Album art rotates while the live track is playing." },
-  { name: "pulse-breathe", seconds: 1.6, reason: "The live dot marks a feed that is connected." },
-  { name: "pulse-edge-glow", seconds: 1.6, reason: "The map edge marks visitor activity arriving live." },
-  { name: "ops-pulse", seconds: 1.6, reason: "The alarm dot marks an unresolved escalation." },
-  { name: "status-pulse", seconds: 2.2, reason: "The status dot marks an available live contact or service." },
-];
-
-// Pinned reading sizes pass only within the named source context and at the exact size.
-const TYPE_ALLOWLIST = [
-  { selector: ".project-studio-monogram", rem: 14, reason: "decorative monogram glyph, art not text" },
-  { selector: ".project-studio-monogram", rem: 7, reason: "decorative monogram glyph, art not text" },
-  { selector: ".piece-body", rem: 1.0625, reason: "Pinned prose size in src/readingMedium.test.ts, the reading floor." },
-];
 
 async function prepare(page: Page, path: string) {
   await page.clock.setFixedTime(new Date("2026-09-24T12:27:00+05:30"));
@@ -105,7 +67,7 @@ function audit(page: Page) {
     const durations = [0, ...["fast", "base", "slow"].map((name) => seconds(tokens[`--dur-${name}`] ?? ""))];
     const near = (a: number, b: number) => Math.abs(a - b) < 0.01;
     const allowedType = (el: Element, size: number) => typeScale.some((allowed) => near(size, allowed))
-      || typeAllowlist.some((entry) => el.closest(entry.selector) && near(size, entry.rem * rootSize));
+      || typeAllowlist.some((entry) => el.closest(entry.selector) && (entry.submittedSize || near(size, entry.rem! * rootSize)));
     const fail = (check: "font-size" | "duration" | "chip", el: Element, detail: string) => violations.push({ check, element: label(el), detail });
     for (const name of ["--text-hero", "--space-section-y", "--dur-fast", "--dur-base", "--dur-slow", "--ease-out-quart"]) {
       if (!tokens[name]) fail("duration", root, `missing design token ${name}`);
@@ -139,7 +101,14 @@ function audit(page: Page) {
             const duration = seconds(value);
             if (duration > 0) motionCount++;
             if (durations.some((allowed) => near(duration, allowed))) return;
-            if (kind === "animation" && allowlist.some((entry) => entry.name === name && near(duration, entry.seconds))) return;
+            if (kind === "animation" && allowlist.some((entry) => {
+              if (entry.name !== name) return false;
+              if (entry.scrollDriven) {
+                const timelines = motion.getPropertyValue("animation-timeline").split(",").map((s) => s.trim());
+                return value.trim() === "auto" && /^(?:scroll|view)\(/.test(timelines[i % timelines.length]);
+              }
+              return near(duration, entry.seconds!);
+            })) return;
             fail("duration", el, `${pseudo ?? "element"} ${kind} ${name}: ${value.trim()}`);
           });
         }
@@ -185,19 +154,37 @@ for (const { vp, width, height } of VIEWPORTS) {
   }
 }
 
-// DS_BREAK_IT=1 exposes the same strict verdict for the broker's negative run.
-test("break-it: an injected 13.37px text node fails the design system", async ({ page }) => {
+// DS_BREAK_IT=1 exposes the strict verdict for fixtures outside both exception contexts.
+test("break-it: off-scale text and raw or invalid auto durations fail", async ({ page }) => {
   await prepare(page, "/");
+  await page.addStyleTag({ content: "@keyframes ds-unlisted { from { opacity: 0.9; } to { opacity: 1; } }" });
   await page.evaluate(() => {
-    const text = document.createElement("span");
-    text.id = "ds-break-it";
-    text.textContent = "Injected design-system violation";
-    text.style.fontSize = "13.37px";
-    document.querySelector("main")!.prepend(text);
+    const fixtures = [
+      ["ds-break-it", "font-size:13.37px"],
+      ["ds-break-duration", "transition:opacity 137ms"],
+      ["ds-break-unlisted", "animation:ds-unlisted auto linear both;animation-timeline:view()"],
+      ["ds-break-clock", "animation:chapter-drift 1.37s linear infinite;animation-timeline:auto"],
+    ];
+    for (const [id, css] of fixtures) {
+      const text = document.createElement("span");
+      text.id = id;
+      text.textContent = "Injected design-system violation";
+      text.style.cssText = css;
+      document.querySelector("main")!.prepend(text);
+    }
   });
   const result = await audit(page);
-  const injected = result.violations.filter((v) => v.element === "span#ds-break-it" && v.check === "font-size");
-  expect(injected).toHaveLength(1);
-  expect(injected[0].detail).toContain("13.37px");
-  if (STRICT && process.env.DS_BREAK_IT === "1") expect(injected, "injected 13.37px text").toEqual([]);
+  const fixtures = [
+    ["ds-break-it", "font-size", "13.37px"],
+    ["ds-break-duration", "duration", "opacity: 0.137s"],
+    ["ds-break-unlisted", "duration", "ds-unlisted: auto"],
+    ["ds-break-clock", "duration", "chapter-drift: 1.37s"],
+  ];
+  const injected = fixtures.flatMap(([id, check, detail]) => {
+    const found = result.violations.filter((v) => v.element === `span#${id}` && v.check === check);
+    expect(found, id).toHaveLength(1);
+    expect(found[0].detail).toContain(detail);
+    return found;
+  });
+  if (STRICT && process.env.DS_BREAK_IT === "1") expect(injected, "fixtures outside the exception contexts").toEqual([]);
 });

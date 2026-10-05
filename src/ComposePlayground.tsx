@@ -1093,7 +1093,7 @@ export default function ComposePlayground() {
                         <span className="font-mono text-xs leading-relaxed text-muted">{error}</span>
                       </div>
                     ) : program ? (
-                      <div className="flex h-full flex-col">
+                      <div data-compose-preview className="flex h-full flex-col">
                         {program.tree.map((n, i) => renderNode(n, state, dispatch, i, onTextChange))}
                       </div>
                     ) : null}
