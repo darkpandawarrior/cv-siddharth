@@ -35,48 +35,25 @@ export type SpineEntry = {
   why: string;
 };
 
-const NO_SITE_FOOTER = ["/blueprint", "/chess", "/compose", "/forge", "/hire", "/lab", "/map", "/playground", "/resume", "/terminal", "/weeb"];
+const NO_SITE_FOOTER = ["/blueprint", "/chess", "/compose", "/forge", "/globe", "/hire", "/lab", "/map", "/playground", "/resume", "/terminal", "/weeb"];
 
 export const SPINE: SpineEntry[] = [
   { id: "skip-link", file: "src/routes/__root.tsx", kind: "chrome", selector: 'a[href="#main-content"]', routes: "all", maxHeight: { "1440": 1, "390": 1 }, why: "first focusable node; sr-only until focused" },
   { id: "sky-line", file: "src/SkyLine.tsx", kind: "chrome", selector: "[data-sky-line]", routes: "all", maxHeight: { "1440": 7, "390": 7 }, debt: "P1-01b", why: "the one sky signal on every page; fixed top hairline (F15)" },
   { id: "route-header", file: "src/SiteHeader.tsx", kind: "chrome", selector: 'header[data-spine="route-header"], header.z-10.border-b.border-line', routes: "any", maxHeight: { "1440": 150, "390": 359 }, why: "shared sticky header with one compact row below SkyLine; BlueprintRoom and ComposePlayground keep their own non-sticky shells; pinned-area rule limits the shared chrome" },
   { id: "anomaly-rail", file: "src/AnomalyRail.tsx", kind: "floating", selector: ".anomaly-rail", routes: "all", debt: "P1-01a", why: "secondary nav, fixed left edge; must not take taps meant for content (F7, F18)" },
-  { id: "palette-trigger", file: "src/CommandPalette.tsx", kind: "floating", selector: "button.palette-trigger", routes: "all", maxHeight: { "1440": 44, "390": 44 }, debt: "P1-01a", why: "eager root mount; covers bottom-left content today (F6)" },
+  { id: "palette-trigger", file: "src/CommandPalette.tsx", kind: "floating", selector: "button.palette-trigger, [data-globe-search-toggle]", routes: "all", maxHeight: { "1440": 44, "390": 44 }, debt: "P1-01a", why: "global palette trigger outside compact globe; compact /globe uses the topbar Search control instead" },
   { id: "globe-story-entry", file: "src/world/globe/ui/StoryPlayer.tsx", kind: "floating", selector: "[data-story-entry-compact]", routes: { only: ["/globe"] }, maxHeight: { "1440": 44, "390": 44 }, why: "compact My story entry when the globe HUD cannot fit the inline control; h-11 = 44px" },
   { id: "globe-film-entry", file: "src/world/globe/ui/StoryPlayer.tsx", kind: "floating", selector: "[data-film-entry-compact]", routes: { only: ["/globe"] }, maxHeight: { "1440": 44, "390": 44 }, why: "compact Life journey film entry above the story button; h-11 = 44px" },
-  { id: "chat-launcher", file: "src/FloatingChat.tsx", kind: "floating", selector: "button.chat-launcher", routes: "all", maxHeight: { "1440": 56, "390": 56 }, debt: "SP-10", why: "missing on /ops and 404 until mounted once in __root (F13)" },
-  // ChatLauncher.tsx split out of FloatingChat.tsx (SP-10, F12/F13): it is the
-  // actual eager root mount (imported directly by __root.tsx) and renders the
-  // SAME `.chat-launcher` button until chat is wanted, then lazy-hands off to
-  // FloatingChat's panel. Registered separately from "chat-launcher" above
-  // rather than repointing it, because FloatingChat.tsx still independently
-  // qualifies as spine on its own (registry.test.ts's own break-it check
-  // requires it to) — it renders its own copy of this button once the panel
-  // is later closed.
-  // "except /playground": ChatLauncher.tsx's own hide gate (`pathname ===
-  // "/playground" && captured`) is true from first paint there, not just
-  // mid-session — WorldV2 (P2-19) mounts by default and attaches keyboard
-  // capture on mount, with no explicit "enter" gesture for a capable visitor
-  // (world/input.ts's `captured` module flag defaults `true`, exactly so
-  // WASD works immediately), so a capable /playground load never shows this
-  // button. Reduced-motion/no-WebGL visitors land on the concept-painting
-  // fallback instead, which never mounts the world at all, so the button
-  // stays visible there — the exception is real but route-wide because
-  // e2e/spine.spec.ts's Chromium run is always WebGL-capable.
-  { id: "chat-launcher-root", file: "src/ChatLauncher.tsx", kind: "floating", selector: "button.chat-launcher", routes: { except: ["/playground"] }, maxHeight: { "1440": 56, "390": 56 }, why: "root-mounted in __root.tsx; the eager half of F12/F13's split, h-14 w-14 = 56x56" },
-  { id: "faq", file: "src/FaqDock.tsx", kind: "block", selector: '[data-spine="faq"]', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 240, "390": 180 }, debt: "SP-01", why: "17 answers, SSR-crawlable; docked as the footer's first band (F1, F2)" },
-  { id: "site-footer", file: "src/SiteFooter.tsx", kind: "block", selector: '[data-spine="site-footer"], footer.relative', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 800, "390": 1080 }, last: true, debt: "P1-01a", why: "includes the docked FAQ; 5 groups; no placeholder chips (F3, F4)" },
+  { id: "chat-launcher", file: "src/ChatLauncher.tsx", kind: "floating", selector: "button.chat-launcher", routes: { except: ["/playground"] }, maxHeight: { "1440": 56, "390": 56 }, debt: "SP-10", why: "one root-mounted launcher, handed to FloatingChat after opening; /playground uses its own Ask control and /globe uses the header Ask button" },
+  { id: "chat-panel", file: "src/FloatingChat.tsx", kind: "primitive", why: "lazy chat panel and continuation of the same launcher after closing; loaded by ChatLauncher, never a second route presence contract" },
+  { id: "faq", file: "src/FaqDock.tsx", kind: "block", selector: '[data-spine="faq"]', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 240, "390": 180 }, debt: "SP-01", why: "17 answers, SSR-crawlable; docked as the footer's first band (F1, F2); full-screen /globe uses RoomFrame and its room pager instead" },
+  { id: "site-footer", file: "src/SiteFooter.tsx", kind: "block", selector: '[data-spine="site-footer"], footer.relative', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 800, "390": 1080 }, last: true, debt: "P1-01a", why: "includes the docked FAQ; 5 groups; no placeholder chips (F3, F4); full-screen /globe uses RoomFrame and its room pager instead" },
   { id: "room-pager", file: "src/rooms.tsx", kind: "block", selector: '[data-spine="room-pager"]', routes: "any", maxHeight: { "1440": 96, "390": 96 }, last: true, debt: "SP-10", why: "next-room pager; the FAQ rendered below it on 8 rooms (F2)" },
   { id: "project-chapters", file: "src/ProjectDetail.tsx", kind: "chrome", selector: ".project-chapters", routes: { only: ["/project/*"] }, maxHeight: { "1440": 61, "390": 61 }, debt: "P1-01a", why: "sticky project sub-nav, 9 routes; within budget (section 1a: OK) but the <nav> lacks data-spine and SP-00 does not own src/ProjectDetail.tsx" },
-  // ponytail: `kind: "chrome"` is deliberate (it is route chrome, not a floating widget), but that
-  // means it is NOT covered by e2e/spine.spec.ts's `floatDebt` short-circuit (floating|route-header
-  // only). Its own `debt` below silences the maxHeight check; it does NOT silence the pinned-area
-  // check, which has no per-entry exemption and runs unconditionally under SPINE_STRICT=1. So
-  // SPINE_STRICT=1 fails here on BOTH "ops-banner: 402px > 398px budget" (1440 only) AND
-  // "pinned div.ops-banner holds 39.9%/25.9% of the viewport" (both viewports, max 10%/12%) until
-  // P2-14 shrinks it. Both are real and expected; list all of them in the handoff, not just the first.
-  { id: "ops-banner", file: "src/OpsBoard.tsx", kind: "chrome", selector: ".ops-banner", routes: { only: ["/ops"] }, maxHeight: { "1440": 398, "390": 688 }, debt: "P2-14", why: "sticky, pins inside its own section; route-local, over budget until P2-14 (maxHeight AND pinned-area both fail under SPINE_STRICT=1, see comment above)" },
+  // The banner stays in normal flow. Its scrollable rail retains every row.
+  // P2-14 remains the source-landmark tagging debt, not a height or pinned-area exemption.
+  { id: "ops-banner", file: "src/OpsBoard.tsx", kind: "chrome", selector: ".ops-banner", routes: { only: ["/ops"] }, maxHeight: { "1440": 398, "390": 688 }, debt: "P2-14", why: "route-local service status banner in normal flow on /ops, with a scrollable escalation rail; strict height and pinned-area checks pass" },
   { id: "term-scanlines", file: "src/Terminal.tsx", kind: "decor", selector: ".term-scanlines", routes: { only: ["/terminal"] }, debt: "P1-01a", why: "terminal room CRT scanline overlay, already pointer-events:none; the <div> lacks data-spine and SP-00 does not own src/Terminal.tsx" },
   { id: "playground-wipe", file: "src/Playground.tsx", kind: "decor", selector: ".playground-wipe", routes: { only: ["/playground"] }, debt: "P1-01a", why: "view-switch transition cover, already pointer-events:none, resolving F20(b)'s hit-testability check; the <div> lacks data-spine and SP-00 does not own src/Playground.tsx" },
   { id: "overlays", file: "src/Launcher.tsx", kind: "overlay", selector: '[role="dialog"][aria-modal="true"]', routes: "closed", internal: true, why: "Launcher, CommandPalette, InstrumentView, chat panel: never in the DOM until opened" },

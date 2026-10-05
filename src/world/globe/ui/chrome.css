@@ -28,7 +28,7 @@ body:has([data-globe-root]) [data-globe-chat] { position: static; inset: auto; }
   [data-globe-topbar] > div > [data-globe-weather] { display: none; }
   [data-hud-overflow] { display: block !important; }
   [data-hud-overflow] > summary { display: flex; }
-  [data-hud-overflow] > [data-globe-overflow] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; position: fixed; top: calc(var(--globe-room-top, 54px) + 60px); left: 8px; right: 8px; max-height: calc(100svh - var(--globe-room-top, 54px) - 76px); overflow: auto; padding: 12px; border: 1px solid var(--color-glass-border); border-radius: 16px; background: var(--color-ink); box-shadow: var(--shadow-elevation-2); }
+  [data-hud-overflow] > [data-globe-overflow] { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; position: fixed; top: calc(var(--globe-room-top, 54px) + 60px); left: 8px; right: 8px; max-height: 96px; overflow: auto; padding: 12px; border: 1px solid var(--color-glass-border); border-radius: 16px; background: var(--color-ink); box-shadow: var(--shadow-elevation-2); }
   [data-hud-overflow]:not([open]) > [data-globe-overflow] { display: none; }
   [data-globe-overflow] > [data-space-weather-pill] { display: grid; }
   [data-globe-overflow] > button, [data-globe-overflow] > div > button { min-height: 44px; min-width: 44px; }

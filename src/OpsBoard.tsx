@@ -1794,7 +1794,7 @@ export function OpsBoard() {
           route provides it. Without it "Skip to content" lands nowhere, which
           is both a real keyboard trap and what made e2e/a11y.spec.ts time out
           here rather than report a violation. */}
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[92rem] px-6 py-10">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[92rem] px-6 py-10 sm:pr-24">
         {/* A way out. A route a visitor can land on and only leave with the
             back button is the failure surfaces.test.ts calls the loopdown bug,
             and it would be a poor joke on a page about noticing things. */}
@@ -1824,7 +1824,7 @@ export function OpsBoard() {
         </p>
 
         <div className="ops-console font-mono-os">
-          <div className="ops-banner" data-worst={worstState}>
+          <div className="ops-banner !static !pb-2" data-worst={worstState}>
             <div className="ops-banner__line">
               {/* The eyebrow used to sit above the h1, in the scrollable
                   intro, so it read "the control loop" once and then scrolled
@@ -1882,7 +1882,7 @@ export function OpsBoard() {
                 {worstState === "BROKEN" && worst?.sinceIso && <BrokenClock sinceIso={worst.sinceIso} />}
               </div>
               {escalated.length > 0 && (
-                <div className="ops-rail__list">
+                <div className="ops-rail__list !max-h-40 sm:!max-h-56">
                   {escalated.map((m) => <Row key={`esc:${m.key}`} m={m} lane />)}
                 </div>
               )}
