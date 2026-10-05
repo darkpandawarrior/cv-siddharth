@@ -40,7 +40,7 @@ const NO_SITE_FOOTER = ["/blueprint", "/chess", "/compose", "/forge", "/hire", "
 export const SPINE: SpineEntry[] = [
   { id: "skip-link", file: "src/routes/__root.tsx", kind: "chrome", selector: 'a[href="#main-content"]', routes: "all", maxHeight: { "1440": 1, "390": 1 }, why: "first focusable node; sr-only until focused" },
   { id: "sky-line", file: "src/SkyLine.tsx", kind: "chrome", selector: "[data-sky-line]", routes: "all", maxHeight: { "1440": 7, "390": 7 }, debt: "P1-01b", why: "the one sky signal on every page; fixed top hairline (F15)" },
-  { id: "route-header", file: "src/rooms.tsx", kind: "chrome", selector: "header.sticky, header.z-10.border-b.border-line", routes: "any", maxHeight: { "1440": 150, "390": 359 }, debt: "P1-01a", why: "7 hand-rolled sticky copies until SP-20 (plus BlueprintRoom.tsx and ComposePlayground.tsx, found unregistered in the live tree since the audit); pinned-area rule does the real work" },
+  { id: "route-header", file: "src/SiteHeader.tsx", kind: "chrome", selector: 'header[data-spine="route-header"], header.z-10.border-b.border-line', routes: "any", maxHeight: { "1440": 150, "390": 359 }, why: "shared sticky header with one compact row below SkyLine; BlueprintRoom and ComposePlayground keep their own non-sticky shells; pinned-area rule limits the shared chrome" },
   { id: "anomaly-rail", file: "src/AnomalyRail.tsx", kind: "floating", selector: ".anomaly-rail", routes: "all", debt: "P1-01a", why: "secondary nav, fixed left edge; must not take taps meant for content (F7, F18)" },
   { id: "palette-trigger", file: "src/CommandPalette.tsx", kind: "floating", selector: "button.palette-trigger", routes: "all", maxHeight: { "1440": 44, "390": 44 }, debt: "P1-01a", why: "eager root mount; covers bottom-left content today (F6)" },
   { id: "globe-story-entry", file: "src/world/globe/ui/StoryPlayer.tsx", kind: "floating", selector: "[data-story-entry-compact]", routes: { only: ["/globe"] }, maxHeight: { "1440": 44, "390": 44 }, why: "compact My story entry when the globe HUD cannot fit the inline control; h-11 = 44px" },
@@ -92,6 +92,7 @@ export const SPINE: SpineEntry[] = [
   // already-budgeted row (src/rooms.tsx's RoomFrame), never a block of its
   // own. altitudeFor() only shows it on /map (ORBIT) and /globe (GLOBE); its
   // high reach comes from RoomFrame being every room route's shared wrapper.
+  { id: "scene-activity", file: "src/SceneActivity.tsx", kind: "primitive", internal: true, why: "shared live reduced-motion source" },
   { id: "altitude-rail", file: "src/world/AltitudeRail.tsx", kind: "primitive", why: "ORBIT/GLOBE altitude switcher, folded into route-header on /map and /globe (living-ledger-spec.md#6.2)" },
   { id: "evidence-chip", file: "src/EvidenceChip.tsx", kind: "primitive", why: "the evidence-chip primitive; mounted directly in 5 route files (16 files overall), unregistered when the spine audit's dry run was taken" },
   { id: "global-css", file: "src/index.css", kind: "css", bytes: 188_913, why: "one sheet on every route; owns the z-stack, body clearances, print, focus ring" },

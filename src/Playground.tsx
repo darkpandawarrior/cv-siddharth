@@ -1,3 +1,4 @@
+import { SiteHeader } from "./SiteHeader.tsx";
 import { Component, Suspense, lazy, useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Hydrate } from "@tanstack/react-start";
@@ -239,7 +240,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
         wantsWorld ? "h-screen overflow-hidden print:h-auto print:overflow-visible" : "min-h-screen"
       }`}
     >
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+      <SiteHeader>
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <button
             type="button"
@@ -270,7 +271,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
             </button>
           </div>
         </nav>
-      </header>
+      </SiteHeader>
       {isV1 && <ArchivePlaque />}
 
       {/* The cover never participates in hit testing. */}

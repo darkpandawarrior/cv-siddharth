@@ -1,3 +1,4 @@
+import { SiteHeader } from "./SiteHeader.tsx";
 import { Link } from "@tanstack/react-router";
 import { useLayoutEffect, useRef } from "react";
 import { ArrowLeft, Rows3 } from "lucide-react";
@@ -101,7 +102,7 @@ export default function Lanes() {
 
   return (
     <div className="flex min-h-screen flex-col bg-void">
-      <header className="sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
+      <SiteHeader>
         <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
             <LauncherButton />
@@ -119,7 +120,7 @@ export default function Lanes() {
           </span>
           <div className="w-[86px] sm:w-[110px]" aria-hidden="true" />
         </nav>
-      </header>
+      </SiteHeader>
 
       <main id="main-content" tabIndex={-1} className="section-y mx-auto w-full max-w-5xl flex-1 px-6">
         <header>
