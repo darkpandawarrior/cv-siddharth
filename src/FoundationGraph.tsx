@@ -75,12 +75,12 @@ export function FoundationGraph() {
                 href={n.url}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-muted transition hover:border-accent/50 hover:text-accent"
+                className="rounded-full border border-line px-2.5 py-1 font-mono text-xs text-muted transition hover:border-accent/50 hover:text-accent"
               >
                 {n.label}
               </a>
             ) : (
-              <span className="rounded-full border border-line px-2.5 py-1 font-mono text-[11px] text-muted">{n.label}</span>
+              <span className="rounded-full border border-line px-2.5 py-1 font-mono text-xs text-muted">{n.label}</span>
             )}
           </li>
         ))}
