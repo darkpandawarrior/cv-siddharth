@@ -23,7 +23,7 @@ const SUBSTITUTED: Record<string, readonly string[]> = {
  */
 export function KmpAdoption() {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="KMP module adoption by app">
       <table className="w-full min-w-[520px] border-collapse text-xs">
         <thead>
           <tr>

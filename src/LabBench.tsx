@@ -133,11 +133,11 @@ export function LabBench() {
                   >
                     {t.label}
                     {t.featured && (
-                      <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
+                      <span className="rounded-full border border-accent/40 px-1.5 py-px text-xs font-mono uppercase tracking-wider text-accent/80">
                         start here
                       </span>
                     )}
-                    <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
+                    <span className={`font-mono text-xs ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
                   </button>
                   <LabEvidence tab={t.key} />
                 </div>
@@ -160,11 +160,11 @@ export function LabBench() {
                   >
                     {t.label}
                     {t.featured && (
-                      <span className="rounded-full border border-accent/40 px-1.5 py-px text-[9px] font-mono uppercase tracking-wider text-accent/80">
+                      <span className="rounded-full border border-accent/40 px-1.5 py-px text-xs font-mono uppercase tracking-wider text-accent/80">
                         start here
                       </span>
                     )}
-                    <span className={`font-mono text-[10px] ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
+                    <span className={`font-mono text-xs ${tab === t.key ? "text-accent/80" : "text-muted"}`}>{t.metric}</span>
                   </button>
                   <LabEvidence tab={t.key} />
                 </div>

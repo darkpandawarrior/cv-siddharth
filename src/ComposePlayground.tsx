@@ -154,7 +154,7 @@ function resolveBool(expr: Expr | undefined, state: StateMap): boolean {
 // for anyone who asked for reduced motion.
 const MOTION_OK = typeof window === "undefined" || !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const TRANSITION = MOTION_OK
-  ? "background-color 0.35s ease, background 0.35s ease, color 0.3s ease, transform 0.35s cubic-bezier(0.2,0.7,0.2,1), opacity 0.3s ease, width 0.35s ease, height 0.35s ease, flex-grow 0.35s ease, border-radius 0.35s ease"
+  ? "background-color var(--dur-base) var(--ease-out-quart), background var(--dur-base) var(--ease-out-quart), color var(--dur-base) var(--ease-out-quart), transform var(--dur-base) var(--ease-out-quart), opacity var(--dur-base) var(--ease-out-quart), width var(--dur-base) var(--ease-out-quart), height var(--dur-base) var(--ease-out-quart), flex-grow var(--dur-base) var(--ease-out-quart), border-radius var(--dur-base) var(--ease-out-quart)"
   : undefined;
 
 /* ── modifier → CSS ──────────────────────────────────────────────────── */
@@ -323,7 +323,7 @@ function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, ke
         gridTemplateRows: visible ? "1fr" : "0fr",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(-6px)",
-        transition: MOTION_OK ? "grid-template-rows 0.4s cubic-bezier(0.2,0.7,0.2,1), opacity 0.3s ease, transform 0.35s ease" : undefined,
+        transition: MOTION_OK ? "grid-template-rows var(--dur-base) var(--ease-out-quart), opacity var(--dur-base) var(--ease-out-quart), transform var(--dur-base) var(--ease-out-quart)" : undefined,
       };
       return (
         <div key={key} style={style}>
@@ -362,7 +362,7 @@ function renderNode(node: Node, state: StateMap, dispatch: (n: Node) => void, ke
     }
     case "unknown":
       return (
-        <div key={key} style={{ padding: "6px 10px", borderRadius: 8, border: "1px dashed #ff5c5c66", color: "#ff8f8f", fontFamily: "var(--font-mono)", fontSize: 11 }}>
+        <div key={key} style={{ padding: "6px 10px", borderRadius: 8, border: "1px dashed #ff5c5c66", color: "#ff8f8f", fontFamily: "var(--font-mono)", fontSize: "var(--text-xs)" }}>
           {node.name} — not supported yet
         </div>
       );
@@ -898,7 +898,7 @@ export default function ComposePlayground() {
           ))}
           <span className="ml-auto flex items-center gap-2">
             {shareNote && (
-              <span aria-live="polite" className="font-mono text-[11px] text-accent2">
+              <span aria-live="polite" className="font-mono text-xs text-accent2">
                 {shareNote}
               </span>
             )}
@@ -927,7 +927,7 @@ export default function ComposePlayground() {
       {/* AI scenario generator — describe a screen, the assistant writes the Compose */}
       <div className="border-b border-line bg-void/40">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
-          <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-accent2">
+          <span className="flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-accent2">
             <Wand2 size={13} /> AI build
           </span>
           <form
@@ -967,7 +967,7 @@ export default function ComposePlayground() {
                 key={idea}
                 onClick={() => { setAiPrompt(idea); generate(idea); }}
                 disabled={aiBusy}
-                className="rounded-full border border-accent2/30 px-2.5 py-1 text-[11px] text-accent2/90 transition hover:border-accent2 hover:bg-accent2/10 disabled:opacity-40"
+                className="rounded-full border border-accent2/30 px-2.5 py-1 text-xs text-accent2/90 transition hover:border-accent2 hover:bg-accent2/10 disabled:opacity-40"
               >
                 {idea}
               </button>
@@ -975,7 +975,7 @@ export default function ComposePlayground() {
           </div>
         </div>
         {aiNote && (
-          <p className="mx-auto max-w-7xl px-4 pb-2 font-mono text-[11px] text-[#ff8f8f] sm:px-6">{aiNote}</p>
+          <p className="mx-auto max-w-7xl px-4 pb-2 font-mono text-xs text-[#ff8f8f] sm:px-6">{aiNote}</p>
         )}
       </div>
 
@@ -989,7 +989,7 @@ export default function ComposePlayground() {
             <div
               ref={gutterRef}
               aria-hidden
-              className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-[1.6] text-muted"
+              className="select-none overflow-hidden border-r border-line bg-ink/40 px-3 py-4 text-right font-mono text-xs leading-relaxed text-muted"
             >
               {Array.from({ length: lineCount }, (_, i) => (
                 <div key={i} className={i + 1 === errorLine ? "text-[#ff8f8f]" : undefined}>{i + 1}</div>
@@ -1002,7 +1002,7 @@ export default function ComposePlayground() {
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
-              className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-[16px] leading-[1.6] text-zinc-100 outline-none sm:text-[13px]"
+              className="min-h-0 flex-1 resize-none bg-transparent px-4 py-4 font-mono text-base leading-relaxed text-zinc-100 outline-none sm:text-sm"
               style={{ tabSize: 4 }}
               onKeyDown={(e) => {
                 // WCAG 2.1.2, No Keyboard Trap. Swallowing Tab to indent means
@@ -1032,7 +1032,7 @@ export default function ComposePlayground() {
               aria-describedby={error ? "compose-editor-escape-hint compose-parse-error" : "compose-editor-escape-hint"}
             />
           </div>
-          <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-muted">
+          <div className="flex items-center gap-2 border-t border-line px-4 py-2 font-mono text-xs text-muted">
             <Play size={11} className="text-accent" /> live · renders as you type
             <span id="compose-editor-escape-hint" className="ml-auto">
               Tab indents · <kbd className="rounded border border-line px-1">Esc</kbd> leaves the editor
@@ -1045,7 +1045,7 @@ export default function ComposePlayground() {
           ref={previewPaneRef}
           className="relative flex min-h-0 flex-col items-center justify-center overflow-auto bg-void/40 p-6"
         >
-          <div className="mb-3 flex items-center gap-1 rounded-full border border-line p-0.5 text-[11px] font-mono">
+          <div className="mb-3 flex items-center gap-1 rounded-full border border-line p-0.5 text-xs font-mono">
             <button
               type="button"
               onClick={() => setView("preview")}
@@ -1065,7 +1065,7 @@ export default function ComposePlayground() {
           </div>
 
           {view === "ast" ? (
-            <pre className="h-[520px] w-full max-w-[420px] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-line bg-[#0b0f0d] p-4 font-mono text-[11px] leading-relaxed text-accent2">
+            <pre className="h-[520px] w-full max-w-[420px] overflow-auto whitespace-pre-wrap break-words rounded-2xl border border-line bg-[#0b0f0d] p-4 font-mono text-xs leading-relaxed text-accent2">
               {program ? JSON.stringify(program, null, 2) : error}
             </pre>
           ) : (
@@ -1076,7 +1076,7 @@ export default function ComposePlayground() {
               <div ref={mockupRef} className="relative" style={{ transform: `scale(${previewBox.scale})`, transformOrigin: "top left" }}>
                 <div className="mx-auto w-[280px] overflow-hidden rounded-[2.2rem] border-[10px] border-[#0d1512] bg-[#0b0f0d] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)]">
                   {/* status bar */}
-                  <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-[9px] text-muted">
+                  <div className="flex items-center justify-between bg-[#0b0f0d] px-5 pb-1 pt-2 font-mono text-xs text-muted">
                     <span>9:41</span>
                     <span className="h-2.5 w-14 rounded-b-xl bg-[#0d1512]" />
                     <span>▮▮▮ 100%</span>
@@ -1090,7 +1090,7 @@ export default function ComposePlayground() {
                         className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"
                       >
                         <span className="font-mono text-xs text-[#ff8f8f]">compile error</span>
-                        <span className="font-mono text-[11px] leading-relaxed text-muted">{error}</span>
+                        <span className="font-mono text-xs leading-relaxed text-muted">{error}</span>
                       </div>
                     ) : program ? (
                       <div className="flex h-full flex-col">
@@ -1099,7 +1099,7 @@ export default function ComposePlayground() {
                     ) : null}
                   </div>
                 </div>
-                <p className="mt-4 text-center font-mono text-[10px] text-muted">simulated preview · state is live</p>
+                <p className="mt-4 text-center font-mono text-xs text-muted">simulated preview · state is live</p>
               </div>
             </div>
           )}
@@ -1114,10 +1114,10 @@ export default function ComposePlayground() {
           <NextRoomLink next={nextRoom} className="mx-auto mb-2 max-w-7xl border-b border-line pb-2" />
         )}
         <details className="mx-auto max-w-7xl">
-          <summary className="cursor-pointer font-mono text-[10px] text-muted marker:text-accent">
+          <summary className="cursor-pointer font-mono text-xs text-muted marker:text-accent">
             supported grammar, {PRESETS.length} examples, tap to expand
           </summary>
-          <p className="mt-1 font-mono text-[10px] leading-relaxed text-muted">{SUPPORTED}</p>
+          <p className="mt-1 font-mono text-xs leading-relaxed text-muted">{SUPPORTED}</p>
         </details>
       </footer>
     </div>

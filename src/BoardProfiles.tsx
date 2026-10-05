@@ -26,12 +26,12 @@ export function BoardProfilesGrid({ stagger = false }: { stagger?: boolean } = {
         >
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-display text-sm font-bold text-accent2">{p.title}</span>
-            <span className="font-mono text-[10px] text-muted">'{p.year.slice(2)}</span>
+            <span className="font-mono text-xs text-muted">'{p.year.slice(2)}</span>
           </div>
           <p className="kicker mt-1">{p.role}</p>
           <p className="mt-3 text-xs italic text-muted">Q: {p.question}</p>
           <blockquote className="mt-2 grow text-sm leading-relaxed text-zinc-300">"{p.quote}"</blockquote>
-          <p className="mt-3 font-mono text-[11px] text-muted">
+          <p className="mt-3 font-mono text-xs text-muted">
             ~「{p.direction}」~{p.gloss ? ` · ${p.gloss}` : ""}
           </p>
           {/* The card has always linked to the scan; nothing said so, so the

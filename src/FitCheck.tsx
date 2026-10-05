@@ -69,7 +69,7 @@ export function FitCheck() {
           {CONTRACT.map((c) => (
             <span
               key={c.label}
-              className="rounded-full border border-line bg-card px-3 py-1.5 font-mono text-[11px] text-muted"
+              className="rounded-full border border-line bg-card px-3 py-1.5 font-mono text-xs text-muted"
             >
               <span className="text-accent2">{c.label}</span> · {c.detail}
             </span>
@@ -85,7 +85,7 @@ export function FitCheck() {
           }}
           className="panel card-elevated overflow-hidden"
         >
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line bg-surface px-4 py-2.5 font-mono text-[10px] uppercase tracking-widest">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line bg-surface px-4 py-2.5 font-mono text-xs uppercase tracking-widest">
             {/* The strip header IS the field's label — visible, not sr-only.
                 Deliberately NOT the console composer's wording ("job
                 description → fit analysis"): both textareas can be on screen at
@@ -119,7 +119,7 @@ export function FitCheck() {
               className="w-full resize-y rounded-xl border border-line bg-ink px-3.5 py-3 text-sm leading-relaxed text-zinc-100 placeholder-muted outline-none focus:border-accent"
             />
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span className={`font-mono text-[11px] ${isJdNearCap(jd.length) ? "text-accent" : "text-muted"}`}>
+              <span className={`font-mono text-xs ${isJdNearCap(jd.length) ? "text-accent" : "text-muted"}`}>
                 {jd.length.toLocaleString()} / {JD_MAX_CHARS.toLocaleString()}
               </span>
               {/* sr-only on phones (no ⌘ to press) but never hidden from
@@ -127,7 +127,7 @@ export function FitCheck() {
                   No "nothing is stored" claim here: the console keeps the last
                   turns in localStorage, so that would be a lie on the one
                   section whose whole pitch is not overselling. */}
-              <span id="fit-jd-hint" className="sr-only text-[11px] text-muted sm:not-sr-only">
+              <span id="fit-jd-hint" className="sr-only text-xs text-muted sm:not-sr-only">
                 ⌘/Ctrl + Enter analyses
               </span>
               <button
@@ -157,7 +157,7 @@ export function FitCheck() {
                 <button
                   type="button"
                   onClick={() => openJdFit(jd.trim())}
-                  className="text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+                  className="text-xs font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
                 >
                   Ask a follow-up in the assistant →
                 </button>
@@ -165,7 +165,7 @@ export function FitCheck() {
                   <button
                     type="button"
                     onClick={run}
-                    className="inline-flex items-center gap-1 text-[11px] font-medium text-muted transition hover:text-accent"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-muted transition hover:text-accent"
                   >
                     <RotateCw size={11} /> Retry
                   </button>
