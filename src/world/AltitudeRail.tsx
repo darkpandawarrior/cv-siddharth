@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { altitudeFor, focusHandoffUrl, type Altitude } from "./altitude.ts";
-import { useReducedMotion } from "../SceneActivity.tsx";
-import "./altitude.css";
+import { useReducedMotion } from "../lib/useReducedMotion.ts";
+import altitudeStyles from "./altitude.css?url";
 
 const STOPS: { altitude: Altitude; label: string }[] = [
   { altitude: "street", label: "STREET" },
@@ -43,6 +43,7 @@ export function AltitudeRail() {
 
   return (
     <div role="group" aria-label="Altitude" data-altitude={here} className="flex items-center gap-0 rounded-full border border-line bg-ink/60 p-0 text-xs sm:gap-1">
+      <link rel="stylesheet" href={altitudeStyles} />
       {STOPS.map((stop) => {
         const active = stop.altitude === here;
         // A real <Link> (real href, crawlable, keyboard-activatable) rather

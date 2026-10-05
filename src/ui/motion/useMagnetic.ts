@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useReducedMotion } from "../../SceneActivity.tsx";
+import { useReducedMotion } from "../../lib/useReducedMotion.ts";
 
 /** Pointer attraction preserves the element's existing transform and keyboard behavior. */
 export function useMagnetic<T extends HTMLElement>() {

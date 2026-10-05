@@ -33,6 +33,10 @@ import { kmpGraph } from "./data/kmpGraph.ts";
 import { touch } from "./lib/sessionRipple.ts";
 import { useDensity, markEvidenceOpened, type Density } from "./lib/density.ts";
 
+function HeroTitle({ name }: { name: string }) {
+  return useSplitText(name);
+}
+
 // Projects with a narrated showcase film under public/projects/<slug>/showcase/.
 // Derived from the registry's own showcase flag, not a hand-typed list that
 // can drift when a project's showcase status changes.
@@ -356,7 +360,6 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const { goToSection } = useSectionNav();
   const project = projects.find((p) => p.slug === slug);
-  const heroTitle = useSplitText(project?.name ?? "");
   // Prefer a curated, captioned set; fall back to the auto-generated gallery.
   const items: { src: string; caption: string }[] = project?.screens?.length
     ? project.screens.map((s) => ({ src: heavy(`/projects/${slug}/screenshots/${s.file}`), caption: s.caption }))
@@ -501,7 +504,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                 className="font-display mt-2 text-hero font-bold tracking-tight text-balance"
                 style={{ viewTransitionName: `project-title-${slug}` }}
               >
-                {heroTitle}
+                {<HeroTitle name={project.name} />}
               </h1>
               <span className="sheen rise-in rise-in-1 mt-3 block h-[3px] w-28 rounded-full bg-clip-content" />
               <p className="rise-in rise-in-2 mt-4 text-lg text-accent">{project.tagline}</p>

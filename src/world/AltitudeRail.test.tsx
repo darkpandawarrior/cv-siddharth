@@ -7,7 +7,7 @@ let search: Record<string, unknown> = {};
 let reduced = false;
 type Navigation = { to: string; viewTransition: false | { types: string[] } };
 const navigateCalls: Navigation[] = [];
-vi.mock("../SceneActivity.tsx", () => ({ useReducedMotion: () => reduced }));
+vi.mock("../lib/useReducedMotion.ts", () => ({ useReducedMotion: () => reduced }));
 
 vi.mock("@tanstack/react-router", () => ({
   useRouterState: () => ({ pathname, search }),
@@ -89,7 +89,7 @@ describe("AltitudeRail direction and motion", () => {
   afterEach(() => { vi.unstubAllGlobals(); });
   function click(stop: string, modified = false) {
     const root = AltitudeRail();
-    const links = root.props.children as ReactElement<{ "data-altitude-stop": string; onClick: (e: unknown) => void }>[];
+    const links = (root.props.children as ReactElement[]).flat() as ReactElement<{ "data-altitude-stop": string; onClick: (e: unknown) => void }>[];
     const preventDefault = vi.fn();
     links.find((link) => link.props["data-altitude-stop"] === stop)!.props.onClick({
       button: 0, metaKey: modified, preventDefault,
