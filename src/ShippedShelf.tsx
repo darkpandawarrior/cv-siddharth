@@ -85,7 +85,7 @@ export function ShippedShelf() {
                 </span>
                 <span className="mt-1 text-sm leading-relaxed text-zinc-400">{app.role}</span>
 
-                <span className="mt-4 flex items-center gap-4 font-mono text-[11px] text-muted">
+                <span className="mt-4 flex items-center gap-4 font-mono text-xs text-muted">
                   {app.rating !== null && (
                     <span className="flex items-center gap-1.5">
                       <Star size={12} className="text-accent" aria-hidden />
@@ -145,7 +145,7 @@ export function ShippedShelf() {
                   <AppIcon app={app} size={34} />
                 </li>
               ))}
-              <li className="font-display grid h-[34px] place-items-center rounded-[22%] border border-dashed border-line px-2 text-[11px] text-muted">
+              <li className="font-display grid h-[34px] place-items-center rounded-[22%] border border-dashed border-line px-2 text-xs text-muted">
                 +{reached - wall.length}
               </li>
             </ul>

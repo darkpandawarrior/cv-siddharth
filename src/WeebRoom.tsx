@@ -94,7 +94,7 @@ export function WeebRoom() {
                 <li key={label} className="flex items-center gap-3">
                   <span className="w-24 shrink-0 font-mono text-xs text-zinc-400">{label}</span>
                   <span
-                    className="weeb-bar h-2 rounded-full bg-accent/70 transition-[width] duration-700"
+                    className="weeb-bar h-2 rounded-full bg-accent/70 transition-[width] duration-(--dur-slow)"
                     style={{ width: `${(n / maxStatus) * 62}%` }}
                   />
                   <span className="font-mono text-xs text-muted">{n}</span>
@@ -239,7 +239,7 @@ export function WeebRoom() {
                       )}
                     </span>
                     <span className="flex min-w-0 items-center gap-3 sm:justify-end">
-                      <span className="font-mono text-[11px] text-muted">
+                      <span className="font-mono text-xs text-muted">
                         {s.sequel}
                         {s.year ? ` · ${s.year}` : ""}
                       </span>

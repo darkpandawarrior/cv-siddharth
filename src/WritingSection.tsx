@@ -92,7 +92,7 @@ export function WritingSection() {
                   <PenLine size={14} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
                   <ArrowUpRight size={13} className="text-muted transition group-hover:text-accent2" />
                 </h3>
-                <span className="shrink-0 font-mono text-[11px] text-accent2/80">the origin blog</span>
+                <span className="shrink-0 font-mono text-xs text-accent2/80">the origin blog</span>
               </div>
               <p className="mt-1.5 text-sm leading-snug text-zinc-400">
                 {BOOKS_BEFORE_BROS.blurb} Most of the pieces below were first published there, at
@@ -103,7 +103,7 @@ export function WritingSection() {
               <div key={a.slug} className="card-elevated rounded-xl border border-line bg-surface p-4 transition hover:border-accent2/40">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-semibold text-zinc-100">{a.title}</h3>
-                  <span className="shrink-0 font-mono text-[11px] text-muted">{a.form}</span>
+                  <span className="shrink-0 font-mono text-xs text-muted">{a.form}</span>
                 </div>
                 {a.blurb && <p className="mt-1.5 text-sm leading-snug text-zinc-400">{a.blurb}</p>}
                 <div className="kicker mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">

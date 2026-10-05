@@ -110,7 +110,7 @@ function RepoCard({ r }: { r: Repo }) {
         </div>
         <ArrowUpRight size={15} className="shrink-0 text-muted transition group-hover:text-accent" />
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="flex items-center gap-1.5 font-mono text-zinc-400">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: LANG[r.lang] ?? "#8b96a0" }} />
           {r.lang}
@@ -118,7 +118,7 @@ function RepoCard({ r }: { r: Repo }) {
         <span className="rounded-full border border-line px-2 py-0.5 font-mono text-muted">{r.kind}</span>
       </div>
       <p className="mt-3 grow text-sm leading-relaxed text-zinc-400">{r.role}</p>
-      <p className="mt-4 font-mono text-[11px]" style={{ color: r.accent }}>
+      <p className="mt-4 font-mono text-xs" style={{ color: r.accent }}>
         {r.stat}
       </p>
     </a>
@@ -144,8 +144,8 @@ function ContributionList({ items }: { items: Contribution[] }) {
             <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
             <span className="font-mono text-xs text-muted">{c.repo}</span>
             <span className="ml-auto flex items-center gap-2">
-              <span className="rounded-full border border-accent/30 px-2 py-0.5 text-[10px] uppercase tracking-wide text-accent/80">{c.status}</span>
-              <span className="font-mono text-[11px] text-muted">{c.date}</span>
+              <span className="rounded-full border border-accent/30 px-2 py-0.5 text-xs uppercase tracking-wide text-accent/80">{c.status}</span>
+              <span className="font-mono text-xs text-muted">{c.date}</span>
             </span>
           </a>
         </li>
@@ -159,7 +159,7 @@ function RepoGroup({ label, hint, repos, intro }: { label: string; hint: string;
     <div className="mt-8 first:mt-0">
       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h4 className="kicker-accent font-semibold">{label}</h4>
-        <span className="font-mono text-[11px] text-muted">{hint}</span>
+        <span className="font-mono text-xs text-muted">{hint}</span>
       </div>
       {intro}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -232,7 +232,7 @@ export function ReposShowcase() {
           <div id="open-source" className="mt-8 scroll-mt-24">
             <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h4 className="kicker-accent font-semibold">career-ops</h4>
-              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-muted">
+              <span className="inline-flex items-center gap-1.5 font-mono text-xs text-muted">
                 a public OSS project
                 <span className="inline-flex items-center gap-1 rounded-full border border-line px-1.5 py-0.5 text-accent/90">
                   <Star size={10} aria-hidden="true" />
@@ -251,7 +251,7 @@ export function ReposShowcase() {
               href="https://github.com/career-ops-hq/career-ops/pulls?q=author%3Adarkpandawarrior"
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted transition hover:text-accent"
+              className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-muted transition hover:text-accent"
             >
               <Star size={11} /> View my pull requests on career-ops <ArrowUpRight size={11} />
             </a>
