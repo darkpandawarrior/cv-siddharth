@@ -98,7 +98,7 @@ export function Compare({
               role="tab"
               aria-selected={i === active}
               onClick={() => setActive(i)}
-              className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors ${
+              className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors duration-(--dur-fast) ${
                 i === active
                   ? "border-accent bg-accent/10 text-accent"
                   : "border-line text-muted hover:border-accent/40 hover:text-text"
@@ -167,22 +167,22 @@ export function Compare({
               style={{ left: `${pos}%` }}
             >
               <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-accent" />
-              <span className="absolute top-1/2 left-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-accent bg-surface font-mono text-[10px] text-accent">
+              <span className="absolute top-1/2 left-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-accent bg-surface font-mono text-xs text-accent">
                 ↔
               </span>
             </div>
 
-            <span className="pointer-events-none absolute bottom-2 left-2 rounded-xs border border-glass-border bg-glass px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-text uppercase backdrop-blur-sm">
+            <span className="pointer-events-none absolute bottom-2 left-2 rounded-xs border border-glass-border bg-glass px-1.5 py-0.5 font-mono text-xs tracking-wider text-text uppercase backdrop-blur-sm">
               light
             </span>
-            <span className="pointer-events-none absolute right-2 bottom-2 rounded-xs border border-glass-border bg-glass px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-text uppercase backdrop-blur-sm">
+            <span className="pointer-events-none absolute right-2 bottom-2 rounded-xs border border-glass-border bg-glass px-1.5 py-0.5 font-mono text-xs tracking-wider text-text uppercase backdrop-blur-sm">
               dark
             </span>
           </>
         )}
       </div>
 
-      <figcaption className="mx-auto mt-2 flex max-w-md items-baseline justify-between gap-3 font-mono text-[11px] text-muted">
+      <figcaption className="mx-auto mt-2 flex max-w-md items-baseline justify-between gap-3 font-mono text-xs text-muted">
         <span>{current.label}</span>
         <span>
           {hasDark
@@ -232,7 +232,7 @@ export function CompareSection({ slug }: { slug: string }) {
                 role="tab"
                 aria-selected={name === activeSet}
                 onClick={() => setActiveSet(name)}
-                className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors ${
+                className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors duration-(--dur-fast) ${
                   name === activeSet
                     ? "border-accent bg-accent/10 text-accent"
                     : "border-line text-muted hover:border-accent/40 hover:text-text"

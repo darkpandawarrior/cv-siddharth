@@ -266,7 +266,7 @@ function GraveyardPane({ corpus }: { corpus: Corpus }) {
             type="button"
             onClick={() => setView(v)}
             aria-pressed={view === v}
-            className={`rounded-full border px-3 py-1 font-mono text-xs transition ${
+            className={`rounded-full border px-3 py-1 font-mono text-xs transition duration-(--dur-fast) ${
               view === v ? "border-accent bg-accent/15 text-accent" : "border-line text-zinc-400 hover:text-zinc-200"
             }`}
           >
@@ -492,7 +492,7 @@ export function ChessRoom() {
             onClick={() => setTab(t.key)}
             aria-pressed={tab === t.key}
             aria-controls="chess-pane"
-            className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+            className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition duration-(--dur-fast) ${
               tab === t.key
                 ? "border-accent bg-accent/15 text-accent"
                 : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"

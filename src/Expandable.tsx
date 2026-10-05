@@ -42,7 +42,7 @@ export function Expandable<T>({
           // click-to-navigate wrapper — stop the toggle from also firing that.
           onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
           onKeyDown={(e) => e.stopPropagation()}
-          className="kicker-accent w-fit transition hover:opacity-80"
+          className="kicker-accent w-fit transition duration-(--dur-fast) hover:opacity-80"
         >
           {expanded ? "show less" : `+ ${hiddenCount} more`}
         </button>

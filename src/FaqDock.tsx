@@ -113,7 +113,7 @@ export function FaqDock({ jsonLd = false }: FaqDockProps) {
                   of the desktop tab order. `visibility` puts that back: a
                   closed card's controls are neither focusable nor exposed to
                   a screen reader, same as mobile's native display:none. */}
-              <div className="md:invisible md:grid md:grid-rows-[0fr] md:transition-[grid-template-rows] md:duration-300 md:ease-out md:group-open:visible md:group-open:grid-rows-[1fr] md:motion-reduce:transition-none max-md:absolute max-md:inset-x-0 max-md:top-full max-md:z-20">
+              <div className="md:invisible md:grid md:grid-rows-[0fr] md:transition-[grid-template-rows] md:duration-(--dur-base) md:ease-out md:group-open:visible md:group-open:grid-rows-[1fr] md:motion-reduce:transition-none max-md:absolute max-md:inset-x-0 max-md:top-full max-md:z-20">
                 <div className="md:overflow-hidden">
                   <div className="space-y-2 text-xs leading-relaxed text-zinc-400 md:pt-2 max-md:rounded-lg max-md:border max-md:border-line max-md:bg-ink max-md:p-3 max-md:shadow-lg">
                     <p>{a.answer}</p>
@@ -122,7 +122,7 @@ export function FaqDock({ jsonLd = false }: FaqDockProps) {
                       <button
                         type="button"
                         onClick={() => openChat({ context: { question: a.question, answer: a.answer, source } })}
-                        className="rounded-full border border-line px-2.5 py-1 text-xs text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                        className="rounded-full border border-line px-2.5 py-1 text-xs text-muted transition duration-(--dur-fast) hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
                       >
                         Ask Panda a follow-up
                       </button>

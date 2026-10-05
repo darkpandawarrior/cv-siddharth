@@ -816,7 +816,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
         <button
           onClick={() => setOpen(true)}
           aria-label="Open chat"
-          className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
+          className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition duration-(--dur-fast) hover:scale-105 print:hidden"
         >
           <MessageCircle size={24} />
         </button>,
@@ -845,7 +845,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
           <div className="flex items-center justify-between gap-2 border-b border-line bg-surface px-4 py-3">
             <div className="min-w-0">
               <p className="font-display text-sm font-bold">
-                <span className="mr-1.5 font-mono text-[11px] font-normal text-accent">sid@android:~$</span>
+                <span className="mr-1.5 font-mono text-xs font-normal text-accent">sid@android:~$</span>
                 Panda <span className="font-normal text-muted">· Siddharth’s AI assistant</span>
               </p>
               <p className="truncate text-xs text-muted">
@@ -899,7 +899,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                         // is the native, keyboard-operable way to fold it away
                         // without the panel becoming a scroll canyon.
                         <details>
-                          <summary className="cursor-pointer font-mono text-[11px] text-zinc-300 marker:text-accent">
+                          <summary className="cursor-pointer font-mono text-xs text-zinc-300 marker:text-accent">
                             pasted text · {m.content.length.toLocaleString()} characters
                           </summary>
                           <div className="mt-2 max-h-64 overflow-y-auto text-xs leading-relaxed text-zinc-200">
@@ -991,14 +991,14 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
               })}
               {suggestions.length > 0 && (
                 <div className="space-y-2 pt-2">
-                  {messages.length > 1 && <p className="text-[11px] uppercase tracking-widest text-muted">Ask next</p>}
+                  {messages.length > 1 && <p className="text-xs uppercase tracking-widest text-muted">Ask next</p>}
                   {suggestions.map((q) => (
                     <button
                       key={q}
                       // The JD chip opens the paste box; every other chip is
                       // just a question typed for you.
                       onClick={() => (q === JD_PROMPT ? setJd("") : submit(q))}
-                      className="block w-full rounded-xl border border-line px-3 py-2 text-left text-xs text-zinc-400 transition hover:border-accent hover:text-accent"
+                      className="block w-full rounded-xl border border-line px-3 py-2 text-left text-xs text-zinc-400 transition duration-(--dur-fast) hover:border-accent hover:text-accent"
                     >
                       {q}
                     </button>
@@ -1029,7 +1029,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                   }`}
                 >
                   <span className="font-mono text-xs text-accent">{c.usage}</span>
-                  <span className="truncate text-[11px] text-muted">{c.help}</span>
+                  <span className="truncate text-xs text-muted">{c.help}</span>
                 </li>
               ))}
             </ul>
@@ -1043,7 +1043,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
             {mic.listening ? "Listening. Speak your question." : mic.error ? mic.error : reader.speaking ? "Reading the reply aloud." : ""}
           </p>
           {(mic.listening || mic.error || reader.speaking) && (
-            <div className="flex items-start gap-2 border-t border-line bg-surface px-3 pt-2 text-[11px] leading-snug">
+            <div className="flex items-start gap-2 border-t border-line bg-surface px-3 pt-2 text-xs leading-snug">
               {mic.listening ? (
                 <>
                   <span aria-hidden className="voice-live mt-1 h-2 w-2 shrink-0 rounded-full bg-accent" />
@@ -1060,7 +1060,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                   <button
                     type="button"
                     onClick={reader.stop}
-                    className="ml-auto shrink-0 rounded-full border border-line px-2 py-0.5 text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                    className="ml-auto shrink-0 rounded-full border border-line px-2 py-0.5 text-muted transition duration-(--dur-fast) hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
                   >
                     Stop
                   </button>
@@ -1083,10 +1083,10 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
               className="space-y-2 border-t border-line bg-surface p-3"
             >
               <div className="flex items-baseline justify-between gap-2">
-                <label htmlFor="jd-input" className="font-mono text-[10px] uppercase tracking-widest text-accent2">
+                <label htmlFor="jd-input" className="font-mono text-xs uppercase tracking-widest text-accent2">
                   job description → fit analysis
                 </label>
-                <span className={`font-mono text-[10px] ${isJdNearCap(jd!.length) ? "text-accent" : "text-muted"}`}>
+                <span className={`font-mono text-xs ${isJdNearCap(jd!.length) ? "text-accent" : "text-muted"}`}>
                   {jd!.length.toLocaleString()} / {JD_MAX_CHARS.toLocaleString()}
                 </span>
               </div>
@@ -1119,7 +1119,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                 <button
                   type="button"
                   onClick={() => setJd(null)}
-                  className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                  className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition duration-(--dur-fast) hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
                 >
                   Cancel
                 </button>
@@ -1127,14 +1127,14 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                     assistive tech — aria-describedby can't read display:none. */}
                 <span
                   id="jd-hint"
-                  className="sr-only text-[11px] text-muted sm:not-sr-only sm:min-w-0 sm:flex-1 sm:truncate sm:text-center"
+                  className="sr-only text-xs text-muted sm:not-sr-only sm:min-w-0 sm:flex-1 sm:truncate sm:text-center"
                 >
                   ⌘/Ctrl + Enter · Esc cancels
                 </span>
                 <button
                   type="submit"
                   disabled={busy || !jd!.trim()}
-                  className="ml-auto rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-ink transition disabled:opacity-40"
+                  className="ml-auto rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-ink transition duration-(--dur-fast) disabled:opacity-40"
                 >
                   Analyse fit
                 </button>

@@ -21,11 +21,11 @@ const APP_STATE_COLOR = { OK: "var(--color-signal)", DEGRADED: "var(--color-acce
 export function AppManifestBadge({ liveUrl }: { liveUrl?: string }) {
   const { manifest, age, state, error } = useAppManifest(liveUrl);
   if (!liveUrl) return null;
-  if (error) return <p className="font-mono text-[10px] text-muted">build info unavailable</p>;
+  if (error) return <p className="font-mono text-xs text-muted">build info unavailable</p>;
   if (!manifest || !state) return null;
   return (
     <p
-      className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-muted"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs text-muted"
       title={`${manifest.repo} · ${manifest.engine} · ${(manifest.bytes / 1e6).toFixed(1)} MB`}
     >
       <span>
@@ -33,7 +33,7 @@ export function AppManifestBadge({ liveUrl }: { liveUrl?: string }) {
       </span>
       {state !== "OK" && (
         <span
-          className="rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
+          className="rounded-full border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider"
           style={{ color: APP_STATE_COLOR[state], borderColor: APP_STATE_COLOR[state] }}
         >
           {state} · {age}d
@@ -112,7 +112,7 @@ function LiveEmbed({ url, fallback }: { url: string; fallback?: string }) {
           // STUTTER but can never look around — the mouse simply never
           // gets captured, with no error anywhere.
           allow="fullscreen; pointer-lock"
-          className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-700 ${painted ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-(--dur-slow) ${painted ? "opacity-100" : "opacity-0"}`}
         />
       )}
       {inView && !painted && !gaveUp && (
@@ -215,11 +215,11 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-          <span className="ml-2 flex-1 truncate rounded-full bg-surface px-3 py-1 text-center font-mono text-[10px] text-muted">
+          <span className="ml-2 flex-1 truncate rounded-full bg-surface px-3 py-1 text-center font-mono text-xs text-muted">
             {target.liveUrl ?? `${slug}.web (not deployed)`}
           </span>
           {target.liveUrl && (
-            <span className="live-badge flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-ink">
+            <span className="live-badge flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-ink">
               <Play size={9} fill="currentColor" /> Live
             </span>
           )}
@@ -255,7 +255,7 @@ function DeviceFrame({ target, slug, shot }: { target: ProjectTarget; slug: stri
           <span className="h-2.5 w-2.5 rounded-full bg-red-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-yellow-400/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-green-400/70" />
-          <span className="ml-2 text-[10px] text-muted">{isNativeDesktop ? `${target.platform} window` : `${target.platform} preview (desktop capture)`}</span>
+          <span className="ml-2 text-xs text-muted">{isNativeDesktop ? `${target.platform} window` : `${target.platform} preview (desktop capture)`}</span>
         </div>
         {shots.length > 0 && (
           <FitImage src={src(shots[shot])} alt={`${target.platform} window${shotLabel}`} targetAspect={16 / 9} className="aspect-video w-full" />
@@ -351,7 +351,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
               aria-selected={i === active}
               onClick={() => pick(i)}
               onKeyDown={onTabKeyDown}
-              className={`flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+              className={`flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition duration-(--dur-fast) ${
                 i === active
                   ? "border-accent bg-accent/15 text-accent"
                   : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -370,7 +370,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
             <button
               onClick={() => setShot((s) => (s - 1 + target.screens.length) % target.screens.length)}
               aria-label="Previous screen"
-              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition hover:border-accent/50 hover:text-accent sm:flex"
+              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition duration-(--dur-fast) hover:border-accent/50 hover:text-accent sm:flex"
             >
               <ChevronLeft size={16} />
             </button>
@@ -389,7 +389,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
             <button
               onClick={() => setShot((s) => (s + 1) % target.screens.length)}
               aria-label="Next screen"
-              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition hover:border-accent/50 hover:text-accent sm:flex"
+              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition duration-(--dur-fast) hover:border-accent/50 hover:text-accent sm:flex"
             >
               <ChevronRight size={16} />
             </button>
@@ -405,7 +405,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
                 aria-pressed={i === shot}
                 className="flex h-8 w-8 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-accent"
               >
-                <span aria-hidden className="h-1.5 rounded-full transition-all"
+                <span aria-hidden className="h-1.5 rounded-full transition-all duration-(--dur-fast)"
                   style={{ width: i === shot ? 18 : 6, backgroundColor: i === shot ? (accent ?? "var(--color-accent)") : "var(--color-line)" }} />
               </button>
             ))}
