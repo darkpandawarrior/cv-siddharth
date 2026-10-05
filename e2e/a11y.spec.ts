@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import { type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
@@ -172,8 +173,10 @@ for (const v of VIEWPORTS) {
       await prepareScan(page, path);
       // Only DOM chrome is scanned; no canvas pixels or animation frames are awaited.
       const results = await scanWithRetry(page);
+      const auditPath = testInfo.outputPath("axe-audit.json");
+      writeFileSync(auditPath, JSON.stringify({ route: path, viewport: v.name, violations: results.violations, incomplete: results.incomplete }));
       await testInfo.attach("axe-audit", {
-        body: JSON.stringify({ route: path, viewport: v.name, violations: results.violations, incomplete: results.incomplete }),
+        path: auditPath,
         contentType: "application/json",
       });
       expectClean(results, `${path} (${v.name})`);

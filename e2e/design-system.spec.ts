@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 import { surfaces } from "../src/data/surfaces.ts";
@@ -29,6 +30,9 @@ async function prepare(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready);
   // Reveal below-fold text without changing its type or motion declarations.
   await page.addStyleTag({ content: "* { content-visibility: visible !important; } .reveal { opacity: 1 !important; transform: none !important; }" });
+  // Cadence labels resolve in a mount effect; audit that state, not the SSR placeholder.
+  await page.waitForFunction(() => [...document.querySelectorAll("[data-evidence-chip]")]
+    .every((chip) => chip.hasAttribute("data-state")), undefined, { polling: 50 });
 }
 
 function audit(page: Page) {
@@ -135,8 +139,10 @@ for (const { vp, width, height } of VIEWPORTS) {
       await prepare(page, path);
       // Audit DOM chrome only, including HUD and panels; never await canvas frames.
       const result = await audit(page);
+      const auditPath = testInfo.outputPath("design-system-audit.json");
+      writeFileSync(auditPath, JSON.stringify({ route: path, viewport: vp, ...result }));
       await testInfo.attach("design-system-audit", {
-        body: JSON.stringify({ route: path, viewport: vp, ...result }), contentType: "application/json",
+        path: auditPath, contentType: "application/json",
       });
       console.log(`DS ${path} @${vp}: ${result.violations.length} violations (${result.textCount} text, ${result.motionCount} motion, ${result.chipCount} chips)`);
       expect(result.textCount, "the audit must inspect rendered text").toBeGreaterThan(0);
