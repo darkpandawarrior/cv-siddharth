@@ -123,9 +123,9 @@ jobs:
           mv kmp-toolkit-checkout ../../KMP/kmp-toolkit
           mv kmp-build-logic-checkout ../../KMP/kmp-build-logic
           mv kmp-app-template-checkout ../../KMP/kmp-app-template
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version-file: .nvmrc
       - run: npm ci
       # rebuild-showcase re-stitches the narrated films whenever synced frames
       # change (ffmpeg + PIL captions; voiceover comes from the committed
