@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.12' }
+      - uses: actions/setup-python@v7
+        with: { python-version: '3.14' }
       - run: python3 -m pip install --quiet Pillow
       # Warn-only for now: --fail-on is intentionally not set. These repos have existing findings,
       # and a gate that fails from day one on pre-existing debt gets switched off within a week.
