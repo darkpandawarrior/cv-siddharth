@@ -75,7 +75,7 @@ export function FoundationGraph() {
                 href={n.url}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full border border-line px-2.5 py-1 font-mono text-xs text-muted transition duration-(--dur-fast) hover:border-accent/50 hover:text-accent"
+                className="rounded-full border border-line px-2.5 py-1 font-mono text-xs text-muted transition hover:border-accent/50 hover:text-accent"
               >
                 {n.label}
               </a>

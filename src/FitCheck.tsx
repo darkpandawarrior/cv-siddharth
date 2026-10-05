@@ -133,7 +133,7 @@ export function FitCheck() {
               <button
                 type="submit"
                 disabled={!jd.trim()}
-                className="ml-auto flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 font-semibold text-ink transition duration-(--dur-fast) hover:bg-accent-dim disabled:opacity-40 disabled:hover:bg-accent"
+                className="ml-auto flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 font-semibold text-ink transition hover:bg-accent-dim disabled:opacity-40 disabled:hover:bg-accent"
               >
                 <Target size={16} /> Analyse fit <ArrowRight size={15} />
               </button>
@@ -165,7 +165,7 @@ export function FitCheck() {
                   <button
                     type="button"
                     onClick={run}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-muted transition duration-(--dur-fast) hover:text-accent"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-muted transition hover:text-accent"
                   >
                     <RotateCw size={11} /> Retry
                   </button>

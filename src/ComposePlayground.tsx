@@ -853,7 +853,7 @@ export default function ComposePlayground() {
               RoomFrame's launcher. */}
           <div className="flex items-center gap-2 sm:gap-3">
             <LauncherButton />
-            <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition duration-(--dur-fast) hover:text-accent">
+            <button type="button" onClick={() => goToSection("top")} className="flex items-center gap-2 text-sm text-zinc-400 transition hover:text-accent">
               <ArrowLeft size={16} /> <span className="label-wide">Back to portfolio</span>
             </button>
           </div>
@@ -867,13 +867,13 @@ export default function ComposePlayground() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => openChat("Explain how the Compose Playground on this site works, and what Compose subset it supports.")}
-              className="hidden items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 transition duration-(--dur-fast) hover:border-accent2 hover:bg-accent2/10 sm:flex"
+              className="hidden items-center gap-1.5 rounded-full border border-accent2/40 px-3 py-1.5 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10 sm:flex"
             >
               <Wand2 size={13} /> How it works
             </button>
             <button
               onClick={() => openChat()}
-              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition duration-(--dur-fast) hover:bg-accent-dim sm:px-4"
+              className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
               Ask <span className="label-wide">my AI</span>
             </button>
@@ -891,7 +891,7 @@ export default function ComposePlayground() {
             <button
               key={p.label}
               onClick={() => setCode(p.code)}
-              className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-300 transition duration-(--dur-fast) hover:border-accent/50 hover:text-accent"
+              className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-300 transition hover:border-accent/50 hover:text-accent"
             >
               {p.label}
             </button>
@@ -909,14 +909,14 @@ export default function ComposePlayground() {
                 setShareNote("link copied");
                 setTimeout(() => setShareNote(null), 2000);
               }}
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition duration-(--dur-fast) hover:border-accent hover:text-accent"
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
             >
               <Share2 size={12} /> Share
             </button>
             <button
               onClick={() => setCode(PRESETS[0].code)}
               title="Reset to the first example"
-              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition duration-(--dur-fast) hover:border-accent hover:text-accent"
+              className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs font-semibold text-zinc-400 transition hover:border-accent hover:text-accent"
             >
               <RotateCcw size={12} /> Reset
             </button>
@@ -941,13 +941,13 @@ export default function ComposePlayground() {
               maxLength={MAX_SCENARIO_CHARS}
               disabled={aiBusy}
               aria-label="Describe a screen for the AI to build in Compose"
-              className="min-w-0 flex-1 rounded-full border border-line bg-ink/60 px-4 py-1.5 text-xs text-zinc-100 outline-none transition duration-(--dur-fast) focus:border-accent2/60 disabled:opacity-50"
+              className="min-w-0 flex-1 rounded-full border border-line bg-ink/60 px-4 py-1.5 text-xs text-zinc-100 outline-none transition focus:border-accent2/60 disabled:opacity-50"
             />
             {aiBusy ? (
               <button
                 type="button"
                 onClick={stopGenerate}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-accent2 ring-1 ring-inset ring-accent2/60 transition duration-(--dur-fast) hover:bg-accent2/10"
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-bold text-accent2 ring-1 ring-inset ring-accent2/60 transition hover:bg-accent2/10"
               >
                 <Square size={11} fill="currentColor" /> Stop
               </button>
@@ -955,7 +955,7 @@ export default function ComposePlayground() {
               <button
                 type="submit"
                 disabled={!aiPrompt.trim()}
-                className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent2/90 px-4 py-1.5 text-xs font-bold text-ink transition duration-(--dur-fast) hover:bg-accent2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex shrink-0 items-center gap-1.5 rounded-full bg-accent2/90 px-4 py-1.5 text-xs font-bold text-ink transition hover:bg-accent2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Generate
               </button>
@@ -967,7 +967,7 @@ export default function ComposePlayground() {
                 key={idea}
                 onClick={() => { setAiPrompt(idea); generate(idea); }}
                 disabled={aiBusy}
-                className="rounded-full border border-accent2/30 px-2.5 py-1 text-xs text-accent2/90 transition duration-(--dur-fast) hover:border-accent2 hover:bg-accent2/10 disabled:opacity-40"
+                className="rounded-full border border-accent2/30 px-2.5 py-1 text-xs text-accent2/90 transition hover:border-accent2 hover:bg-accent2/10 disabled:opacity-40"
               >
                 {idea}
               </button>

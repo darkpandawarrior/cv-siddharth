@@ -816,7 +816,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
         <button
           onClick={() => setOpen(true)}
           aria-label="Open chat"
-          className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition duration-(--dur-fast) hover:scale-105 print:hidden"
+          className="chat-launcher fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-ink shadow-lg shadow-accent/20 transition hover:scale-105 print:hidden"
         >
           <MessageCircle size={24} />
         </button>,
@@ -998,7 +998,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                       // The JD chip opens the paste box; every other chip is
                       // just a question typed for you.
                       onClick={() => (q === JD_PROMPT ? setJd("") : submit(q))}
-                      className="block w-full rounded-xl border border-line px-3 py-2 text-left text-xs text-zinc-400 transition duration-(--dur-fast) hover:border-accent hover:text-accent"
+                      className="block w-full rounded-xl border border-line px-3 py-2 text-left text-xs text-zinc-400 transition hover:border-accent hover:text-accent"
                     >
                       {q}
                     </button>
@@ -1024,7 +1024,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                   onMouseEnter={() => setMenuIndex(i)}
                   onMouseDown={(e) => e.preventDefault()} // keep focus in the input
                   onClick={() => submit(`/${c.name}`)}
-                  className={`flex cursor-pointer items-baseline gap-2 rounded-lg px-2 py-1.5 transition-colors duration-(--dur-fast) ${
+                  className={`flex cursor-pointer items-baseline gap-2 rounded-lg px-2 py-1.5 transition-colors ${
                     i === menuIndex ? "bg-surface" : ""
                   }`}
                 >
@@ -1060,7 +1060,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                   <button
                     type="button"
                     onClick={reader.stop}
-                    className="ml-auto shrink-0 rounded-full border border-line px-2 py-0.5 text-muted transition duration-(--dur-fast) hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                    className="ml-auto shrink-0 rounded-full border border-line px-2 py-0.5 text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
                   >
                     Stop
                   </button>
@@ -1119,7 +1119,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                 <button
                   type="button"
                   onClick={() => setJd(null)}
-                  className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition duration-(--dur-fast) hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
+                  className="rounded-full border border-line px-3 py-1.5 text-xs text-muted transition hover:border-accent hover:text-accent focus-visible:border-accent focus-visible:outline-none"
                 >
                   Cancel
                 </button>
@@ -1134,7 +1134,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
                 <button
                   type="submit"
                   disabled={busy || !jd!.trim()}
-                  className="ml-auto rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-ink transition duration-(--dur-fast) disabled:opacity-40"
+                  className="ml-auto rounded-full bg-accent px-3.5 py-1.5 text-xs font-semibold text-ink transition disabled:opacity-40"
                 >
                   Analyse fit
                 </button>

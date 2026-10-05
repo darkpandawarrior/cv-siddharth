@@ -9,6 +9,8 @@
 
 
 @theme {
+  /* Transitions default to the fast motion token. */
+  --default-transition-duration: var(--dur-fast);
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
   --color-accent: #f2a13d; /* CAL-1 Channel A — calibration amber, the MEASURED signal. 9.24:1 on ink. */

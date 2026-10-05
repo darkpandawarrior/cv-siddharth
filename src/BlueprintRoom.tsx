@@ -76,11 +76,11 @@ class RoomBoundary extends Component<{ children: ReactNode }, { failed: boolean 
             await clearBlueprintPersistence();
             window.location.reload();
           }}
-          className="flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition duration-(--dur-fast) hover:bg-accent-dim"
+          className="flex items-center gap-2 rounded-full bg-accent px-5 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
         >
           <RotateCcw size={15} /> Reset canvas
         </button>
-        <BackToPortfolio className="text-sm text-muted transition duration-(--dur-fast) hover:text-accent">
+        <BackToPortfolio className="text-sm text-muted transition hover:text-accent">
           ← Portfolio
         </BackToPortfolio>
       </div>
@@ -403,10 +403,10 @@ function BlueprintRoomInner() {
                   <EvidenceChip file="systemGraph.ts" stamp={systemGraph.generatedAt} source="registry + includeBuild scan" />
                 </div>
                 <div className="pointer-events-auto flex gap-1.5 font-mono">
-                  <Link to="/map" className="rounded-full border border-line bg-ink/80 px-2.5 py-1 text-zinc-400 backdrop-blur transition duration-(--dur-fast) hover:border-accent hover:text-accent">
+                  <Link to="/map" className="rounded-full border border-line bg-ink/80 px-2.5 py-1 text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent">
                     orbit
                   </Link>
-                  <Link to="/playground" className="rounded-full border border-line bg-ink/80 px-2.5 py-1 text-zinc-400 backdrop-blur transition duration-(--dur-fast) hover:border-accent hover:text-accent">
+                  <Link to="/playground" className="rounded-full border border-line bg-ink/80 px-2.5 py-1 text-zinc-400 backdrop-blur transition hover:border-accent hover:text-accent">
                     streets
                   </Link>
                 </div>

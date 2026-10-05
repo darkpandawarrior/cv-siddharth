@@ -351,7 +351,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
               aria-selected={i === active}
               onClick={() => pick(i)}
               onKeyDown={onTabKeyDown}
-              className={`flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition duration-(--dur-fast) ${
+              className={`flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition ${
                 i === active
                   ? "border-accent bg-accent/15 text-accent"
                   : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -370,7 +370,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
             <button
               onClick={() => setShot((s) => (s - 1 + target.screens.length) % target.screens.length)}
               aria-label="Previous screen"
-              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition duration-(--dur-fast) hover:border-accent/50 hover:text-accent sm:flex"
+              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition hover:border-accent/50 hover:text-accent sm:flex"
             >
               <ChevronLeft size={16} />
             </button>
@@ -389,7 +389,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
             <button
               onClick={() => setShot((s) => (s + 1) % target.screens.length)}
               aria-label="Next screen"
-              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition duration-(--dur-fast) hover:border-accent/50 hover:text-accent sm:flex"
+              className="hidden shrink-0 rounded-full border border-line bg-card p-2 text-zinc-300 transition hover:border-accent/50 hover:text-accent sm:flex"
             >
               <ChevronRight size={16} />
             </button>
@@ -405,7 +405,7 @@ export function DeviceWall({ targets, slug, accent }: { targets: ProjectTarget[]
                 aria-pressed={i === shot}
                 className="flex h-8 w-8 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-accent"
               >
-                <span aria-hidden className="h-1.5 rounded-full transition-all duration-(--dur-fast)"
+                <span aria-hidden className="h-1.5 rounded-full transition-all"
                   style={{ width: i === shot ? 18 : 6, backgroundColor: i === shot ? (accent ?? "var(--color-accent)") : "var(--color-line)" }} />
               </button>
             ))}

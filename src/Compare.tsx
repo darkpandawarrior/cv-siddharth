@@ -98,7 +98,7 @@ export function Compare({
               role="tab"
               aria-selected={i === active}
               onClick={() => setActive(i)}
-              className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors duration-(--dur-fast) ${
+              className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors ${
                 i === active
                   ? "border-accent bg-accent/10 text-accent"
                   : "border-line text-muted hover:border-accent/40 hover:text-text"
@@ -232,7 +232,7 @@ export function CompareSection({ slug }: { slug: string }) {
                 role="tab"
                 aria-selected={name === activeSet}
                 onClick={() => setActiveSet(name)}
-                className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors duration-(--dur-fast) ${
+                className={`rounded-xs border px-3 py-1.5 font-mono text-xs tracking-wide transition-colors ${
                   name === activeSet
                     ? "border-accent bg-accent/10 text-accent"
                     : "border-line text-muted hover:border-accent/40 hover:text-text"

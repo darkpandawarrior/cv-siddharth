@@ -108,7 +108,7 @@ export function LabBench() {
             the{" "}
             <Link
               to="/playground"
-              className="text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-accent-dim hover:decoration-accent-dim"
+              className="text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-accent-dim hover:decoration-accent-dim"
             >
               Playground
             </Link>
@@ -125,7 +125,7 @@ export function LabBench() {
                   <button
                     onClick={() => setTab(t.key)}
                     aria-pressed={tab === t.key}
-                    className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition duration-(--dur-fast) ${
+                    className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
                       tab === t.key
                         ? "border-accent bg-accent/15 text-accent"
                         : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"
@@ -152,7 +152,7 @@ export function LabBench() {
                   <button
                     onClick={() => setTab(t.key)}
                     aria-pressed={tab === t.key}
-                    className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition duration-(--dur-fast) ${
+                    className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
                       tab === t.key
                         ? "border-accent bg-accent/15 text-accent"
                         : "border-line text-zinc-400 hover:border-accent/40 hover:text-zinc-200"

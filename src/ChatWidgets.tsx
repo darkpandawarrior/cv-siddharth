@@ -33,9 +33,9 @@ import { Picture } from "./Picture.tsx";
  * depends on a fixed width.
  */
 
-const LINK_CLASS = "font-medium text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent";
+const LINK_CLASS = "font-medium text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent";
 const TILE_CLASS =
-  "block rounded-lg border border-line bg-ink px-2.5 py-2 text-left transition duration-(--dur-fast) hover:border-accent/60 focus-visible:border-accent focus-visible:outline-none";
+  "block rounded-lg border border-line bg-ink px-2.5 py-2 text-left transition hover:border-accent/60 focus-visible:border-accent focus-visible:outline-none";
 
 /**
  * Renders a link from an assistant reply. Internal targets navigate through the
@@ -337,7 +337,7 @@ export function JdFitCard({
                     <button
                       type="button"
                       onClick={() => onAsk(`Tell me more about ${g.need} — where does that actually stand?`)}
-                      className="mt-0.5 text-xs font-medium text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
+                      className="mt-0.5 text-xs font-medium text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
                     >
                       ask about this
                     </button>
@@ -358,7 +358,7 @@ export function JdFitCard({
           <button
             type="button"
             onClick={() => void copy()}
-            className="inline-flex items-center gap-1 text-xs font-medium text-muted transition duration-(--dur-fast) hover:text-accent"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted transition hover:text-accent"
           >
             {copied ? <Check size={11} className="text-accent" /> : <Copy size={11} />}
             {copied ? "Copied" : "Copy"}
