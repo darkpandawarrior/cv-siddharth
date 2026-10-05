@@ -359,7 +359,7 @@ function EntryCard({ entry: e, index }: { entry: AnthologyEntry; index: number }
           </div>
         )}
         <div className="flex flex-1 flex-col p-4">
-          <span className={`font-mono text-[11px] uppercase tracking-widest ${t.kicker}`}>
+          <span className={`font-mono text-xs uppercase tracking-widest ${t.kicker}`}>
             {t.label}
           </span>
           {/* h2, not h3. These cards sit directly under the page's h1 with no
@@ -680,7 +680,7 @@ function UnfiledTab() {
                     requires and nobody has filled in, so "[unassigned]" IS the
                     answer rather than a missing one, and it is set in the mono
                     register every other filing value on this site uses. */}
-                <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                   {p.series}
                 </span>
                 {/* h3 under the page h1 and the layer's own h2. Heading order is
@@ -695,7 +695,7 @@ function UnfiledTab() {
                 <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                   {p.blurb}
                 </p>
-                <span className="mt-4 font-mono text-[11px] tabular-nums" style={{ color: "var(--color-muted)" }}>
+                <span className="mt-4 font-mono text-xs tabular-nums" style={{ color: "var(--color-muted)" }}>
                   {p.words.toLocaleString()} words
                 </span>
               </Link>
@@ -724,7 +724,7 @@ function SiblingTab() {
     <div className="mt-8">
       {siblingSeries.map((s) => (
         <section key={s.slug} className="mb-12">
-          <p className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+          <p className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
             {s.medium}
           </p>
           {/* h2 under the page h1, h3 on the cards. Heading order is asserted
@@ -755,7 +755,7 @@ function SiblingTab() {
                       className="mb-4 h-auto w-full"
                     />
                   )}
-                  <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
+                  <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-muted)" }}>
                     Request {String(e.idx).padStart(2, "0")}
                   </span>
                   {/* Colour stated, not inherited. See the note on EntryCard's
@@ -770,7 +770,7 @@ function SiblingTab() {
                   <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-dim)" }}>
                     {e.blurb}
                   </p>
-                  <span className="mt-4 font-mono text-[11px] tabular-nums" style={{ color: "var(--color-muted)" }}>
+                  <span className="mt-4 font-mono text-xs tabular-nums" style={{ color: "var(--color-muted)" }}>
                     {e.words.toLocaleString()} words
                   </span>
                 </Link>
@@ -897,7 +897,7 @@ function BlankCard({ blank: b }: { blank: Blank }) {
 
   const body = (
     <div className="flex flex-1 flex-col p-4">
-      <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: "var(--color-text-dim)" }}>
+      <span className="font-mono text-xs uppercase tracking-widest" style={{ color: "var(--color-text-dim)" }}>
         {b.kicker}
       </span>
       <h3 className="font-display mt-2 text-lg font-bold leading-snug">{b.title}</h3>

@@ -87,9 +87,9 @@ function GhostNumeral({ n }: { n: number }) {
         x="62"
         y="52"
         textAnchor="end"
+        className="text-5xl"
         style={{
           fontFamily: "var(--font-display)",
-          fontSize: 54,
           fontWeight: 700,
           fill: "var(--color-accent)",
           fillOpacity: 0.13,
