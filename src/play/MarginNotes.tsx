@@ -66,18 +66,18 @@ export function MarginNotesView({
           disabled={!live}
           maxLength={NOTE_MAX_LENGTH}
           placeholder="leave a note here…"
-          className="min-w-0 flex-1 rounded-full border border-line bg-card px-4 py-2 text-sm outline-none transition placeholder:text-muted focus:border-accent/60 disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-full border border-line bg-card px-4 py-2 text-sm outline-none transition duration-(--dur-fast) placeholder:text-muted focus:border-accent/60 disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!live}
-          className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim disabled:opacity-60"
+          className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition duration-(--dur-fast) hover:bg-accent-dim disabled:opacity-60"
         >
           <MessageSquarePlus size={14} /> pin it
         </button>
       </form>
       {error && (
-        <p className="mt-2 font-mono text-[11px] text-red-400" role="status">
+        <p className="mt-2 font-mono text-xs text-red-400" role="status">
           {error}
         </p>
       )}
@@ -96,7 +96,7 @@ export function MarginNotesView({
                   type="button"
                   onClick={() => onRemove(n.id)}
                   aria-label="Remove your note"
-                  className="absolute -right-2 -top-2 rounded-full border border-line bg-ink p-1 text-muted opacity-0 transition hover:text-red-400 focus:opacity-100 group-hover:opacity-100"
+                  className="absolute -right-2 -top-2 rounded-full border border-line bg-ink p-1 text-muted opacity-0 transition duration-(--dur-fast) hover:text-red-400 focus:opacity-100 group-hover:opacity-100"
                 >
                   <Trash2 size={11} />
                 </button>

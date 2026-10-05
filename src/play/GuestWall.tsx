@@ -99,7 +99,7 @@ export function GuestWall() {
           <button
             type="button"
             onClick={() => setWall((d) => void (d.notes = []))}
-            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-[11px] text-muted transition hover:border-red-500/50 hover:text-red-400"
+            className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-xs text-muted transition duration-(--dur-fast) hover:border-red-500/50 hover:text-red-400"
           >
             <Eraser size={12} /> clear the wall
           </button>
@@ -122,21 +122,21 @@ export function GuestWall() {
           }}
           maxLength={NOTE_MAX_LENGTH}
           placeholder="say hi, or tell me what you'd build with this…"
-          className="min-w-0 flex-1 rounded-full border border-line bg-card px-4 py-2 text-sm outline-none transition placeholder:text-muted focus:border-accent/60"
+          className="min-w-0 flex-1 rounded-full border border-line bg-card px-4 py-2 text-sm outline-none transition duration-(--dur-fast) placeholder:text-muted focus:border-accent/60"
         />
         <button
           type="submit"
-          className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition hover:bg-accent-dim"
+          className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-ink transition duration-(--dur-fast) hover:bg-accent-dim"
         >
           <MessageSquarePlus size={14} /> pin it
         </button>
       </form>
-      <p className="mt-2 min-h-[1.25rem] font-mono text-[11px] text-red-400" role="status">
+      <p className="mt-2 min-h-[1.25rem] font-mono text-xs text-red-400" role="status">
         {error}
       </p>
 
       {notes.length === 0 ? (
-        <p className="mt-4 font-mono text-[11px] text-muted">nothing on the wall yet — be the first.</p>
+        <p className="mt-4 font-mono text-xs text-muted">nothing on the wall yet. Be the first.</p>
       ) : (
         <ul className="mt-4 flex flex-wrap gap-3">
           {[...notes].reverse().map((n) => (
@@ -151,7 +151,7 @@ export function GuestWall() {
                   type="button"
                   onClick={() => remove(n.id)}
                   aria-label="Remove your note"
-                  className="absolute -right-2 -top-2 rounded-full border border-line bg-ink p-1 text-muted opacity-0 transition hover:text-red-400 focus:opacity-100 group-hover:opacity-100"
+                  className="absolute -right-2 -top-2 rounded-full border border-line bg-ink p-1 text-muted opacity-0 transition duration-(--dur-fast) hover:text-red-400 focus:opacity-100 group-hover:opacity-100"
                 >
                   <Trash2 size={11} />
                 </button>

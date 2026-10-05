@@ -277,7 +277,7 @@ export function DayBars({
             key={d.day}
             aria-hidden="true"
             title={`${d.day} — ${d.count} visit${d.count === 1 ? "" : "s"}`}
-            className={`min-w-0 flex-1 rounded-[1px] transition-[height] duration-700 ${glowing ? "pulse-edge" : ""}`}
+            className={`min-w-0 flex-1 rounded-[1px] transition-[height] duration-(--dur-slow) ${glowing ? "pulse-edge" : ""}`}
             style={{
               // Empty days keep a hairline so the axis stays readable — a gap
               // and a quiet day should not look like the same thing.
@@ -348,7 +348,7 @@ export function VisitorPlaque() {
       aria-label="Visitor count"
     >
       <div className="min-w-0">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">
           {myNumber ? (visit?.fresh ? "you are" : "you were") : "so far"}
         </p>
         <p className="font-display mt-1 text-4xl font-bold tabular-nums tracking-tight text-accent">
@@ -375,14 +375,14 @@ export function VisitorPlaque() {
             <span className="text-accent2">{todayCount} today</span>
           </div>
           <DayBars days={days} className="mt-2 h-9" />
-          <p className="mt-2 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-muted">
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 font-mono text-xs text-muted">
             <span>{total.toLocaleString()} through the door</span>
             {zones.length > 0 && (
               <span className="flex items-center gap-1">
                 · <Globe2 size={11} /> {zones.length} time zone{zones.length === 1 ? "" : "s"}
               </span>
             )}
-            <Link to="/pulse" className="transition hover:text-accent">
+            <Link to="/pulse" className="transition duration-(--dur-fast) hover:text-accent">
               · the full ledger →
             </Link>
           </p>
