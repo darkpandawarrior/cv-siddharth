@@ -371,7 +371,7 @@ export function StoryMap({ focus }: { focus?: string } = {}) {
         {/* text-muted, not text-zinc-500/600 — those fail WCAG AA on this dark
             ground (index.css's own note on --color-muted), which is exactly
             what axe caught here at first pass. */}
-        <div className="mt-2 flex flex-wrap items-center gap-4 text-[11px] text-muted">
+        <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-muted">
           <span className="flex items-center gap-1.5">
             <svg width="16" height="2" aria-hidden><line x1="0" y1="1" x2="16" y2="1" stroke="currentColor" strokeWidth="1.5" /></svg>
             measured

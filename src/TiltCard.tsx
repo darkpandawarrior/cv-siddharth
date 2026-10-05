@@ -42,14 +42,14 @@ export function TiltCard({
     >
       <div
         ref={innerRef}
-        className="relative h-full overflow-hidden rounded-2xl transition-transform duration-200 ease-out"
+        className="relative h-full overflow-hidden rounded-2xl transition-transform ease-out"
         style={{ transformStyle: "preserve-3d" }}
       >
         {glow && (
           <div
             ref={glowRef}
             aria-hidden
-            className="tilt-glow pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover/tilt:opacity-100"
+            className="tilt-glow pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-(--dur-base) group-hover/tilt:opacity-100"
           />
         )}
         <div className="relative z-10 h-full">{children}</div>

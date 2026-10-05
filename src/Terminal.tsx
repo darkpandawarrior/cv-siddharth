@@ -417,7 +417,7 @@ function buildCommands(jump: Go): Cmd[] {
             <Dim> or </Dim>
             <Hi>hire</Hi>
             <Dim> · press </Dim>
-            <kbd className="rounded border border-line px-1 text-[11px]">`</kbd>
+            <kbd className="rounded border border-line px-1 text-xs">`</kbd>
             <Dim> anywhere to summon this shell</Dim>
           </div>
           <div className="sm:col-span-2">
@@ -1324,7 +1324,7 @@ function Neofetch() {
   ];
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-      <pre className="shrink-0 whitespace-pre text-[10px] leading-tight text-[var(--t-accent)] sm:text-xs">{BANNER}</pre>
+      <pre className="shrink-0 whitespace-pre text-xs leading-tight text-[var(--t-accent)]">{BANNER}</pre>
       <div className="min-w-0 space-y-0.5">
         {rows.map(([k, v]) => (
           <div key={k}>
@@ -1619,7 +1619,7 @@ export function Terminal() {
   return (
     <div
       ref={rootRef}
-      className="term-root relative flex h-screen flex-col bg-void font-mono text-[13px] text-zinc-200 sm:text-sm"
+      className="term-root relative flex h-screen flex-col bg-void font-mono text-sm text-zinc-200"
       style={{ ["--t-accent" as string]: "#f2a13d", ["--t-dim" as string]: "#c47f2a" }}
       onClick={(e) => {
         // Don't steal focus from links/buttons the user is clicking.
