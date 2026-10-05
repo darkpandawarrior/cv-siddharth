@@ -1824,7 +1824,7 @@ export function OpsBoard() {
         </p>
 
         <div className="ops-console font-mono-os">
-          <div className="ops-banner" data-worst={worstState}>
+          <div className="ops-banner !static !pb-2" data-worst={worstState}>
             <div className="ops-banner__line">
               {/* The eyebrow used to sit above the h1, in the scrollable
                   intro, so it read "the control loop" once and then scrolled

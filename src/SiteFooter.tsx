@@ -327,7 +327,7 @@ export function SiteFooter() {
         ))}
       </div>
       <NowChip />
-      <div className="border-t border-line py-5 text-center text-xs text-muted">
+      <div className="border-t border-line py-4 sm:py-5 text-center text-xs text-muted">
         Built with React 19, Tailwind v4, three.js, tldraw and an LLM-agnostic chat backend · {new Date().getFullYear()}
       </div>
     </footer>
