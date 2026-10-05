@@ -50,7 +50,7 @@ export function WritingSection() {
             <Link
               to="/excelsior"
               search={{ year: Number(loopdownOrigin.year), page: loopdownOrigin.page }}
-              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:decoration-accent"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
             >
               Excelsior '21
             </Link>
@@ -69,7 +69,7 @@ export function WritingSection() {
               // rather than styling identically to an in-page anchor — same
               // "two colours before you click" idea WorldSwitch already uses,
               // spent here as a one-line hover tint instead of a new component.
-              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition duration-(--dur-fast) hover:text-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)] hover:decoration-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)]"
+              className="font-semibold text-accent underline decoration-accent/40 underline-offset-2 transition hover:text-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)] hover:decoration-[color-mix(in_srgb,var(--color-accent)_50%,#f2a13d)]"
             >
               The Loopdown
             </Link>
@@ -85,12 +85,12 @@ export function WritingSection() {
               href={BOOKS_BEFORE_BROS.url}
               target="_blank"
               rel="noreferrer"
-              className="group rounded-xl border border-accent2/30 bg-accent2/5 p-4 transition duration-(--dur-fast) hover:border-accent2/60 sm:col-span-2"
+              className="group rounded-xl border border-accent2/30 bg-accent2/5 p-4 transition hover:border-accent2/60 sm:col-span-2"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <h3 className="flex items-center gap-2 font-semibold text-zinc-100">
                   <PenLine size={14} className="text-accent2" /> {BOOKS_BEFORE_BROS.name}
-                  <ArrowUpRight size={13} className="text-muted transition duration-(--dur-fast) group-hover:text-accent2" />
+                  <ArrowUpRight size={13} className="text-muted transition group-hover:text-accent2" />
                 </h3>
                 <span className="shrink-0 font-mono text-xs text-accent2/80">the origin blog</span>
               </div>
@@ -100,7 +100,7 @@ export function WritingSection() {
               </p>
             </a>
             {archive.map((a) => (
-              <div key={a.slug} className="card-elevated rounded-xl border border-line bg-surface p-4 transition duration-(--dur-fast) hover:border-accent2/40">
+              <div key={a.slug} className="card-elevated rounded-xl border border-line bg-surface p-4 transition hover:border-accent2/40">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="font-semibold text-zinc-100">{a.title}</h3>
                   <span className="shrink-0 font-mono text-xs text-muted">{a.form}</span>
@@ -185,7 +185,7 @@ export function WritingSection() {
                   <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
                     {s.links.map((l) =>
                       l.url.startsWith("/") ? (
-                        <Link key={l.url} to={l.url} className="text-xs font-semibold text-accent transition duration-(--dur-fast) hover:text-accent-dim">
+                        <Link key={l.url} to={l.url} className="text-xs font-semibold text-accent transition hover:text-accent-dim">
                           {l.label} →
                         </Link>
                       ) : (
@@ -194,7 +194,7 @@ export function WritingSection() {
                           href={l.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-xs font-semibold text-zinc-400 transition duration-(--dur-fast) hover:text-accent2"
+                          className="text-xs font-semibold text-zinc-400 transition hover:text-accent2"
                         >
                           {l.label} ↗
                         </a>

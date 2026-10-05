@@ -98,7 +98,7 @@ function RepoCard({ r }: { r: Repo }) {
       // 327px column. The card sat 29px outside its own track and the homepage
       // scrolled 5px sideways on a phone — the truncate below never got the
       // chance to fire, because the track was never the constraint.
-      className="panel group flex h-full min-w-0 flex-col p-5 transition duration-(--dur-fast) hover:-translate-y-0.5"
+      className="panel group flex h-full min-w-0 flex-col p-5 transition hover:-translate-y-0.5"
       style={{ borderColor: undefined }}
       onMouseEnter={(e) => (e.currentTarget.style.borderColor = `${r.accent}66`)}
       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
@@ -108,7 +108,7 @@ function RepoCard({ r }: { r: Repo }) {
           <GitBranch size={14} style={{ color: r.accent }} className="shrink-0" />
           <span className="truncate font-mono text-sm font-semibold text-zinc-100">{r.path}</span>
         </div>
-        <ArrowUpRight size={15} className="shrink-0 text-muted transition duration-(--dur-fast) group-hover:text-accent" />
+        <ArrowUpRight size={15} className="shrink-0 text-muted transition group-hover:text-accent" />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="flex items-center gap-1.5 font-mono text-zinc-400">
@@ -138,10 +138,10 @@ function ContributionList({ items }: { items: Contribution[] }) {
             href={c.url}
             target="_blank"
             rel="noreferrer"
-            className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition duration-(--dur-fast) hover:border-accent/50"
+            className="panel-sm group flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm transition hover:border-accent/50"
           >
             <GitPullRequestArrow size={14} className="shrink-0 text-accent" />
-            <span className="font-medium text-zinc-200 transition duration-(--dur-fast) group-hover:text-accent">{c.title}</span>
+            <span className="font-medium text-zinc-200 transition group-hover:text-accent">{c.title}</span>
             <span className="font-mono text-xs text-muted">{c.repo}</span>
             <span className="ml-auto flex items-center gap-2">
               <span className="rounded-full border border-accent/30 px-2 py-0.5 text-xs uppercase tracking-wide text-accent/80">{c.status}</span>
@@ -196,7 +196,7 @@ export function ReposShowcase() {
               href="https://github.com/darkpandawarrior"
               target="_blank"
               rel="noreferrer"
-              className="flex shrink-0 items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-300 transition duration-(--dur-fast) hover:border-accent hover:text-accent"
+              className="flex shrink-0 items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-zinc-300 transition hover:border-accent hover:text-accent"
             >
               <GitBranch size={14} /> @darkpandawarrior
             </a>
@@ -251,7 +251,7 @@ export function ReposShowcase() {
               href="https://github.com/career-ops-hq/career-ops/pulls?q=author%3Adarkpandawarrior"
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-muted transition duration-(--dur-fast) hover:text-accent"
+              className="mt-3 inline-flex items-center gap-1.5 font-mono text-xs text-muted transition hover:text-accent"
             >
               <Star size={11} /> View my pull requests on career-ops <ArrowUpRight size={11} />
             </a>

@@ -74,13 +74,13 @@ export function ShippedShelf() {
                 href={app.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="panel group flex h-full flex-col p-5 transition duration-(--dur-fast) hover:-translate-y-1 hover:border-accent"
+                className="panel group flex h-full flex-col p-5 transition hover:-translate-y-1 hover:border-accent"
               >
                 <AppIcon app={app} size={44} />
                 <span className="kicker mt-4">
                   {app.employer}
                 </span>
-                <span className="font-display mt-1 text-lg font-bold transition duration-(--dur-fast) group-hover:text-accent">
+                <span className="font-display mt-1 text-lg font-bold transition group-hover:text-accent">
                   {app.name}
                 </span>
                 <span className="mt-1 text-sm leading-relaxed text-zinc-400">{app.role}</span>
@@ -102,7 +102,7 @@ export function ShippedShelf() {
                   )}
                   <ExternalLink
                     size={12}
-                    className="ml-auto opacity-0 transition duration-(--dur-fast) group-hover:opacity-100"
+                    className="ml-auto opacity-0 transition group-hover:opacity-100"
                     aria-hidden
                   />
                 </span>
@@ -135,7 +135,7 @@ export function ShippedShelf() {
               and the visible label of that element was all of it. Now the
               stats are read as the content they are, and the link is called
               what it says. */}
-          <div className="group relative mt-8 rounded-2xl border border-line bg-card/40 p-6 transition duration-(--dur-fast) hover:border-accent">
+          <div className="group relative mt-8 rounded-2xl border border-line bg-card/40 p-6 transition hover:border-accent">
             {/* Not links individually — a wall of 32 competing hit targets in a
                 summary is noise. The whole block goes to /shipped, where each
                 icon becomes its own link with a name and a store page. */}
@@ -167,10 +167,10 @@ export function ShippedShelf() {
 
             <Link
               to="/shipped"
-              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300 transition duration-(--dur-fast) after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-accent"
+              className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-zinc-300 transition after:absolute after:inset-0 after:rounded-2xl after:content-[''] group-hover:text-accent"
             >
               See all {reached} apps, and how the list was rebuilt
-              <ArrowRight size={15} aria-hidden className="transition duration-(--dur-fast) group-hover:translate-x-0.5" />
+              <ArrowRight size={15} aria-hidden className="transition group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>

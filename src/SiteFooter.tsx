@@ -126,7 +126,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
   },
 ];
 
-const LINK_CLASS = "group inline-flex items-center gap-1 text-sm text-zinc-400 transition duration-(--dur-fast) hover:text-accent";
+const LINK_CLASS = "group inline-flex items-center gap-1 text-sm text-zinc-400 transition hover:text-accent";
 
 /**
  * The real Pune weather, read once by useWeather() (the one shared
@@ -317,7 +317,7 @@ export function SiteFooter() {
                   {l.kind === "external" && (
                     <a href={l.href} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
                       {l.label}
-                      <ArrowUpRight size={11} className="opacity-0 transition duration-(--dur-fast) group-hover:opacity-100" />
+                      <ArrowUpRight size={11} className="opacity-0 transition group-hover:opacity-100" />
                     </a>
                   )}
                 </li>

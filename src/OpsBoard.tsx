@@ -1799,7 +1799,7 @@ export function OpsBoard() {
             back button is the failure surfaces.test.ts calls the loopdown bug,
             and it would be a poor joke on a page about noticing things. */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <Link to="/" className="kicker-accent transition duration-(--dur-fast) hover:opacity-80">← Back to portfolio</Link>
+          <Link to="/" className="kicker-accent transition hover:opacity-80">← Back to portfolio</Link>
           <LauncherButton />
         </div>
         <h1 className="font-display mb-3 text-h2 font-bold tracking-tight">Still true, or only once true</h1>

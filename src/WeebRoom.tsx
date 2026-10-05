@@ -281,7 +281,7 @@ export function WeebRoom() {
               href="https://anilist.co"
               target="_blank"
               rel="noreferrer"
-              className="mt-5 inline-flex items-center gap-2 text-sm text-accent transition duration-(--dur-fast) hover:underline"
+              className="mt-5 inline-flex items-center gap-2 text-sm text-accent transition hover:underline"
             >
               Enrichment source: AniList <ArrowUpRight size={14} />
             </a>

@@ -42,7 +42,7 @@ export function TiltCard({
     >
       <div
         ref={innerRef}
-        className="relative h-full overflow-hidden rounded-2xl transition-transform duration-(--dur-fast) ease-out"
+        className="relative h-full overflow-hidden rounded-2xl transition-transform ease-out"
         style={{ transformStyle: "preserve-3d" }}
       >
         {glow && (
