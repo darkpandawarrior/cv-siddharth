@@ -64,7 +64,7 @@ export function FieldNotes({ slug, className = "", stagger = false }: { slug: st
         to="/loopdown"
         hash={`series-${n.id}`}
         onClick={(e) => e.stopPropagation()}
-        className="flex items-center gap-1.5 rounded-full border bg-card/60 py-1 pl-1 pr-2.5 text-[11px] text-zinc-300 transition hover:text-zinc-100"
+        className="flex items-center gap-1.5 rounded-full border bg-card/60 py-1 pl-1 pr-2.5 text-xs text-zinc-300 transition hover:text-zinc-100"
         style={{ borderColor: `${n.color}55` }}
       >
         {cover ? (
@@ -73,7 +73,7 @@ export function FieldNotes({ slug, className = "", stagger = false }: { slug: st
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: n.color }} />
         )}
         {n.title}
-        <span className="text-[10px] text-muted">{n.episodes}</span>
+        <span className="text-xs text-muted">{n.episodes}</span>
       </Link>
     );
   });
@@ -106,16 +106,16 @@ export function LessonNotes({ slug, className = "", stagger = false }: { slug: s
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="flex items-center gap-1 rounded-full border border-line bg-card/60 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:text-zinc-100"
+        className="flex items-center gap-1 rounded-full border border-line bg-card/60 px-2.5 py-1 text-xs text-zinc-300 transition hover:text-zinc-100"
       >
         {l.title} <ArrowUpRight size={11} className="text-muted" />
       </a>
     ) : (
       <span
         key={l.slug}
-        className="rounded-full border border-line px-2.5 py-1 text-[11px] text-muted"
+        className="rounded-full border border-line px-2.5 py-1 text-xs text-muted"
       >
-        {l.title} <span className="text-[10px]">soon</span>
+        {l.title} <span className="text-xs">soon</span>
       </span>
     ),
   );
@@ -139,7 +139,7 @@ export function SystemStrip({ slug, className = "", stagger = false }: { slug: s
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {groups.map((g) => {
         const chips = g.items.map((item) => {
-          const chip = "rounded-full border border-line bg-card/60 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:text-zinc-100";
+          const chip = "rounded-full border border-line bg-card/60 px-2.5 py-1 text-xs text-zinc-300 transition hover:text-zinc-100";
           if (item.url?.startsWith("/")) {
             const [to, hash] = item.url.split("#");
             return (

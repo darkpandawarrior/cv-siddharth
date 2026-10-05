@@ -393,12 +393,12 @@ function BlueprintRoomInner() {
               {showTourNudge && stop === -1 && (
                 <span
                   role="status"
-                  className="pointer-events-none absolute left-1/2 top-[52px] z-20 w-max max-w-[220px] -translate-x-1/2 rounded-lg border border-accent2/40 bg-ink px-3 py-2 text-center font-mono text-[11px] text-accent2 shadow-lg animate-pulse"
+                  className="pointer-events-none absolute left-1/2 top-[52px] z-20 w-max max-w-[220px] -translate-x-1/2 rounded-lg border border-accent2/40 bg-ink px-3 py-2 text-center font-mono text-xs text-accent2 shadow-lg animate-pulse"
                 >
                   new here? start the tour ↑
                 </span>
               )}
-              <div className="pointer-events-none absolute bottom-4 right-4 flex flex-col items-end gap-1.5 text-[11px]">
+              <div className="pointer-events-none absolute bottom-4 right-4 flex flex-col items-end gap-1.5 text-xs">
                 <div className="pointer-events-auto rounded-lg border border-line bg-ink/80 px-2.5 py-1.5 backdrop-blur">
                   <EvidenceChip file="systemGraph.ts" stamp={systemGraph.generatedAt} source="registry + includeBuild scan" />
                 </div>

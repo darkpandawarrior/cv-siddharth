@@ -103,12 +103,12 @@ function ProjectCard({ project, onNavigate }: { project: ProjectCardData; onNavi
         <p className="line-clamp-2 text-xs leading-snug text-zinc-400">{project.tagline}</p>
         <div className="flex flex-wrap gap-1">
           {project.stack.slice(0, 3).map((s) => (
-            <span key={s} className="rounded-full border border-line bg-surface px-2 py-0.5 text-[10px] text-zinc-400">
+            <span key={s} className="rounded-full border border-line bg-surface px-2 py-0.5 text-xs text-zinc-400">
               {s}
             </span>
           ))}
         </div>
-        <p className="font-mono text-[10px] text-muted">{project.status}</p>
+        <p className="font-mono text-xs text-muted">{project.status}</p>
         <ChatLink href={`/project/${project.slug}`} onNavigate={onNavigate} className={`${LINK_CLASS} inline-flex items-center gap-1 text-xs no-underline`}>
           open case study <ArrowRight size={12} />
         </ChatLink>
@@ -123,7 +123,7 @@ function RoomsGrid({ onNavigate }: { onNavigate?: () => void }) {
       {siteRooms.map((room) => (
         <ChatLink key={room.to} href={room.to} onNavigate={onNavigate} className={TILE_CLASS}>
           <span className="block text-xs font-semibold text-zinc-200">{room.label}</span>
-          <span className="mt-0.5 block font-mono text-[10px] text-muted">{room.tag}</span>
+          <span className="mt-0.5 block font-mono text-xs text-muted">{room.tag}</span>
         </ChatLink>
       ))}
     </div>
@@ -143,8 +143,8 @@ function MetricTiles({ onNavigate }: { onNavigate?: () => void }) {
           className={`${TILE_CLASS} no-underline`}
         >
           <p className="font-mono text-lg font-bold leading-none tabular-nums text-accent">{m.value}</p>
-          <p className="mt-1 text-[11px] leading-tight text-zinc-300">{m.label}</p>
-          <p className="mt-0.5 text-[10px] leading-tight text-muted">{m.detail}</p>
+          <p className="mt-1 text-xs leading-tight text-zinc-300">{m.label}</p>
+          <p className="mt-0.5 text-xs leading-tight text-muted">{m.detail}</p>
         </ChatLink>
       ))}
     </div>
@@ -156,10 +156,10 @@ function SkillChips() {
     <div className="my-2.5 space-y-2">
       {skills.map((group) => (
         <div key={group.group}>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-accent2">{group.group}</p>
+          <p className="font-mono text-xs uppercase tracking-widest text-accent2">{group.group}</p>
           <div className="mt-1 flex flex-wrap gap-1">
             {group.items.map((item) => (
-              <span key={item} className="rounded-full border border-line bg-ink px-2 py-0.5 text-[10px] text-zinc-400">
+              <span key={item} className="rounded-full border border-line bg-ink px-2 py-0.5 text-xs text-zinc-400">
                 {item}
               </span>
             ))}
@@ -186,7 +186,7 @@ const BANDS = [
   { min: 0, label: "Not a match", tone: "text-zinc-300", bar: "bg-zinc-500" },
 ];
 
-const SECTION_LABEL = "font-mono text-[10px] uppercase tracking-widest";
+const SECTION_LABEL = "font-mono text-xs uppercase tracking-widest";
 
 // The email this site publishes everywhere else (CHAT_FALLBACK, the JD system
 // prompt) — one constant here rather than a fourth copy of the string.
@@ -238,7 +238,7 @@ export function JdFitCard({
               real read are different claims, and the card says which one this
               is rather than leaving a recruiter to guess. */}
           <span
-            className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${
+            className={`shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${
               report.source === "offline"
                 ? "border-line text-muted"
                 : "border-accent/40 text-accent"
@@ -250,14 +250,14 @@ export function JdFitCard({
         {report.role && <p className="mt-1 break-words text-xs text-zinc-300">{report.role}</p>}
         <div className="mt-2 flex items-baseline gap-1.5">
           <span className={`font-mono text-2xl font-bold leading-none tabular-nums ${band.tone}`}>{report.score}</span>
-          <span className="font-mono text-[10px] text-muted">/ 100</span>
-          <span className={`ml-auto text-[11px] font-semibold ${band.tone}`}>{band.label}</span>
+          <span className="font-mono text-xs text-muted">/ 100</span>
+          <span className={`ml-auto text-xs font-semibold ${band.tone}`}>{band.label}</span>
         </div>
         {/* Decorative: the number and the band next to it already say this. */}
         <div aria-hidden className="mt-2 h-1 overflow-hidden rounded-full bg-line">
           <div className={`h-full rounded-full ${band.bar}`} style={{ width: `${report.score}%` }} />
         </div>
-        <p className="mt-1.5 font-mono text-[10px] tabular-nums text-muted">
+        <p className="mt-1.5 font-mono text-xs tabular-nums text-muted">
           {matched} matched · {gapCount} gap{gapCount === 1 ? "" : "s"}
         </p>
         {/* SYS-7 dossier chit: click the score's receipt for the mechanism
@@ -307,13 +307,13 @@ export function JdFitCard({
                 const project = s.project ? projectCards.find((p) => p.slug === s.project) : undefined;
                 return (
                   <li key={i} className="border-l-2 border-accent/40 pl-2">
-                    <p className="text-[11px] font-semibold leading-snug text-zinc-200">{s.need}</p>
-                    <p className="text-[11px] leading-snug text-zinc-400">{s.evidence}</p>
+                    <p className="text-xs font-semibold leading-snug text-zinc-200">{s.need}</p>
+                    <p className="text-xs leading-snug text-zinc-400">{s.evidence}</p>
                     {project && (
                       <ChatLink
                         href={`/project/${project.slug}`}
                         onNavigate={onNavigate}
-                        className={`${LINK_CLASS} mt-0.5 inline-flex items-center gap-1 text-[11px] no-underline`}
+                        className={`${LINK_CLASS} mt-0.5 inline-flex items-center gap-1 text-xs no-underline`}
                       >
                         {project.name} case study <ArrowRight size={11} />
                       </ChatLink>
@@ -331,13 +331,13 @@ export function JdFitCard({
             <ul className="mt-1.5 space-y-2 list-none! pl-0!">
               {report.gaps.map((g, i) => (
                 <li key={i} className="border-l-2 border-amber-300/40 pl-2">
-                  <p className="text-[11px] font-semibold leading-snug text-zinc-200">{g.need}</p>
-                  <p className="text-[11px] leading-snug text-zinc-400">{g.note}</p>
+                  <p className="text-xs font-semibold leading-snug text-zinc-200">{g.need}</p>
+                  <p className="text-xs leading-snug text-zinc-400">{g.note}</p>
                   {onAsk && (
                     <button
                       type="button"
                       onClick={() => onAsk(`Tell me more about ${g.need} — where does that actually stand?`)}
-                      className="mt-0.5 text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+                      className="mt-0.5 text-xs font-medium text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
                     >
                       ask about this
                     </button>
@@ -346,7 +346,7 @@ export function JdFitCard({
               ))}
             </ul>
           ) : (
-            <p className="mt-1.5 text-[11px] leading-snug text-muted">
+            <p className="mt-1.5 text-xs leading-snug text-muted">
               Nothing flagged from the description — ask me directly and I&apos;ll tell you where I&apos;d need ramp-up.
             </p>
           )}
@@ -358,7 +358,7 @@ export function JdFitCard({
           <button
             type="button"
             onClick={() => void copy()}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-muted transition hover:text-accent"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted transition hover:text-accent"
           >
             {copied ? <Check size={11} className="text-accent" /> : <Copy size={11} />}
             {copied ? "Copied" : "Copy"}
@@ -366,13 +366,13 @@ export function JdFitCard({
           <ChatLink
             href="/hire"
             onNavigate={onNavigate}
-            className="text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 no-underline hover:decoration-accent"
+            className="text-xs font-medium text-accent underline decoration-accent/40 underline-offset-2 no-underline hover:decoration-accent"
           >
             90-second version &amp; résumé
           </ChatLink>
           <a
             href={mailHref}
-            className="text-[11px] font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
+            className="text-xs font-medium text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent"
           >
             Email this to me
           </a>
