@@ -18,7 +18,7 @@ export const projectStats = {
     "features": 13,
     "cores": 12,
     "dbVersion": 50,
-    "screenshots": 383,
+    "screenshots": 412,
     "schemaVersion": 50,
     "substitutedModules": [
       "location",
@@ -101,7 +101,7 @@ export const projectStats = {
     ]
   }
 } as const;
-export const projectStatsGeneratedAt = "2026-10-05";
+export const projectStatsGeneratedAt = "2026-10-06";
 export const kmpAdoption = {
   "candidai": {
     "composedModules": 9,
