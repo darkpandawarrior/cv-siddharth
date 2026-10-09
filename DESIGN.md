@@ -107,3 +107,19 @@ No bespoke durations. Reduced motion always wins globally, and 3D has a static f
   `npm run sentinel`). The unit gate proves the build, not that the page looks right; look at it.
 - Known gaps: radius scale (TBD), a light theme for the main site (only resume print and ink
   world are light), and any component catalogue beyond the file listing.
+
+## Changelog
+
+| Date | Change | Why | Source |
+|---|---|---|---|
+| 2026-10-09 | Initial version, distilled from the code token files and existing design docs | Establish design direction for agents | DESIGN.md rollout |
+
+## Open questions
+
+- TBD: corner radii (no radius token declared in @theme).
+- Known gap: a light theme for the main site (only resume print and ink world are light).
+- Known gap: any component catalogue beyond the file listing.
+
+## Evolving this file
+
+Agents: when you change UI and find this file wrong or silent, fix it in the same change and add a Changelog row. Code token files win over this file; when they disagree, correct the doc. A user correction of a visual choice with a stated reason becomes a rule here immediately. Lessons that apply beyond this repo go to the LEARNINGS log of the `design-md` skill in AgentHarness.
