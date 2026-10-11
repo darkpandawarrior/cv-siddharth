@@ -1,22 +1,112 @@
-# Archive policy
+# Archived work, 2026-10-11
 
-Superseded but kept means archived behind at least one easter egg, never
-silently kept and never silently deleted. Every touchpoint that a row covers
-carries the marker below, verbatim, so a future refactor finds it without
-reading history. `registry.test.ts` checks that every marker has a row and
-every row is real; it never looks at today's date. The doctor (SH-4) is what
-flags a row whose `reviewBy` has passed. Removal then follows the row's
-`removal` recipe exactly, with no fresh analysis.
+Branches and uncommitted worktree changes removed during the disk cleanup.
+Each is a parent of this commit. Restore one with: git branch <name> <sha>
 
-## Marker format
-
-```
-// ponytail: archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>
-```
-
-`<id>` matches an entry in `src/archive/registry.ts` (`ARCHIVE`), and
-`<reviewBy>` (`YYYY-MM-DD`) must equal that entry's `reviewBy`.
-
-## Rows
-
-No entry has been archived yet. The first row (`world-v1`) lands with P3-07.
+| Source | Branch | Commit |
+|---|---|---|
+| worktree cv-siddharth-wt-wave uncommitted | feat/portfolio-phase345-20261004 | 51a3f3d80f5812ff22b6e5772d4354a97407e52f |
+| local branch | feat/globe-living-earth-20260927 | b33f7374f811 |
+| local branch | feat/portfolio-phase345-20261004 | 6afa97248d01 |
+| local branch | fix/green-main-ci-20260927 | ae6ed0f0833c |
+| local branch | fix/store-delisted-20261001 | ce5569e5856d |
+| local branch | fix/volcano-relay-20261001 | 3f1862a46aa4 |
+| local branch | lane/P3-07-swap | 888a90498e51 |
+| local branch | lane/P3-fix | 631a396677b3 |
+| local branch | lane/P3-wire | 425c37883fb3 |
+| local branch | lane/P4-00 | 620bcb261d8f |
+| local branch | lane/P4-01 | 190ea0fec35d |
+| local branch | lane/P4-02 | 5295d2e24c1f |
+| local branch | lane/P4-03 | 9a3cd350f115 |
+| local branch | lane/P4-04 | 9c038b77a7ba |
+| local branch | lane/P4-wire | c2de5d5b8860 |
+| local branch | lane/SP-20 | 475501c642c5 |
+| local branch | lane/U-00 | 9107878371cb |
+| local branch | lane/U-01 | 7eefcbb98e78 |
+| local branch | lane/U-fix-1 | 3c50543ae949 |
+| local branch | lane/U-fix-2 | 5c0d4e3907ea |
+| local branch | lane/U-fix-3 | 422826a1d969 |
+| local branch | lane/U-fix-4 | d1b137f83696 |
+| local branch | lane/U-fix-5 | 7ca6c7d54a70 |
+| local branch | lane/U-fix-6 | 4f3925ebc1ad |
+| local branch | lane/U-fix-7 | b8723ec2e35b |
+| local branch | lane/U-spine | 79bfbe62bb6f |
+| local branch | lane/U-wet | 7e19b94395f2 |
+| local branch | lane/U-wire | 4c60ce339fff |
+| local branch | lane/globe-C1 | c24ca15f8f91 |
+| local branch | lane/globe-C2 | 9e9158e2102b |
+| local branch | lane/globe-C3 | a966431d2311 |
+| local branch | lane/globe-C4 | 1e87b919f950 |
+| local branch | lane/globe-E1 | 97bce4b5d5ae |
+| local branch | lane/globe-E2 | 8d9b00ee787f |
+| local branch | lane/globe-E3 | b83ef29ce049 |
+| local branch | lane/globe-E4 | 538dd718e2d4 |
+| local branch | lane/globe-F1 | c9468ec456a4 |
+| local branch | lane/globe-F2 | 958c37eea09e |
+| local branch | lane/globe-F3 | b617eb385847 |
+| local branch | lane/globe-F4 | 8ba5f3ca227a |
+| local branch | lane/globe-G1 | b162f27e656f |
+| local branch | lane/globe-G2 | 35b382e575e1 |
+| local branch | lane/globe-G3 | 939d188377d5 |
+| local branch | lane/globe-G4 | a57170fadf65 |
+| local branch | lane/globe-G5 | 8eef0c23b37f |
+| local branch | lane/globe-H1 | 64ebc1f08130 |
+| local branch | lane/globe-I2 | 5d515a98d06d |
+| local branch | lane/globe-P1 | 8282eff4373e |
+| local branch | lane/globe-P10A | ba9881d481ce |
+| local branch | lane/globe-P10B | 8fe38d814ff9 |
+| local branch | lane/globe-P10C | ba70ac5bec8f |
+| local branch | lane/globe-Q1 | d9a48b422b1d |
+| local branch | lane/globe-Q2 | baba1062e512 |
+| local branch | lane/globe-Q4 | 9d80516fc289 |
+| local branch | lane/globe-Q5 | 6e08710dcbbb |
+| local branch | lane/globe-Q6 | 1e258015c329 |
+| local branch | lane/globe-S1 | d388e4870944 |
+| local branch | lane/globe-S2 | a3b36f22f156 |
+| local branch | lane/globe-S3 | 1956e3a95228 |
+| local branch | lane/globe-S4 | 6560cca16ad1 |
+| local branch | lane/globe-T1 | c22ab54602d4 |
+| local branch | lane/globe-T2 | b71d2c19923d |
+| local branch | lane/globe-U1 | d3bd091371a3 |
+| local branch | lane/globe-V1 | 1a23cdd5f1a0 |
+| local branch | lane/globe-V2 | 59c6b2c2f76c |
+| local branch | lane/globe-V3 | 057bc347efb3 |
+| local branch | lane/globe-V3B | c70e34365c72 |
+| local branch | lane/globe-V4 | a59adb779565 |
+| local branch | lane/globe-V5 | 2ebb4ee0360e |
+| local branch | lane/globe-V6 | b47cd85d8a70 |
+| local branch | lane/globe-V7 | f624ea6270b5 |
+| local branch | lane/globe-V8 | 8111e552fe18 |
+| local branch | lane/globe-W1 | 82351e3c7ac3 |
+| local branch | lane/globe-W10 | 2cbb23be2973 |
+| local branch | lane/globe-W10D | 3a4585afb37e |
+| local branch | lane/globe-W11 | 6e671426abdf |
+| local branch | lane/globe-W11A | f49fe0ed7b92 |
+| local branch | lane/globe-W11B | a9c67a002c84 |
+| local branch | lane/globe-W11C | 3b745c3f9021 |
+| local branch | lane/globe-W12 | eb74400f5c23 |
+| local branch | lane/globe-W13 | e7812b683001 |
+| local branch | lane/globe-W14 | ad4c925908e3 |
+| local branch | lane/globe-W15 | 666dedd97cdd |
+| local branch | lane/globe-W3 | 0c02cd419abd |
+| local branch | lane/globe-W4 | eb1a3ac6ecb9 |
+| local branch | lane/globe-W5 | b1fa1673a671 |
+| local branch | lane/globe-W6 | 59838583fc96 |
+| local branch | lane/globe-W8 | 97dccf022c0c |
+| local branch | lane/globe-X1 | 44a1b77e414b |
+| local branch | lane/globe-X2 | bd6eef0a8841 |
+| local branch | lane/globe-X3 | bbbc5b484d89 |
+| local branch | lane/globe-X4 | cffe6e9413df |
+| local branch | lane/globe-X5 | cf3d478f316f |
+| local branch | lane/globe-X6 | 243e92b66a5c |
+| local branch | lane/globe-Z1 | ad65c40ef006 |
+| local branch | lane/globe-Z2 | 08d2615941da |
+| local branch | lane/globe-Z3 | 0c566d25166d |
+| local branch | lane/globe-Z4 | 140af88b5a4c |
+| local branch | pilot/cv-01-a | 07a0f6f0b862 |
+| local branch | pilot/cv-01-b | 743327080aa1 |
+| local branch | pilot/cv-02-a | fa7780956f73 |
+| local branch | pilot/cv-02-b | 2db8d35570da |
+| local branch | pilot/cv-03-a | 694ef2f5cd0a |
+| local branch | pilot/cv-03-b | ad6ad4b6f2fd |
+| local branch | probe/e2e-ci-flakes-20261002 | 9c7985e74b32 |
