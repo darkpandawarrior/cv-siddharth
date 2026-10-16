@@ -1,5 +1,5 @@
 {
-  "generatedAt": "07597413b32b",
+  "generatedAt": "0c0f5d2930ad",
   "profile": {
     "name": "Siddharth Pandalai",
     "title": "Senior Android Engineer",
@@ -150,7 +150,7 @@
     },
     "paymentslab-kmp": {
       "modules": 17,
-      "composedModules": 29,
+      "composedModules": 31,
       "providers": 0,
       "features": 4,
       "cores": 9,
@@ -169,6 +169,8 @@
         "result",
         "ai",
         "ai-testing",
+        "ai-mlkit",
+        "designsystem-wallet-gms",
         "llm-chat",
         "payments-api",
         "stripe",
@@ -195,7 +197,7 @@
     "gaddi": {
       "modules": 15,
       "screenshots": 61,
-      "composedModules": 10,
+      "composedModules": 11,
       "substitutedModules": [
         "mvi-core",
         "common",
@@ -203,6 +205,7 @@
         "bots-policy",
         "network",
         "ai",
+        "ai-mlkit",
         "llm-chat",
         "result",
         "ai-testing",
