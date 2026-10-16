@@ -28,6 +28,8 @@
     "postbuild": "node scripts/gen-csp.mjs && node scripts/check-budget.mjs",
     "preview": "vite preview --port 4173 --strictPort",
     "serve": "vite preview --strictPort --port 4173",
+    "postinstall": "node scripts/cv-gate/install.mjs",
+    "test:cv-gate": "node scripts/cv-gate/install.mjs --self-test",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
