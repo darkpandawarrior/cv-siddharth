@@ -29,6 +29,7 @@ import {
   validateRoute,
 } from "./chat-handler";
 import { SYSTEM_PROMPT, ROUTE_PHRASES } from "./system-prompt";
+import { projectModuleCounts } from "../../src/lib/projectStatLine";
 import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt";
 import { JD_SYSTEM_PROMPT } from "./jd-prompt";
 import { guard } from "./prompt-guard";
@@ -420,7 +421,8 @@ describe("validateRequest (mode)", () => {
  * what Panda actually says. */
 describe("SYSTEM_PROMPT facts (regression: the stale PaymentsLab-KMP count)", () => {
   it("states the registry's current module count for PaymentsLab-KMP, not the stale 44", () => {
-    expect(SYSTEM_PROMPT).toContain("46-module registry");
+    // Derived: the count moves with every registry refresh; only the stale 44 is a regression.
+    expect(SYSTEM_PROMPT).toContain(`${projectModuleCounts["paymentslab-kmp"]}-module registry`);
     expect(SYSTEM_PROMPT).not.toMatch(/44-module/);
   });
 });

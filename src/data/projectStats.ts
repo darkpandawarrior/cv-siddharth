@@ -41,7 +41,7 @@ export const projectStats = {
   },
   "paymentslab-kmp": {
     "modules": 17,
-    "composedModules": 29,
+    "composedModules": 31,
     "providers": 0,
     "features": 4,
     "cores": 9,
@@ -60,6 +60,8 @@ export const projectStats = {
       "result",
       "ai",
       "ai-testing",
+      "ai-mlkit",
+      "designsystem-wallet-gms",
       "llm-chat",
       "payments-api",
       "stripe",
@@ -86,7 +88,7 @@ export const projectStats = {
   "gaddi": {
     "modules": 15,
     "screenshots": 61,
-    "composedModules": 10,
+    "composedModules": 11,
     "substitutedModules": [
       "mvi-core",
       "common",
@@ -94,6 +96,7 @@ export const projectStats = {
       "bots-policy",
       "network",
       "ai",
+      "ai-mlkit",
       "llm-chat",
       "result",
       "ai-testing",
@@ -101,7 +104,7 @@ export const projectStats = {
     ]
   }
 } as const;
-export const projectStatsGeneratedAt = "2026-10-06";
+export const projectStatsGeneratedAt = "2026-10-16";
 export const kmpAdoption = {
   "candidai": {
     "composedModules": 9,

@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { globeFacts, liveDotsLabel, weeksAgoLabel, REACH_INSTALLS_CLAIM, REACH_UPSTREAM_CLAIM } from "./globeRows.ts";
 import { fleetStats } from "../../data/store.ts";
+import { upstreamStars, upstreamMergedPRs } from "../../data/profile.ts";
 
 describe("globeFacts", () => {
   it("carries the exact reach-column claim sentences (living-ledger-spec.md#6.3)", () => {
     expect(REACH_INSTALLS_CLAIM).toBe("install floor across 88 live listings (Play's own install bands, summed as floors)");
-    expect(REACH_UPSTREAM_CLAIM).toBe("25 merged PRs in a repository starred 73k+ times");
+    expect(REACH_UPSTREAM_CLAIM).toBe(`${upstreamMergedPRs} merged PRs in a repository starred ${upstreamStars} times`);
   });
 
   it("every row carries a number and an EvidenceChip source (G8: a number always sits beside its chip)", () => {
