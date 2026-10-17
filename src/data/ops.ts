@@ -41,7 +41,7 @@ export const perimeter = [
   },
   {
     "file": "lanes.ts",
-    "generatedAt": "2026-10-16",
+    "generatedAt": "2026-10-17",
     "slaDays": 45,
     "generator": "npm run gen:lanes"
   },
@@ -283,4 +283,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-10-16";
+export const opsGeneratedAt = "2026-10-17";

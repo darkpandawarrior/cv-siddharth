@@ -442,4 +442,4 @@ export const lanes: Lane[] = [
     }
   }
 ] as const;
-export const lanesGeneratedAt = "2026-10-16";
+export const lanesGeneratedAt = "2026-10-17";
