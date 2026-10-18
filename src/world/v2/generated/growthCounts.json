@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-16T12:17:32.831Z",
+  "generatedAt": "2026-10-18T12:02:17.626Z",
   "counts": {
     "year-strata": 8,
     "weir": 4,
@@ -481,9 +481,9 @@
       "peakAt": "2026-10-04T13:12:51.700Z"
     },
     "river-width:2026-10": {
-      "current": 23.46316810702143,
-      "peak": 23.46316810702143,
-      "peakAt": "2026-10-16T12:17:32.831Z"
+      "current": 23.74479034652039,
+      "peak": 23.74479034652039,
+      "peakAt": "2026-10-18T12:02:17.626Z"
     },
     "district-bench:foundation": {
       "current": 46,
