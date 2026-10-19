@@ -224,7 +224,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
       <dl className="mb-2 grid grid-cols-2 gap-x-2 gap-y-1.5">
         {selected.rows.map((row, i) => (
           <div key={`${row.label}-${i}`} className="contents">
-            <dt className={row.swatch ? "sr-only" : "truncate text-zinc-500"}>{row.label}</dt>
+            <dt className={row.swatch ? "sr-only" : "truncate text-muted"}>{row.label}</dt>
             <dd className={row.swatch ? "col-span-2 flex items-start gap-2 text-zinc-200" : "truncate text-right text-zinc-200"}>
               {row.swatch && <span aria-hidden className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: row.swatch }} />}
               <span>{row.value}</span>

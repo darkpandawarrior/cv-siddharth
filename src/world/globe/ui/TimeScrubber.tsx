@@ -425,7 +425,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
             {compareButton}
             {eclipseButtonFull}
           </div>
-          {notLive && <p className="mt-2 text-zinc-500">Live feeds pause while you scrub.</p>}
+          {notLive && <p className="mt-2 text-muted">Live feeds pause while you scrub.</p>}
         </div>, document.querySelector("[data-globe-stage]") ?? document.body
       )}
 
