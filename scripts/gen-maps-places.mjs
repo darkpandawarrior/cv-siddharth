@@ -4,6 +4,7 @@
  * otherwise city centres or 0.1° cells protect home without reading its location.
  * All outputs are validated before replacing committed generated assets. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { basename, join, resolve } from "node:path";
 import sharp from "sharp";
 import { mapsGazetteer, nearestGazetteerCity, haversineKm } from "../src/data/mapsGazetteer.ts";
@@ -121,7 +122,7 @@ for (const path of sidecars) {
   thumbnailPlans.push({ input, title: photo.title, slug: coarse.slug, city: coarse.city, month, year: Number(month.slice(0, 4)), views, ...pin, ...(captions.get(photo.title) ? { caption: captions.get(photo.title) } : {}) });
 }
 thumbnailPlans.sort((a, b) => a.slug.localeCompare(b.slug) || b.views - a.views || a.title.localeCompare(b.title));
-const counters = new Map(), encoded = [];
+const counters = new Map(), encoded = [], firstFileByHash = new Map();
 for (const photo of thumbnailPlans) {
   const n = (counters.get(photo.slug) ?? 0) + 1; counters.set(photo.slug, n);
   const file = `${photo.slug}-${n}.avif`;
@@ -139,8 +140,12 @@ for (const photo of thumbnailPlans) {
   }
   const metadata = await sharp(buffer).metadata();
   if (metadata.exif || metadata.xmp || metadata.iptc || metadata.icc || metadata.width > 480 || metadata.height > 480) throw new Error("Thumbnail privacy/size check failed");
-  mapsPhotos.push({ src: `/globe/maps/${file}`, ...record, w: metadata.width, h: metadata.height });
-  encoded.push({ file, buffer });
+  // The same still exported twice encodes to identical bytes: ship one file and point both records
+  // at it (counter-derived names stay stable, so a duplicate just leaves a gap in the numbering).
+  const hash = createHash("sha256").update(buffer).digest("hex");
+  const shared = firstFileByHash.get(hash);
+  mapsPhotos.push({ src: `/globe/maps/${shared ?? file}`, ...record, w: metadata.width, h: metadata.height });
+  if (!shared) { firstFileByHash.set(hash, file); encoded.push({ file, buffer }); }
 }
 const answers = files(join(root, "Maps", "Answers to automated questions"));
 const edits = files(join(root, "Maps", "Suggested edits to business establishments"));

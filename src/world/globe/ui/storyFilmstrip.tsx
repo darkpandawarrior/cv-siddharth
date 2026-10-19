@@ -10,9 +10,9 @@ export default function StoryFilmstrip({ photos, reducedMotion }: { photos: read
   if (!photos.length) return null;
   return (
     <div data-story-filmstrip className="mt-2 flex gap-1.5 overflow-x-auto hide-scrollbar" aria-label="Google Maps photos from this city">
-      {photos.slice(0, 6).map((photo) => (
+      {photos.slice(0, 6).map((photo, i) => (
         <figure
-          key={photo.src}
+          key={`${photo.src}-${i}`}
           data-story-filmstrip-photo
           data-story-filmstrip-slug={photo.slug}
           className={`w-16 shrink-0 overflow-hidden rounded border border-line bg-ink/60 ${reducedMotion ? "" : "fade-in"}`}
