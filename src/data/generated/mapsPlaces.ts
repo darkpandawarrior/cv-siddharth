@@ -1232,7 +1232,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 360
   },
   {
-    "src": "/globe/maps/bhopal-4.avif",
+    "src": "/globe/maps/bhopal-3.avif",
     "slug": "bhopal",
     "city": "Bhopal",
     "month": "2017-07",
@@ -2290,7 +2290,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-4.avif",
+    "src": "/globe/maps/new-delhi-1.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2316,7 +2316,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-6.avif",
+    "src": "/globe/maps/new-delhi-2.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2342,7 +2342,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-8.avif",
+    "src": "/globe/maps/new-delhi-3.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2355,7 +2355,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-9.avif",
+    "src": "/globe/maps/new-delhi-5.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2396,7 +2396,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-12.avif",
+    "src": "/globe/maps/new-delhi-11.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2422,7 +2422,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-14.avif",
+    "src": "/globe/maps/new-delhi-13.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2435,7 +2435,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-15.avif",
+    "src": "/globe/maps/new-delhi-7.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
@@ -2487,7 +2487,7 @@ export const mapsPhotos: MapsPhoto[] = [
     "h": 480
   },
   {
-    "src": "/globe/maps/new-delhi-19.avif",
+    "src": "/globe/maps/new-delhi-17.avif",
     "slug": "new-delhi",
     "city": "New Delhi",
     "month": "2018-01",
