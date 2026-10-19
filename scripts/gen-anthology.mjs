@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 import { fetchWithTimeout } from "./lib/net.mjs";
-import { HEAVY_ASSET_BASE } from "../src/lib/assetBase.ts";
+import { heavy } from "../src/lib/assetBase.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = join(root, "src", "data", "anthology.ts");
 // Moved off Vercel onto GitHub Pages (heavy/) — see src/lib/assetBase.ts.
@@ -75,7 +75,7 @@ for (const e of src.entries) {
       if (img.ok) {
         const name = basename(e.plate);
         writeFileSync(join(plateDir, name), Buffer.from(await img.arrayBuffer()));
-        plate = `${HEAVY_ASSET_BASE}/p/anthology/plates/${name}`;
+        plate = heavy(`/p/anthology/plates/${name}`);
       }
     }
 
@@ -143,7 +143,7 @@ for (const sib of src.siblings ?? []) {
       if (img.ok) {
         const name = basename(e.plate);
         writeFileSync(join(plateDir, name), Buffer.from(await img.arrayBuffer()));
-        plate = `${HEAVY_ASSET_BASE}/p/anthology/plates/${name}`;
+        plate = heavy(`/p/anthology/plates/${name}`);
       }
     }
 
@@ -204,7 +204,7 @@ try {
   const r = await fetchWithTimeout(`${REPO}/fiction/morkinstar-journals/assets/web/the-fourteen.jpg`);
   if (r.ok) {
     writeFileSync(join(plateDir, "the-fourteen.jpg"), Buffer.from(await r.arrayBuffer()));
-    fourteen = `${HEAVY_ASSET_BASE}/p/anthology/plates/the-fourteen.jpg`;
+    fourteen = heavy(`/p/anthology/plates/the-fourteen.jpg`);
   }
 } catch { /* optional */ }
 
@@ -242,7 +242,7 @@ for (const w of src.witnesses ?? []) {
       .resize({ width: 1100, withoutEnlargement: true })
       .jpeg({ quality: 82 })
       .toFile(join(witnessDir, `${w.id}.jpg`));
-    art = `${HEAVY_ASSET_BASE}/p/anthology/witnesses/${w.id}.jpg`;
+    art = heavy(`/p/anthology/witnesses/${w.id}.jpg`);
   } catch { /* Undrawn, or the fetch failed. Either way the record still ships. */ }
   witnesses.push({ id: w.id, name: w.name, entry: w.entry, of: w.of, did: w.did, art });
 }
