@@ -63,8 +63,8 @@ jobs:
           path: cv-siddharth-kmp-checkout
       - name: Put the twin where the scripts expect it
         run: mv cv-siddharth-kmp-checkout ../cv-siddharth-kmp
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-node@v7
+        with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
 
       # One consolidated job, but every check still reports. `!cancelled()`

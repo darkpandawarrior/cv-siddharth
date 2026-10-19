@@ -2,24 +2,24 @@
 // Numbers are derived from each app repo's settings.gradle.kts + Room DB over
 // raw.githubusercontent, plus a local sibling-checkout scan for the KMP
 // substitution/adoption fields (candidai's repo is private and can only ever
-// be read locally — see the module docstring). candidai/portfolio's own
+// be read locally, see the module docstring). candidai/portfolio's own
 // composedModules/substitutedModules live in the separate kmpAdoption export
-// below, not on projectStats itself — see the module docstring for why.
+// below, not on projectStats itself, see the module docstring for why.
 // Run `npm run gen:stats` to refresh.
 export const projectStats = {
   "foundation": {
-    "modules": 43,
+    "modules": 46,
     "providerModules": 20,
     "conventionPlugins": 18
   },
   "doori": {
     "modules": 36,
-    "composedModules": 13,
+    "composedModules": 16,
     "features": 13,
     "cores": 12,
-    "dbVersion": 48,
-    "screenshots": 372,
-    "schemaVersion": 48,
+    "dbVersion": 50,
+    "screenshots": 412,
+    "schemaVersion": 50,
     "substitutedModules": [
       "location",
       "common",
@@ -28,7 +28,10 @@ export const projectStats = {
       "mvi-core",
       "result",
       "app-shell",
+      "app-shell-location-gms",
       "ai",
+      "ai-mlkit",
+      "designsystem-wallet-gms",
       "ai-testing",
       "security",
       "settings",
@@ -38,7 +41,7 @@ export const projectStats = {
   },
   "paymentslab-kmp": {
     "modules": 17,
-    "composedModules": 29,
+    "composedModules": 31,
     "providers": 0,
     "features": 4,
     "cores": 9,
@@ -57,6 +60,8 @@ export const projectStats = {
       "result",
       "ai",
       "ai-testing",
+      "ai-mlkit",
+      "designsystem-wallet-gms",
       "llm-chat",
       "payments-api",
       "stripe",
@@ -83,7 +88,7 @@ export const projectStats = {
   "gaddi": {
     "modules": 15,
     "screenshots": 61,
-    "composedModules": 10,
+    "composedModules": 11,
     "substitutedModules": [
       "mvi-core",
       "common",
@@ -91,6 +96,7 @@ export const projectStats = {
       "bots-policy",
       "network",
       "ai",
+      "ai-mlkit",
       "llm-chat",
       "result",
       "ai-testing",
@@ -98,7 +104,7 @@ export const projectStats = {
     ]
   }
 } as const;
-export const projectStatsGeneratedAt = "2026-09-25";
+export const projectStatsGeneratedAt = "2026-10-16";
 export const kmpAdoption = {
   "candidai": {
     "composedModules": 9,

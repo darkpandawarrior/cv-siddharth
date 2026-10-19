@@ -21,7 +21,7 @@ it("counts only owned source and preserves prerelease Gradle versions", () => {
     write("external/toolkit/Other.kt", "not twin source\n");
     write("build/Generated.kt", "not source\n");
     write("gradle/libs.versions.toml", 'kotlin = "2.4.20"\ncompose-multiplatform = "1.13.0-alpha01"\nagp = "9.5.0-alpha06"\n');
-    write("gradle/wrapper/gradle-wrapper.properties", "distributionUrl=https://services.gradle.org/distributions/gradle-9.8.0-rc-2-bin.zip\n");
+    write("gradle/wrapper/gradle-wrapper.properties", "distributionUrl=https://services.gradle.org/distributions/gradle-9.8.0-rc-2-bin.zip\n"); // toolchain-audit:allow fixture wrapper string, test data
     const root = pathToFileURL(dir + "/");
     expect(readTwinStats(root)).toMatchObject({ kotlinFiles: 1, kotlinLines: 2, gradle: "9.8.0-rc-2" });
     write("gradle/wrapper/gradle-wrapper.properties", "distributionUrl=unknown");

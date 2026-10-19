@@ -45,7 +45,7 @@ function CityRow({ status, onPick }: { status: DaylightCityStatus; onPick: (stat
         className="flex w-full items-center justify-between gap-2 rounded px-1 py-1 text-left hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <span className="min-w-0 truncate">{status.city.name}</span>
-        <span className="shrink-0 whitespace-nowrap text-xs text-zinc-500">
+        <span className="shrink-0 whitespace-nowrap text-xs text-muted">
           {status.altitudeDeg >= 0 ? "+" : ""}
           {status.altitudeDeg.toFixed(1)}°
         </span>
@@ -153,7 +153,7 @@ export default function DaylightReadout() {
               <span>Rising</span>
             </div>
             {rising.length === 0 ? (
-              <p className="px-1 py-1 text-zinc-500">No sizeable city near sunrise right now</p>
+              <p className="px-1 py-1 text-muted">No sizeable city near sunrise right now</p>
             ) : (
               <ul>
                 {rising.map((s) => (
@@ -166,7 +166,7 @@ export default function DaylightReadout() {
               <span>Setting</span>
             </div>
             {setting.length === 0 ? (
-              <p className="px-1 py-1 text-zinc-500">No sizeable city near sunset right now</p>
+              <p className="px-1 py-1 text-muted">No sizeable city near sunset right now</p>
             ) : (
               <ul>
                 {setting.map((s) => (

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "95c1ef40c231",
+  "generatedAt": "0c0f5d2930ad",
   "profile": {
     "name": "Siddharth Pandalai",
     "title": "Senior Android Engineer",
@@ -117,18 +117,18 @@
   ],
   "projectStats": {
     "foundation": {
-      "modules": 43,
+      "modules": 46,
       "providerModules": 20,
       "conventionPlugins": 18
     },
     "doori": {
       "modules": 36,
-      "composedModules": 13,
+      "composedModules": 16,
       "features": 13,
       "cores": 12,
-      "dbVersion": 48,
-      "screenshots": 372,
-      "schemaVersion": 48,
+      "dbVersion": 50,
+      "screenshots": 412,
+      "schemaVersion": 50,
       "substitutedModules": [
         "location",
         "common",
@@ -137,7 +137,10 @@
         "mvi-core",
         "result",
         "app-shell",
+        "app-shell-location-gms",
         "ai",
+        "ai-mlkit",
+        "designsystem-wallet-gms",
         "ai-testing",
         "security",
         "settings",
@@ -147,7 +150,7 @@
     },
     "paymentslab-kmp": {
       "modules": 17,
-      "composedModules": 29,
+      "composedModules": 31,
       "providers": 0,
       "features": 4,
       "cores": 9,
@@ -166,6 +169,8 @@
         "result",
         "ai",
         "ai-testing",
+        "ai-mlkit",
+        "designsystem-wallet-gms",
         "llm-chat",
         "payments-api",
         "stripe",
@@ -192,7 +197,7 @@
     "gaddi": {
       "modules": 15,
       "screenshots": 61,
-      "composedModules": 10,
+      "composedModules": 11,
       "substitutedModules": [
         "mvi-core",
         "common",
@@ -200,6 +205,7 @@
         "bots-policy",
         "network",
         "ai",
+        "ai-mlkit",
         "llm-chat",
         "result",
         "ai-testing",
