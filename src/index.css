@@ -136,8 +136,13 @@
   --sun-progress: 0;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 html {
-  scroll-behavior: smooth;
   overflow-x: hidden; /* decorative layers (e.g. .particle-hero) intentionally bleed past their section on wide viewports — never a page scrollbar */
 }
 
@@ -3491,6 +3496,15 @@ html.resume-mode .palette-trigger {
 @media (max-width: 639px) {
   .term-root input,
   .term-root textarea {
+    font-size: 16px;
+  }
+}
+
+/* Every other form field: 16px on phones so iOS never zooms on focus. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
     font-size: 16px;
   }
 }

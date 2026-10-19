@@ -586,7 +586,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       {/* No `truncate` here on purpose: attribution text is required, not
           decorative, so on a 390px phone it wraps to a second line instead
           of silently hiding "Photos: Panoramax contributors" off the edge. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 glass-panel px-3 py-1.5 font-mono text-xs leading-snug text-zinc-500">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 glass-panel px-3 py-1.5 font-mono text-xs leading-snug text-muted">
         © OpenMapTiles © OpenStreetMap contributors, OpenFreeMap{photos.length > 0 ? " · Photos: Panoramax contributors" : ""}
         {terrainState === "enabled" ? ` · ${TERRAIN_ATTRIBUTION}` : ""}
         {terrainState === "loading" ? " · Terrain loading" : ""}

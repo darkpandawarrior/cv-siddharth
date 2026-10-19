@@ -36,7 +36,7 @@ export function resolveSectionAction(pathname: string): SectionAction {
   return pathname === "/" ? "scroll" : "navigate";
 }
 
-function prefersReducedMotion() {
+export function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 

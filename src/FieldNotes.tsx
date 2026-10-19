@@ -31,7 +31,9 @@ function FieldNoteCover({ cover, color }: { cover: NonNullable<ReturnType<typeof
     <img
       ref={imgRef}
       src={heavy(cover.src)}
-      alt={cover.alt}
+      alt=""
+      loading="lazy"
+      decoding="async"
       width={cover.width}
       height={cover.height}
       onError={() => setFailed(true)}

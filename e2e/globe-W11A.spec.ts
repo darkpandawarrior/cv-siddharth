@@ -150,8 +150,12 @@ test.describe('W11A touch', () => {
     await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await client.detach();
     await expect(seam).not.toHaveAttribute('aria-valuenow', before!);
-    await expect.poll(() => new URL(page.url()).searchParams.get('lat')).toBe(camera.get('lat'));
-    expect(new URL(page.url()).searchParams.get('lon')).toBe(camera.get('lon'));
+    // The camera's own easing can still be moving in the fourth decimal after the settle poll
+    // (CI saw 72.3869 vs 72.3868). A seam drag that leaked into the globe pans by whole degrees,
+    // so 0.001 still catches it.
+    const drift = (key: string) => Math.abs(Number(new URL(page.url()).searchParams.get(key)) - Number(camera.get(key)));
+    await expect.poll(() => drift('lat')).toBeLessThan(0.001);
+    expect(drift('lon')).toBeLessThan(0.001);
     await shot(page, info, 'phone-compare');
     await page.getByRole('button', { name: 'Exit compare' }).tap();
     await page.getByRole('button', { name: 'Close the time sheet' }).tap();
