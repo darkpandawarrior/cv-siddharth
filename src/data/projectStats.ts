@@ -50,7 +50,7 @@ export const projectStats = {
     "gatewaysHosted": 44,
     "gatewaysMobileMoney": 7,
     "gatewaysStub": 3,
-    "screenshots": 26,
+    "screenshots": 28,
     "substitutedModules": [
       "common",
       "mvi-core",
@@ -104,7 +104,7 @@ export const projectStats = {
     ]
   }
 } as const;
-export const projectStatsGeneratedAt = "2026-10-16";
+export const projectStatsGeneratedAt = "2026-10-20";
 export const kmpAdoption = {
   "candidai": {
     "composedModules": 9,
