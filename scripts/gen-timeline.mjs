@@ -276,7 +276,7 @@ async function writingLane() {
   if (counted === 0) return null;
   return {
     key: "writing", label: "writing", unit: "pieces published", resolution: "year",
-    source: "Excelsior editions, printed archive and the facet chronology. Most carry a year but no month, so this change is plotted at year resolution and must not be read month-to-month",
+    source: "Excelsior editions, printed archive and the facet chronology. Most carry a year but no month, so this lane is plotted at year resolution and must not be read month-to-month",
     months, total: counted, milestones,
   };
 }
