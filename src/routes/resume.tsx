@@ -22,10 +22,10 @@ export const Route = createFileRoute("/resume")({
     // old title in the two strings a recruiter's tab and unfurl actually show.
     // The metrics stay written out: each of these strings is under its own
     // length budget and reads as a sentence, not a joined list.
-    const desc = `Print-perfect résumé — ${profile.name}, ${profile.title}. ~964k-LOC Compose SaaS, GPS 50%→95%, 85% crash reduction.`;
+    const desc = `Print-perfect résumé, ${profile.name}, ${profile.title}. ~964k-LOC Compose SaaS, GPS 50%→95%, 85% crash reduction.`;
     return {
       meta: [
-        { title: `Résumé — ${profile.name} | ${profile.title}` },
+        { title: `Résumé | ${profile.name} | ${profile.title}` },
         { name: "description", content: desc },
         { property: "og:url", content: "https://siddharth-pandalai.vercel.app/resume" },
         { property: "og:description", content: desc },
