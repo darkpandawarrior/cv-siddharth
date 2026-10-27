@@ -10,7 +10,7 @@ import type { Page } from "@playwright/test";
  * (G10, same discipline as e2e/globe.spec.ts) -- this spec never depends on
  * a live network, and the intro-seen flag is seeded so a share link's own
  * fly-in is the only camera animation in play (globe-X5.spec.ts's own
- * `seedIntroSeen` pattern, restated per this lane's file ownership).
+ * `seedIntroSeen` pattern, restated per this change's file ownership).
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
@@ -25,7 +25,7 @@ async function withApiFixtures(page: Page) {
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
   await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
-  // This lane's own postcard/share surface doesn't touch imagery at all, but
+  // This change's own postcard/share surface doesn't touch imagery at all, but
   // the default earth style renders real GIBS tiles regardless -- routed to
   // committed fixtures (same images globe-V1.spec.ts already uses) so this
   // spec never depends on a live NASA/EOX network or gets caught behind

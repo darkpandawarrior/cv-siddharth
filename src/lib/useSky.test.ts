@@ -3,7 +3,7 @@ import { classifyWeather, computeSkyState, type WeatherEnvelope } from "./useSky
 import { subscribeLiveSignal } from "./useLiveSignal";
 import type { Weather } from "./sky";
 
-// ponytail: @testing-library/react isn't a devDependency (same note as
+// @testing-library/react isn't a devDependency (same note as
 // useLiveSignal.test.ts), so useNow/useWeather/useSky's pure combinators —
 // classifyWeather and computeSkyState — are tested directly rather than via
 // renderHook. Both hooks are thin wrappers over these with no branching of

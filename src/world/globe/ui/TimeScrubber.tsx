@@ -17,7 +17,7 @@ import CompareDivider from "./CompareDivider.tsx";
  *  centred floating card used to sit directly on top of the globe and the
  *  reach columns at every measured breakpoint.
  *
- *  WAVE 6 LANE X3 (time machine UI) swapped the linear +-24h slider for
+ *  X3 (time machine UI) swapped the linear +-24h slider for
  *  rangeModel's non-linear +-30d/+2d range (fine control near now, coarse
  *  day-scale steps far from it), added the day-per-second speed and the
  *  Compare toggle, and kept every L5/U1 shape (compact pill, phone sheet,
@@ -196,7 +196,7 @@ export default function TimeScrubber(_props: { tier: 1 | 2 | 3 }) {
     </button>
   );
 
-  // WAVE 7 LANE 8 (eclipse paths): astronomy-engine loads only when this is
+  // 8 (eclipse paths): astronomy-engine loads only when this is
   // clicked (its own lazy chunk, shared with EclipseLayer.tsx if that layer
   // is on) -- never a static import here, or its ~47 KB gzip would land in
   // the eager Globe chunk. The jump sets a real offset past the normal +-30

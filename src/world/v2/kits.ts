@@ -1,5 +1,5 @@
 /**
- * The kit registry (this lane's own task list): every real per-form model
+ * The kit registry (this change's own task list): every real per-form model
  * under `src/world/v2/kits/*.ts` self-registers by exporting a `FormId` ->
  * kit-component map. A kit "claims" a form the day its file lands; until
  * then `GrammarInstances.tsx` draws every one of that form's features as an

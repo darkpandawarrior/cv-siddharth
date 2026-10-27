@@ -81,7 +81,7 @@ const TINTS = ["var(--color-signal)", "var(--color-probe)", "var(--color-alt)"];
  * it gets lightness steps off --color-text-dim, which carries no meaning
  * anywhere on this site.
  *
- * ponytail: linear down to a 30% floor. Past ~6 regions adjacent steps stop
+ * linear down to a 30% floor. Past ~6 regions adjacent steps stop
  * being tellable apart — fine, because the legend beside the bar is the text
  * and the bar is aria-hidden. Give it a real categorical scale only if the
  * world section ever leads with the bar instead of the list.

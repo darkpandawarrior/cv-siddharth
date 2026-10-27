@@ -127,4 +127,4 @@ number from this machine would just be a second developer-laptop reading, not
 the calibration the file is waiting on, and flipping the gate without it risks
 exactly the failure the header warns about: "an error there would be red on
 the first CI run." Left as `warn`; see `## Deliberately not fixed / not
-verified` in this lane's PR for the reasoning in full.
+verified` in this change's PR for the reasoning in full.

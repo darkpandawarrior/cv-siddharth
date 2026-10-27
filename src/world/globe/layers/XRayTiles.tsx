@@ -2,7 +2,7 @@
 // TileLayer.tsx currently has on screen, coloured by level of detail, and
 // samples renderer.info for the stats card (ui/XRay.tsx). Both readers are
 // fed from `drawnTileSet` (TileLayer.tsx's own read-only export) and
-// `xrayState.ts` (this lane's shared store) — nothing here draws anything
+// `xrayState.ts` (this change's shared store) — nothing here draws anything
 // TileLayer.tsx isn't already drawing itself; this is pure inspection.
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";

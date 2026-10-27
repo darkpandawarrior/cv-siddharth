@@ -10,7 +10,7 @@ import { usePresenceGeo } from "../presenceGeo.ts";
 import { useGlobe } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { arcApexHeight, arcPoint, centralAngleDeg, sampleArc } from "./arcGeo.ts";
-import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
+import { publish } from "../feed.ts"; // X1 (live world feed)
 
 const centroidByCc = new Map(centroids.map((c) => [c.iso2, c] as const));
 const PUNE_UNIT = latLonToXyz(PUNE.lat, PUNE.lon);
@@ -75,7 +75,7 @@ export default function ArcLayer({ tier }: { tier: 1 | 2 | 3 }) {
   const setStatus = useGlobe((s) => s.setStatus);
   const probeColor = useMemo(() => readColor("--color-probe", "#5ee6ff"), []);
   const domRef = useRef<HTMLDivElement>(null);
-  // WAVE 6 LANE X1 (live world feed): the previous poll's set of countries
+  // X1 (live world feed): the previous poll's set of countries
   // with at least one visitor -- `null` means "no poll seen yet", so the
   // first real poll only baselines the set rather than announcing every
   // country already here at page load as a fresh "arrival" (PulseLayer's
@@ -126,7 +126,7 @@ export default function ArcLayer({ tier }: { tier: 1 | 2 | 3 }) {
     );
   }, [counts, entries.length, cap, setStatus]);
 
-  // WAVE 6 LANE X1 (live world feed): a country transitioning from absent
+  // X1 (live world feed): a country transitioning from absent
   // to present is "a visitor country appears" -- includes India (the ring),
   // not just the arced entries, since a visitor from home is still a
   // visitor arriving.

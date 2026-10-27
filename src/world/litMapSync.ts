@@ -26,7 +26,7 @@ const STAMP_PUBLISH_MS = 400;
  * this hook throttles the actual network write and applies every OTHER
  * tab's incoming stamp into `litData` via `stampLitMap` as it arrives.
  *
- * ponytail: a tab that closes stays in the shared document at its last
+ * a tab that closes stays in the shared document at its last
  * position forever — no expiry/pruning. The document holds one entry per
  * distinct playhtml identity that has ever driven, not one per event, so it
  * stays small in practice; add pruning (drop entries older than N minutes,

@@ -23,7 +23,7 @@ function prerenderedPaths(dir: string, base = ""): string[] {
 }
 
 /**
- * The acceptance gate for this lane: dist/client's prerendered page set and
+ * The acceptance gate for this change: dist/client's prerendered page set and
  * public/sitemap.xml's <loc> set must be exactly the same set, because both
  * are supposed to be `allRoutes` (src/data/routes.ts) and nothing else. This
  * is the one place that would notice if either side stopped being that —

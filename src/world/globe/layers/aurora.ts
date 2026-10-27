@@ -5,7 +5,7 @@
 //
 // Feeds:
 //  https://services.swpc.noaa.gov/json/ovation_aurora_latest.json (nowcast,
-//  updates roughly every 5 min — the same cadence this lane polls quakes at)
+//  updates roughly every 5 min — the same cadence this change polls quakes at)
 //  https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json
 export const AURORA_POLL_MS = 5 * 60_000;
 export const KP_POLL_MS = 15 * 60_000; // Kp is a 3-hour index; 15 min is a comfortable margin, not a race
@@ -18,7 +18,7 @@ export interface AuroraGrid {
   height: number;
   /** Row-major, y=0 at lat -90, y=height-1 at lat +90; one byte per texel,
    *  0-255 scaled from OVATION's 0-100 probability. Cells the feed didn't
-   *  report (this lane's fixture is deliberately sparse — see its own
+   *  report (this change's fixture is deliberately sparse — see its own
    *  comment) default to 0, same as "feed says nothing here" would mean. */
   data: Uint8Array;
 }

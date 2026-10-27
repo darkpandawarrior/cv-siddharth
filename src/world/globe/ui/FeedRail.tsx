@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFeedStore, formatRelative, bucketLabel, minuteBucket, type FeedItem } from "../feed.ts";
 import { useGlobe, type Selection } from "../globeStore.ts";
 
-/** WAVE 6 LANE X1 (live world feed rail). LayerPanel renders this as its
+/** X1 (live world feed rail). LayerPanel renders this as its
  *  "Live" tab, sm+ column and phone bottom sheet alike — the store this
  *  reads (`useFeedStore`) is filled by publisher hooks in HazardLayer,
  *  PulseLayer, SatelliteLayer, ArcLayer and TogetherLayer, never by this

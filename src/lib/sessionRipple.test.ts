@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { touch, getTouched, _resetForTests } from "./sessionRipple";
 
-// ponytail: @testing-library/react isn't a devDependency (same note as
+// @testing-library/react isn't a devDependency (same note as
 // useLiveSignal.test.ts), so this exercises touch/getTouched directly rather
 // than renderHook — useTouched is a thin useSyncExternalStore wrapper over
 // exactly this state, so the contract is fully covered here.

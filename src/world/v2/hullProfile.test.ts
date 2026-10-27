@@ -7,7 +7,7 @@ import hullProfile from "./hullProfile.json" with { type: "json" };
  * and, later, by P2-07d's Blender hull script. This test only pins the
  * two properties every reader relies on — a real hull boundary curve is
  * exactly this: widest at midship, tapering to both ends, mirror-symmetric
- * because nothing in this lane gives bow and stern different widths.
+ * because nothing in this change gives bow and stern different widths.
  */
 describe("hullProfile.json", () => {
   const samples = hullProfile.samples as unknown as readonly [number, number][];

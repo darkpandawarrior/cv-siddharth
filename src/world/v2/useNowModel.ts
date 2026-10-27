@@ -94,7 +94,7 @@ function pushesFrom(activity: GithubActivity | null, nowMs: number): Push[] {
  *  reads only what a future presence-countries render layer will actually
  *  need once `/api/whereami` is wired into the same channel (living-ledger
  *  §5.5 S14); until then it is honestly empty, never a guessed value.
- *  ponytail: presence-countries stays `{}` until a lane threads
+ *  presence-countries stays `{}` until a lane threads
  *  `/api/whereami`'s country into this same playhtml channel — this hub
  *  only needs somewhere real for that count to land once it exists. */
 function presenceCountriesFrom(): Record<string, number> {

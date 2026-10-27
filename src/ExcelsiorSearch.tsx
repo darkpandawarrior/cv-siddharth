@@ -58,7 +58,7 @@ export function ExcelsiorSearch({
 
   // Array.prototype.filter + String.prototype.includes over at most ~150
   // short strings a render — no fuzzy-search dependency for a corpus this
-  // size (ponytail: add one only if plain substring search misses too much
+  // size (add one only if plain substring search misses too much
   // in practice).
   const hits = useMemo(() => {
     if (!text || text === "unavailable" || q.trim().length < 2) return [];

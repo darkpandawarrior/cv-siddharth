@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
  *   2. `src/world/v2/fiction/*` never imports `src/lib/sky.ts`,
  *      `src/lib/stars.ts`, or references `public/sky` — the fiction layer
  *      renders its own moon-white/deep-ground sky, never the real one
- *      (this lane's task list).
+ *      (this change's task list).
  *   3. `destinations.ts`, `Landmarks.tsx`, `LandmarkPanel.tsx` never import
  *      `anthology`, `canonLore`, or anything under `world/v2/fiction/`.
  *   4. `NightSky` (wherever it lands) never imports `anthology`.
@@ -121,7 +121,7 @@ describe("fictionFence: the real/profile layer never imports fiction outward", (
 
 describe("fictionFence: the checker actually fires (break-it, G15)", () => {
   // Inlined rather than a separate __fixtures__ file — this test file is
-  // this lane's only owned path here (master-plan.json P2-03b `owns`), and
+  // this change's only owned path here (master-plan.json P2-03b `owns`), and
   // an injected fixture STRING proves the checker fires exactly as well as
   // a fixture file would, without adding a path outside that list (G2).
   const fixture = [

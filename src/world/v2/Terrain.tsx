@@ -11,7 +11,7 @@ import type { SplatBakeRequest, SplatBakeResponse } from "./splat.worker.ts";
  * World v2 ("Sangam") terrain, world-v2-spec.md §3: a 512^2 grid on
  * desktop, 256^2 on the phone/throttled tier, in 4x4 chunks for culling.
  * Vertices displace ONCE at load from the real, generated heightmap
- * (`gen-terrain.mjs`, this lane); splat (soil/grass/laterite/pebble +
+ * (`gen-terrain.mjs`, this change); splat (soil/grass/laterite/pebble +
  * canopy/curvature/REC-6 grain) bakes ONCE at load in `splat.worker.ts`,
  * off the main thread. Nothing here recomputes per frame except the
  * material's own `uCamPos`/`uGrassWet` uniform writes (terrainMaterial.ts),
@@ -162,7 +162,7 @@ function buildChunkGeometry(cx: number, cz: number, chunkSegments: number, chunk
  *  each vertex by its own (x,z), same order-independence as the geometry
  *  build above. Chunk edges clamp their own neighbour lookups (splat.worker
  *  .ts's `at()`), so a splat weight can read very slightly differently
- *  right at a chunk seam, ponytail: a per-chunk apron would remove that,
+ *  right at a chunk seam, a per-chunk apron would remove that,
  *  add one if a seam ever reads as a visible line in a crawl. */
 async function bakeChunkSplat(
   client: ReturnType<typeof createSplatClient>,
@@ -216,8 +216,7 @@ async function buildTerrainAssets(): Promise<TerrainAssets> {
   const chunkSize = EXTENT / CHUNKS_PER_AXIS;
 
   // world-v2-spec §3: valley-h-513.png is "first view AND mobile"; the
-  // 1025 bake is a desktop-only upgrade this lane leaves unwired, ponytail:
-  // add a post-load texture swap when a real LOD-driven asset system exists
+  // 1025 bake is a desktop-only upgrade this change leaves unwired,   // add a post-load texture swap when a real LOD-driven asset system exists
   // to hang it off, rather than a second bespoke fetch path for one tier.
   const hm = await loadHeightmap(heavy("/world/terrain/valley-h-513.png"), heavy("/world/terrain/valley-h-513.json"));
 

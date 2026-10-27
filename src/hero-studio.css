@@ -196,7 +196,7 @@
 }
 
 
-/* ponytail: matches the design-system h1 scale (clamp(2.5rem, 6vw, 3.5rem)) instead
+/* matches the design-system h1 scale (clamp(2.5rem, 6vw, 3.5rem)) instead
    of the old clamp(3.5rem, 6vw, 6rem)/-.06em pair. That larger size overflowed its
    two-col grid cell for any name close to "PaymentsLab-KMP" length: the only valid
    break (the hyphen) still didn't fit, so the line overflowed behind the neighbouring

@@ -11,11 +11,11 @@ import { flushSync } from "react-dom";
 import type { Vector3 } from "three";
 import { PUNE } from "../../../lib/sky.ts";
 import { entityPositions, LAYER_IDS, useGlobe, type EarthStyle, type ImageryStack, type LayerId, type LayerHealth } from "../globeStore.ts";
-// WAVE 6 LANE X1 (live world feed): the "Layers | Live" tab this file adds
+// X1 (live world feed): the "Layers | Live" tab this file adds
 // below renders FeedRail for the "Live" tab; every other line in this file
 // is unchanged.
 import FeedRail from "./FeedRail.tsx";
-// WAVE 6 LANE X6 needed a true in-sheet row instead of floating a second
+// X6 needed a true in-sheet row instead of floating a second
 // button over this sheet's own content (see that file's own "Needs from
 // integration" comment) — LANE H1 (integration) adds the slot here.
 import { SoundToggleSlot } from "./SoundToggle.tsx";
@@ -275,7 +275,7 @@ function PresetChips({ touchTarget }: { touchTarget: string }) {
   );
 }
 
-// WAVE 6 LANE X1: which of the panel's two tabs is showing — component
+// X1: which of the panel's two tabs is showing — component
 // state, not globeStore, since nothing outside this file's own two render
 // sites (desktop column, phone sheet) needs to read or drive it.
 type PanelTab = "layers" | "live";
@@ -395,7 +395,7 @@ export default function LayerPanel({ tier }: { tier: 1 | 2 | 3 }) {
       >
         Look up from Pune
       </button>
-      {/* Street-level entry point for lane W3's surface - this lane only
+      {/* Street-level entry point for lane W3's surface - this change only
           ever sets store state (flyTo + setView("street")); the surface
           itself is StreetView.tsx, not ours. */}
       <button

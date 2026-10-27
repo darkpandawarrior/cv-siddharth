@@ -1,10 +1,10 @@
-/** WAVE 6 LANE X3 (time machine UI), swipe compare's DOM half: a draggable
+/** X3 (time machine UI), swipe compare's DOM half: a draggable
  *  vertical divider over the canvas. The other half — the actual left/right
  *  imagery — is a screen-space split uniform in EarthImagery's shader (this
  *  file paints no pixels of the globe itself, just the handle and the two
- *  date chips). Mounted from TimeScrubber.tsx (this lane's own file) rather
+ *  date chips). Mounted from TimeScrubber.tsx (this change's own file) rather
  *  than Globe.tsx, so the compose-layout owner (U1) never needs an edit for
- *  this lane's toggle — see that file's own comment. */
+ *  this change's toggle — see that file's own comment. */
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";

@@ -1,10 +1,10 @@
-// LANE L7 (live earth events). Pure NASA EONET v3 parsing: this lane draws
+// LANE L7 (live earth events). Pure NASA EONET v3 parsing: this change draws
 // exactly three of EONET's dozen categories (wildfires, volcanoes, severe
 // storms — the brief's own list), everything else in the feed is ignored.
 // No three, no React.
 //
 // Feed: https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30
-export const EONET_POLL_MS = 15 * 60_000; // ponytail: EONET's own events update
+export const EONET_POLL_MS = 15 * 60_000; // EONET's own events update
 // a few times a day, not by the minute — 15 min is comfortably inside that,
 // no published SLA to tune against.
 
@@ -52,7 +52,7 @@ export interface EonetEvent {
   sourceUrl: string;
 }
 
-/** A Polygon's rough centroid (mean of its outer ring) — this lane draws a
+/** A Polygon's rough centroid (mean of its outer ring) — this change draws a
  *  point marker for every category, never a filled area, so an exact
  *  area-weighted centroid buys nothing here. */
 function polygonCentroid(coords: unknown): { lat: number; lon: number } | null {

@@ -6,7 +6,7 @@ const decode = (text: string) => text.replace(/&lt;/g, "<").replace(/&gt;/g, ">"
 export function parseVolcanoes(xml: string): Volcano[] {
   if (!/<rss\b/.test(xml) || /<!DOCTYPE|<!ENTITY/i.test(xml)) throw new Error("invalid RSS");
   const rows: Volcano[] = [];
-  // ponytail: bounded RSS subset, not a general XML parser; replace with a
+  // bounded RSS subset, not a general XML parser; replace with a
   // maintained XML parser if the upstream changes its simple item format.
   for (const match of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
     const tag = (name: string) => decode(match[1].match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`))?.[1] ?? "").replace(/^<!\[CDATA\[|\]\]>$/g, "").trim();

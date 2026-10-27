@@ -8,8 +8,8 @@ import type { Page } from "@playwright/test";
  * LANE W3 (street level: vector map, 3D buildings, street photos), wave 2.
  *
  * The real OpenFreeMap vector tiles are PBF binary and not worth mocking
- * shape-for-shape (this lane's own brief allows the fallback: mock the style
- * minimally and assert on this lane's own DOM, not on map pixels). The style
+ * shape-for-shape (this change's own brief allows the fallback: mock the style
+ * minimally and assert on this change's own DOM, not on map pixels). The style
  * fetch is routed to a bare `{version:8, sources:{}, layers:[]}` document —
  * enough for MapLibre to reach its own "load" event (camera/projection math
  * needs no tile data) without requesting a single external tile, sprite or
@@ -36,7 +36,7 @@ async function openStreetView(page: Page, lat: number, lon: number, photos: unkn
   await page.setViewportSize({ width: 1440, height: 900 });
   await withStreetFixtures(page, photos);
   // This worktree has no trigger lane (Inspector "Street level here" /
-  // LayerPanel "Street level at Pune") wired up — the seam this lane's own
+  // LayerPanel "Street level at Pune") wired up — the seam this change's own
   // brief specifies (task 9), same "read on mount" shape as Inspector.tsx's
   // own __GLOBE_TEST_SELECT__.
   await page.addInitScript(

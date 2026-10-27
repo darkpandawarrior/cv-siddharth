@@ -12,7 +12,7 @@ import { countWord } from "../data/labs.ts";
 // Spelled out rather than a numeral because that is the register the rest of
 // the site counts in, lowercased because countWord capitalises for prose.
 //
-// ponytail: derived here rather than exported from src/data/chess.ts, which is
+// derived here rather than exported from src/data/chess.ts, which is
 // generator output — a helper added there is deleted by the next
 // `npm run gen:chess`. Four other surfaces state the same number; when they
 // derive it too this belongs next to countWord in src/data/labs.ts.

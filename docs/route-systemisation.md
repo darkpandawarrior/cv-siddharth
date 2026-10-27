@@ -84,7 +84,7 @@ Two routes are neither in the facet registry nor the sitemap generator's list, o
   `/excelsior` (the scanned magazine) and `/anthology`/`/canon` (the season structure) are the
   indexed entry points into this material; every `/read/$slug` piece is reached by a link from one
   of those, never cold. That's a real, undecided gap — N pieces with no per-URL SEO entry, not a
-  design choice this lane is making — flagged here rather than silently passed by a test that only
+  design choice this change is making — flagged here rather than silently passed by a test that only
   checks routes, not link-reachability from other pages.
 
 `project.$slug.tsx` is **not** an exception, even though it has no literal entry in either

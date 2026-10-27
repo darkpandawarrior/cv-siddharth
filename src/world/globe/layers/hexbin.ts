@@ -1,4 +1,4 @@
-// WAVE 6 LANE X6 (density layer). Pure spherical hex-binning: no three, no
+// X6 (density layer). Pure spherical hex-binning: no three, no
 // React — same "render layer wraps pure math" split as geoMath.ts.
 //
 // Real equal-area hex grids over a sphere (Uber's H3, the ISEA/Snyder
@@ -40,7 +40,7 @@ interface Centre extends LatLon {
 
 /** Nearest lattice centre's index for a point, by max dot product (smallest
  *  angular separation) of unit-sphere vectors — O(centres) per point, no
- *  spatial index. ponytail: fine at hazard-feed scale (a few hundred points
+ *  spatial index. fine at hazard-feed scale (a few hundred points
  *  x a few hundred centres); add a grid/kd-tree if a future feed makes this
  *  measurably slow. */
 function nearestCentre(p: LatLon, centres: Centre[]): number {

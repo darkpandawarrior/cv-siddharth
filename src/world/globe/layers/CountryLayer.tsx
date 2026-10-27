@@ -75,7 +75,7 @@ export default function CountryLayer(_props: { tier: 1 | 2 | 3 }) {
     }
     // LineSegmentsGeometry.setPositions expects exactly the flat, consecutive
     // (start.xyz, end.xyz)-per-segment layout the loop above already built
-    // for GL_LINES -- unchanged from before this lane's edit.
+    // for GL_LINES -- unchanged from before this change's edit.
     const geometry = new LineSegmentsGeometry();
     geometry.setPositions(positions);
     const base = new Color("#637e8b"), bright = readColor("--color-probe", "#5ee6ff");
@@ -168,7 +168,7 @@ export default function CountryLayer(_props: { tier: 1 | 2 | 3 }) {
     // has to track the canvas's own CSS size -- the old LineBasicMaterial
     // had no such dependency (a browser's raw GL line width is resolution-
     // independent to begin with, just clamped to ~1px, which is the whole
-    // reason this lane swapped it out).
+    // reason this change swapped it out).
     const onResize = () => { material.resolution.set(canvas.clientWidth, canvas.clientHeight); invalidate(); };
     const resizeObserver = new ResizeObserver(onResize);
     resizeObserver.observe(canvas);

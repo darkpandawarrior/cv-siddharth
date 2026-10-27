@@ -8,7 +8,7 @@
 // Playwright (e2e/globe-W15.spec.ts) covers the render path via the
 // `__GLOBE_TOGETHER_TEST__` seam.
 //
-// Privacy is the product (this lane's brief): what ever crosses the wire
+// Privacy is the product (this change's brief): what ever crosses the wire
 // is a quantized view-centre direction, a coarse zoom bucket and a view
 // mode -- never a location, never an identity, and never the presence-geo
 // country presenceGeo.ts's `geo-v1` channel already carries (deliberately

@@ -4,8 +4,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * P2-07c's own gate (this lane's acceptance list): banyan-neem.glb and
- * palm.glb carry the node/material names this lane's task list names, no
+ * P2-07c's own gate (this change's acceptance list): banyan-neem.glb and
+ * palm.glb carry the node/material names this change's task list names, no
  * node bakes a data-record count (world-v2-spec.md §0.3 rule 2), every
  * GLB stays within its world-v2-spec.md §6 byte budget, and every Poly
  * Haven texture/model row in heavy/world/assets.json matches the file it
@@ -50,7 +50,7 @@ function readGlb(path: string): GlbDoc {
 }
 
 /** world-v2-spec.md §0.3 rule 2, restated by P2-07a/b's acceptance list and
- * reused by this lane: single-digit fixed-count suffixes (this lane's own
+ * reused by this change: single-digit fixed-count suffixes (this change's own
  * two neem trunks) stay allowed; two-or-more digits is the shape a live
  * data count takes. */
 const DATA_COUNT_SUFFIX = /\.\d{2,}(\.|$)/;
@@ -95,7 +95,7 @@ describe("kitSockets.nature (P2-07c: banyan-neem, palm)", () => {
   });
 });
 
-// world-v2-spec.md §6 per-asset byte budgets, this lane's acceptance list.
+// world-v2-spec.md §6 per-asset byte budgets, this change's acceptance list.
 const GLB_BUDGET_KB: Record<string, number> = {
   "banyan-neem": 700,
   "brass_diya_lantern": 600,
@@ -121,7 +121,7 @@ describe("nature-kit byte budgets (world-v2-spec.md §6)", () => {
   });
 });
 
-// Two things assets.json never rows: the atlas pair (this lane's own
+// Two things assets.json never rows: the atlas pair (this change's own
 // original foliage-atlas.py render, not Poly Haven-sourced content, so it
 // is deliberately outside the provenance ledger, master-plan.md#M43:
 // "assets.json + ASSETS.md stay the [Poly Haven] provenance record"), and
@@ -129,7 +129,7 @@ describe("nature-kit byte budgets (world-v2-spec.md §6)", () => {
 // heavy/**/*.webp per prebuild, gitignored, never fetched by this script.
 const skipsProvenanceRow = (name: string) => name.startsWith("atlas-") || name.endsWith(".avif");
 
-describe("heavy/world/assets.json provenance ledger (this lane's acceptance list)", () => {
+describe("heavy/world/assets.json provenance ledger (this change's acceptance list)", () => {
   it("every non-atlas file under heavy/world/textures has a CC0 row with its exact byte size", () => {
     if (!existsSync(ASSETS_JSON) || !existsSync(TEXTURES_DIR)) return;
     const ledger = JSON.parse(readFileSync(ASSETS_JSON, "utf8")) as {

@@ -1,5 +1,5 @@
 /**
- * The Sangam hub (this lane's own task list, master-plan.md#M17/#M22/#M36/
+ * The Sangam hub (this change's own task list, master-plan.md#M17/#M22/#M36/
  * #M56/#M67/#M68): assembles every phase-2 world-v2 piece — terrain, water,
  * sky, environment, post, the hodi, the growth grammar and its ledger —
  * behind ONE route, `/playground?world=v2` (preview only, `playground.tsx`
@@ -115,17 +115,17 @@ export default function WorldV2(): JSX.Element {
     return buildLedgerSections(wm.rows, nowModel.raw);
   }, [wm, nowModel]);
 
-  // ponytail: spawnPose's CHASE_Y (spawn.ts) is a fixed world-space height
+  // spawnPose's CHASE_Y (spawn.ts) is a fixed world-space height
   // (~1.9 m), written against a flat, Y=0 river assumption. The real
   // heightmap Terrain.tsx now loads (P2-05's gen-terrain.mjs) ranges from
   // about -3 m to +102 m across the valley, and GRAMMAR features
   // (worldModel.ts's own buildFeature) place at a fixed y=0 too — neither
-  // was reconciled against the other before this lane, the first one to
+  // was reconciled against the other before this change, the first one to
   // mount both together. The result: the spawn camera and every
   // GrammarInstances placeholder can sit well below or above the real
   // ground at their (x,z), which reads as a bad camera angle rather than a
   // ledger/grammar bug. Fixing it needs a shared terrain-height sampler
-  // neither valley.ts nor worldModel.ts owns yet (this lane owns neither) —
+  // neither valley.ts nor worldModel.ts owns yet (this change owns neither) —
   // flagged for whichever lane gives GRAMMAR/spawn a real y = terrainHeight
   // (x, z) call, not patched here with a second, disagreeing height guess.
   const spawn = useMemo(() => {

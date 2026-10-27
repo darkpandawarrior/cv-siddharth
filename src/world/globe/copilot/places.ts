@@ -31,7 +31,7 @@ interface CityRow {
   aliases?: string[];
 }
 
-// ponytail: ~95 cities, hand-picked for "a visitor is likely to type this" —
+// ~95 cities, hand-picked for "a visitor is likely to type this" —
 // major capitals, tech hubs and the largest metro areas per continent. Not
 // an exhaustive gazetteer (that's W11's real geocoder); extend this table
 // (or wait for setPlaceResolver to replace it) if a specific city a demo

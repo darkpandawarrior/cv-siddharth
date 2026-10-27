@@ -10,7 +10,7 @@ type PlaygroundSearch = { world?: "v2" };
 
 // M56/M67 — the world-v2 hub is preview-only: it renders on every branch
 // deploy and local dev, but a PRODUCTION build of `/playground?world=v2`
-// falls back to the unchanged v1 world (this lane's own acceptance line).
+// falls back to the unchanged v1 world (this change's own acceptance line).
 // `import.meta.env.VITE_VERCEL_ENV` is a build-time constant Vite inlines,
 // so this branch is identical on the server and the client — no hydration
 // mismatch from checking it here rather than a runtime request header.
@@ -23,7 +23,7 @@ const worldV2LoadingFallback = (
 // Lazy: nothing outside this branch pays for WorldV2's own three.js/drei/
 // postprocessing chunk, and it never even reaches the SERVER compile
 // (`<ClientOnly>` strips it there, the same pattern `Playground.tsx` uses
-// for v1's own `World.tsx`) — see this lane's own acceptance line on the
+// for v1's own `World.tsx`) — see this change's own acceptance line on the
 // WorldV2 chunk staying separate from the v1 Playground chunk.
 const WorldV2 = lazy(() => import("../world/v2/WorldV2.tsx"));
 
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/playground")({
   }),
   /*
    * This route server-renders, unlike the other WebGL rooms — see below for
-   * why that is unaffected by the world=v2 branch this lane adds.
+   * why that is unaffected by the world=v2 branch this change adds.
    */
   component: PlaygroundRoute,
 });

@@ -1,4 +1,4 @@
-// WAVE 6 LANE X6 (density hexbins). A read-only snapshot of exactly the two
+// X6 (density hexbins). A read-only snapshot of exactly the two
 // point series HexbinLayer.tsx needs (quakes shown, wildfires shown),
 // written by HazardLayer.tsx's own minimal additive edit and read here by
 // any sibling layer. Module-level like globeStore.ts's own `entityPositions`

@@ -158,7 +158,7 @@ export interface MoonTimes {
  *  the IST calendar day containing `d`. Good to a couple of minutes, which is
  *  all a "rises HH:MM" ledger row (skyText.ts) needs — a bisection refinement
  *  would cost more code than the display ever uses.
- *  ponytail: fixed 10-min step, tighten if a caller ever needs sub-minute. */
+ *  fixed 10-min step, tighten if a caller ever needs sub-minute. */
 export function moonTimes(d: Date, lat: number = PUNE.lat, lon: number = PUNE.lon): MoonTimes {
   const IST_OFFSET_MS = 5.5 * 3600_000;
   const istMidnightUtcMs = Math.floor((d.getTime() + IST_OFFSET_MS) / 86_400_000) * 86_400_000 - IST_OFFSET_MS;

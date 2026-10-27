@@ -3694,7 +3694,7 @@ html.resume-mode .palette-trigger {
    src/ComposePlayground.tsx) and measured 157px tall at 1440 against the
    spine registry's 150px route-header ceiling — src/rooms.tsx's seven
    sticky headers are one row and clear it easily, this is the one exception.
-   ComposePlayground.tsx isn't owned by this lane, so the fix lives here as a
+   ComposePlayground.tsx isn't owned by this change, so the fix lives here as a
    CSS trim of the two extra rows' vertical padding rather than a JSX change;
    the selectors below are this component's own unique class combinations
    (verified against every other header in the tree) so nothing else shifts. */

@@ -75,7 +75,7 @@ describe("parseShareState: malformed / hostile input never throws and is ignored
   it("every accepted field, across a deterministic fuzz sweep, is in-range and well-typed", () => {
     // A small seeded LCG, not Math.random(): deterministic across runs so a
     // failure here is reproducible, not a flake. Same "no new dependency"
-    // discipline the rest of this lane follows (no fast-check import).
+    // discipline the rest of this change follows (no fast-check import).
     let seed = 42;
     const rand = (): number => {
       seed = (seed * 1103515245 + 12345) & 0x7fffffff;

@@ -69,7 +69,7 @@ export const SPINE: SpineEntry[] = [
   { id: "site-footer", file: "src/SiteFooter.tsx", kind: "block", selector: '[data-spine="site-footer"], footer.relative', routes: { except: NO_SITE_FOOTER }, maxHeight: { "1440": 800, "390": 1080 }, last: true, debt: "P1-01a", why: "includes the docked FAQ; 5 groups; no placeholder chips (F3, F4)" },
   { id: "room-pager", file: "src/rooms.tsx", kind: "block", selector: '[data-spine="room-pager"]', routes: "any", maxHeight: { "1440": 96, "390": 96 }, last: true, debt: "SP-10", why: "next-room pager; the FAQ rendered below it on 8 rooms (F2)" },
   { id: "project-chapters", file: "src/ProjectDetail.tsx", kind: "chrome", selector: ".project-chapters", routes: { only: ["/project/*"] }, maxHeight: { "1440": 61, "390": 61 }, debt: "P1-01a", why: "sticky project sub-nav, 9 routes; within budget (section 1a: OK) but the <nav> lacks data-spine and SP-00 does not own src/ProjectDetail.tsx" },
-  // ponytail: `kind: "chrome"` is deliberate (it is route chrome, not a floating widget), but that
+  // `kind: "chrome"` is deliberate (it is route chrome, not a floating widget), but that
   // means it is NOT covered by e2e/spine.spec.ts's `floatDebt` short-circuit (floating|route-header
   // only). Its own `debt` below silences the maxHeight check; it does NOT silence the pinned-area
   // check, which has no per-entry exemption and runs unconditionally under SPINE_STRICT=1. So

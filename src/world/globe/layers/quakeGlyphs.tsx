@@ -43,9 +43,9 @@ const MAX_RIPPLES = 12;
 const ARRIVAL_MS = 900;
 const RIPPLE_PERIOD_S = 2.6;
 // The scene's own background (GlobeScene.tsx's <color attach="background">)
-// — fading a ring's colour toward it is this lane's stand-in for per-instance
+// — fading a ring's colour toward it is this change's stand-in for per-instance
 // alpha (InstancedMesh has no built-in per-instance opacity channel; a real
-// one needs a custom shader + InstancedBufferAttribute). ponytail: darkening
+// one needs a custom shader + InstancedBufferAttribute). darkening
 // toward the known background reads as "fading" without one; upgrade to a
 // shader if the earth's own background ever varies under this ring.
 const BACKGROUND = new THREE.Color("#05070a");
@@ -109,7 +109,7 @@ export function QuakeGlyphs({ quakes, staticTier, simNowMs }: { quakes: Quake[];
     hitMesh.instanceMatrix.needsUpdate = true;
   }, [capped, simNowMs]);
 
-  // T3 is a static read (this lane's task 1): no arrival flash, no ripple,
+  // T3 is a static read (this change's task 1): no arrival flash, no ripple,
   // ever — arrivalsRef stays empty so the two overlay meshes always draw 0.
   useEffect(() => {
     if (motionOff) return;

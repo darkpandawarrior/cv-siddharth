@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { EARTH_IMAGERY_FRAG } from "./earthImageryShader.ts";
 
 /**
- * WAVE 6 LANE X3 defect: the swath-gap/polar-night fill mask (`dayLuma`/
+ * X3 defect: the swath-gap/polar-night fill mask (`dayLuma`/
  * `gap`) used to sample `uDay` unconditionally, while the pixel actually
  * drawn (`dayColor`) can be the time-lapse crossfade (`uTLOlder`/`uTLNewer`)
  * or the compare pick (`uComparePast`). Scrubbed to a past day whose real

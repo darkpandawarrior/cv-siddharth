@@ -1,7 +1,6 @@
 # cv-siddharth DESIGN.md
 
-> Inherits: house design standard (AgentHarness skill `design-md`). This file wins on conflict.
-> Agents: read this before creating or changing any UI. Values live in `src/index.css` (`@theme`),
+> Contributors: read this before creating or changing any UI. Values live in `src/index.css` (`@theme`),
 > never copy a hex from here into a component. Scene (r3f / canvas) colours go through
 > `src/themeColor.ts` and `src/themeColorThree.ts`.
 
@@ -101,7 +100,7 @@ No bespoke durations. Reduced motion always wins globally, and 3D has a static f
 
 ## Agent notes
 
-- Brand and marks: the brand system plan lives in the private AgentHarness repo; the visual rules
+- Brand and marks: the brand system plan lives in a private repo; the visual rules
   that matter here are summarised in Shapes above. Do not paste private plan text into this repo.
 - Gate for UI changes: see README `## Gates` (`npm test`, `npm run lint`, `npm run test:e2e`,
   `npm run sentinel`). The unit gate proves the build, not that the page looks right; look at it.
@@ -112,7 +111,7 @@ No bespoke durations. Reduced motion always wins globally, and 3D has a static f
 
 | Date | Change | Why | Source |
 |---|---|---|---|
-| 2026-10-09 | Initial version, distilled from the code token files and existing design docs | Establish design direction for agents | DESIGN.md rollout |
+| 2026-10-09 | Initial version, distilled from the code token files and existing design docs | Establish design direction for contributors | DESIGN.md rollout |
 
 ## Open questions
 
@@ -122,4 +121,4 @@ No bespoke durations. Reduced motion always wins globally, and 3D has a static f
 
 ## Evolving this file
 
-Agents: when you change UI and find this file wrong or silent, fix it in the same change and add a Changelog row. Code token files win over this file; when they disagree, correct the doc. A user correction of a visual choice with a stated reason becomes a rule here immediately. Lessons that apply beyond this repo go to the LEARNINGS log of the `design-md` skill in AgentHarness.
+Contributors: when you change UI and find this file wrong or silent, fix it in the same change and add a Changelog row. Code token files win over this file; when they disagree, correct the doc. A user correction of a visual choice with a stated reason becomes a rule here immediately. Lessons that apply beyond this repo go to the LEARNINGS log of the `design-md` skill in AgentHarness.

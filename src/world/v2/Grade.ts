@@ -35,7 +35,7 @@ const VOL_STRENGTH_DESIGN = volStrengthRow.design[0];
 
 // world-v2-spec §7's render recipe gives no numeric golden baseline for
 // exposure/vignette/grain — only the Survey delta (open-data-spec §5) is
-// numeric. These are this lane's own art-direction defaults: the "1.0 = the
+// numeric. These are this change's own art-direction defaults: the "1.0 = the
 // recipe unmodified" honest baseline, the same doctrine liveContract's own
 // design values follow.
 const GOLDEN_LOOK: LookValues = { exposure: 1.0, saturation: 1.0, vignette: 0.35, grain: 1.0, tealLift: 0.0 };

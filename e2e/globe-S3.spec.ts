@@ -5,15 +5,15 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
 /**
- * WAVE 9 LANE S3 (Open-Meteo marine/air-quality/flood hover readout). Every
+ * S3 (Open-Meteo marine/air-quality/flood hover readout). Every
  * feed routed to a fixture (G10 discipline, same as e2e/globe-V4.spec.ts --
  * this file's sibling for the SAME component). Assertions go through the
  * `__V4_HOVER__` seam HoverReadout.tsx already installs under `__W11_TEST__`
- * (unchanged by this lane), so they exercise the real fetch/parse/render
+ * (unchanged by this change), so they exercise the real fetch/parse/render
  * path without depending on the camera's exact screen projection.
  *
  * Deliberately NO `page.clock.setFixedTime` here (unlike globe-V4.spec.ts):
- * this lane's own throttle (HoverReadout.tsx's `pollCell`/`hoverFetchGate`)
+ * this change's own throttle (HoverReadout.tsx's `pollCell`/`hoverFetchGate`)
  * is timed off the browser's real `Date.now()`, and none of this file's
  * assertions need a frozen wall clock -- freezing it would freeze the gate
  * forever after the first fetch, which is not what a real hover does.

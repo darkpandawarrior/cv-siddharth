@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
  * (ui/exploreMeasure.tsx, layers/CountryLayer.tsx). Same route-mock
  * discipline as e2e/globe-W11.spec.ts/globe-X2.spec.ts: a broad https abort
  * registered first (more specific routes registered after run first,
- * Playwright routes are LIFO) so every candidate this lane's "Surprise me"
+ * Playwright routes are LIFO) so every candidate this change's "Surprise me"
  * could pick from an external feed (the ISS, launches, quakes) is
  * deterministically UNAVAILABLE unless a test explicitly seeds it -- leaving
  * only the two always-computable/static candidates (sunset, Maps places),
@@ -33,12 +33,12 @@ async function openGlobe(page: Page) {
   await waitForHydration(page);
   await expect(page.getByRole("combobox", { name: "Search places or ask the globe" })).toBeVisible({ timeout: 30_000 });
   // CameraDirector.tsx's own "hold at minimum zoom for 400ms" auto-handoff
-  // to street view (WAVE 6 LANE X5, unrelated to this lane) fires whenever
+  // to street view (a separate change, unrelated to this one) fires whenever
   // the camera sits within 0.05 units of the orbit's closest distance for
   // any 400ms stretch -- which the globe's own default starting distance is
   // close enough to that a test with more than a couple of real-time awaits
   // can trip it by accident and land street view's full-screen dialog over
-  // whatever this lane's own test was checking. One discrete zoom-out step
+  // whatever this change's own test was checking. One discrete zoom-out step
   // (the same HUD control a visitor would use) moves the camera comfortably
   // clear of that band for the rest of the test, since nothing here ever
   // zooms back in.
@@ -139,7 +139,7 @@ test.describe("Surprise me", () => {
     // (globe-W11.spec.ts's own pattern) rather than a real "fly to <city>"
     // command: that command's flyTo has no explicit `distance`, which lands
     // the camera at OrbitControls' own closest zoom -- CameraDirector.tsx's
-    // unrelated "hold at minimum zoom" auto-handoff (WAVE 6 LANE X5) then
+    // unrelated "hold at minimum zoom" auto-handoff (a separate change) then
     // races this test's own later awaits and can silently flip the view to
     // "street" mid-test, whose full-screen dialog then eats the Undo click.
     // A country pick's own focus carries an explicit `distance: 18`

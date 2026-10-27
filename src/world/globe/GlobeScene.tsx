@@ -41,7 +41,7 @@ const HistoryLayer = lazy(() => import("./layers/HistoryLayer.tsx"));
 const StoryArc = lazy(() => import("./layers/StoryArc.tsx"));
 const HexbinLayer = lazy(() => import("./layers/HexbinLayer.tsx"));
 const GuideLayer = lazy(() => import("./layers/GuideLayer.tsx"));
-// WAVE 7 LANE V2 (city-light bloom): the globe's first composer, lazy so
+// V2 (city-light bloom): the globe's first composer, lazy so
 // its postprocessing imports stay out of the Globe shell chunk.
 const GlobePost = lazy(() => import("./layers/GlobePost.tsx"));
 const DaylightLayer = lazy(() => import("./layers/DaylightLayer.tsx"));
@@ -108,7 +108,7 @@ const LIFT = 0.5 - 1 / PHI ** 2;
  *   AT, but a sighted keyboard-only or switch-access visitor got nothing).
  *   `+`/`-` dolly the same distance a zoom-button click does. Arrow-key
  *   orbit is a natural follow-up but didn't fit this chunk's byte budget
- *   (check-budget.mjs) alongside it — see this lane's PR notes.
+ *   (check-budget.mjs) alongside it — see this change's PR notes.
  */
 // LANE U1 (composition): sm+ only - the right LayerPanel column and the
 // shared left slot (Inspector / the tour's running card) each reserve this
@@ -222,7 +222,7 @@ function SceneRig({
       const free = 1 - topReserve;
       r = Math.min(0.25, free / 2);
       // Centred in the free band below the topbar, not at a fixed 27.5% -
-      // see the NDC derivation in this lane's PR notes: increasing
+      // see the NDC derivation in this change's PR notes: increasing
       // setViewOffset's y pushes screen content UP (`top -= offsetY*height`
       // in three's own PerspectiveCamera.updateProjectionMatrix), so
       // clearing the TOP needs a SMALLER (often negative) offsetY, not a
@@ -482,7 +482,7 @@ export function GlobeScene({ now: realNow, tier, zoomInTick = 0, zoomOutTick = 0
         </Suspense>
         <Suspense fallback={null}>{layers.density && tier !== 3 && <HexbinLayer now={now} tier={tier} />}</Suspense>
         <Suspense fallback={null}>{imagery && <TileLayer now={now} tier={tier} earthRef={earthRef} />}</Suspense>
-        {/* WAVE 7 LANE V2: city-light bloom, tier 1/2 imagery only — tier 3
+        {/* V2: city-light bloom, tier 1/2 imagery only — tier 3
             (and the dot-matrix style) never mount a composer at all. */}
         <Suspense fallback={null}>{imagery && <GlobePost tier={tier} />}</Suspense>
         {/* LANE C4 ("Living daylight"): the golden-hour and waking bands,

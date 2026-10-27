@@ -11,7 +11,7 @@ import type { Page } from "@playwright/test";
  * atmosphere/haze dithering, and the TileLayer/EarthImagery fetch-race fix.
  * Fixed clock, every /api/* route mocked (G10, same discipline as
  * e2e/globe.spec.ts). GIBS itself is mocked here too (e2e/globe-W1.spec.ts's
- * own fixture set, reused) — this lane needs `style: "imagery"` actually
+ * own fixture set, reused) — this change needs `style: "imagery"` actually
  * live, not just the dot fallback, to exercise GlobePost/TileLayer at all.
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");

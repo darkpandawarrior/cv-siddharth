@@ -8,7 +8,7 @@ import { matchJd, toFitReport } from "./skillMatch.ts";
 // actually sent upstream — not a second, hand-kept copy of the heading
 // regexes. (The promptFence.ts extraction a sibling lane, P2-13b, does for
 // prompt-guard.ts is the tidier long-term shape for this kind of sharing;
-// out of scope here since this lane doesn't own a new src/lib file to put it
+// out of scope here since this change doesn't own a new src/lib file to put it
 // in.)
 import { jdSections } from "../../api/_lib/jd-condense.ts";
 

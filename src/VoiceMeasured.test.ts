@@ -7,7 +7,7 @@ import { voiceMetrics } from "./data/voice.ts";
 /**
  * Named .test.ts, not .test.tsx, matching AnimatedMetric.test.ts: written with
  * createElement rather than JSX so it needs no change to vitest.config.ts's
- * include pattern (a file this lane does not own).
+ * include pattern (a file this change does not own).
  */
 const html = renderToStaticMarkup(createElement(VoiceMeasured));
 
