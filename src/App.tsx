@@ -485,7 +485,7 @@ function Hero() {
 }
 
 // Three lines, each saying something the metrics band 250px below does not.
-// The fourth was "GPS 50% → 95% · crashes -80%", which is metrics[1] and
+// The fourth was "GPS 50% → 95% · crashes -85%", which is metrics[1] and
 // metrics[2] typed out again, hardcoded, one screen above the band itself.
 const IDENTITY_LINES = [
   "platform owner · 50k+ MAU fintech",
@@ -1025,7 +1025,7 @@ const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
     { label: `Doori · ${projectStats.doori.modules} modules`, href: "#project/doori" },
   ],
   "Concurrency & Data": [
-    { label: "-80% crashes", href: "#work" },
+    { label: "-85% crashes", href: "#work" },
     { label: "The Coroutine Court", href: "#loopdown" },
   ],
   "Platform & Systems": [

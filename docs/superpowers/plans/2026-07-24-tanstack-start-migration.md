@@ -188,7 +188,7 @@ This moves all of `index.html`'s `<head>` into the root route and installs the b
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1.0" },
         { title: "Siddharth Pandalai | Senior Android Engineer" },
-        { name: "description", content: "Senior Android Engineer. Platform owner at 50k MAU scale. GPS accuracy 50%→95%, 80% crash reduction, 92% Jetpack Compose. Ask my AI assistant anything." },
+        { name: "description", content: "Senior Android Engineer. Platform owner at 50k MAU scale. GPS accuracy 50%→95%, 85% crash reduction, 92% Jetpack Compose. Ask my AI assistant anything." },
         { name: "author", content: "Siddharth Pandalai" },
         { name: "theme-color", content: "#0b0f0d" },
         { name: "color-scheme", content: "dark" },
@@ -196,7 +196,7 @@ This moves all of `index.html`'s `<head>` into the root route and installs the b
         { property: "og:url", content: "https://cv-siddharth.vercel.app/" },
         { property: "og:site_name", content: "sid.android" },
         { property: "og:title", content: "Siddharth Pandalai | Senior Android Engineer" },
-        { property: "og:description", content: "Interactive CV with an AI assistant. GPS accuracy 50%→95%, 80% crash reduction, 92% Jetpack Compose at 738k LOC." },
+        { property: "og:description", content: "Interactive CV with an AI assistant. GPS accuracy 50%→95%, 85% crash reduction, 92% Jetpack Compose at 738k LOC." },
         { property: "og:image", content: "https://cv-siddharth.vercel.app/og-image.png" },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
@@ -263,7 +263,7 @@ This moves all of `index.html`'s `<head>` into the root route and installs the b
           <noscript>
             <main style={{ maxWidth: 640, margin: "4rem auto", padding: "0 1.5rem", fontFamily: "system-ui", color: "#e8efe9" }}>
               <h1>Siddharth Pandalai — Senior Android Engineer</h1>
-              <p>Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 80% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
+              <p>Platform owner of a 738k-LOC, 92%-Compose financial SaaS app serving 50,000+ monthly users. GPS accuracy 50%→95%, 85% crash reduction. Kotlin · Jetpack Compose · Kotlin Multiplatform.</p>
               <p>This portfolio is interactive and needs JavaScript. Text versions:</p>
               <ul>
                 <li><a href="/llms.txt" style={{ color: "#3ddc84" }}>Profile summary (llms.txt)</a></li>

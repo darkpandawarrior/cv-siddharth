@@ -7,7 +7,7 @@ Status: approved, implementing
 
 The Lab Bench (`src/LabBench.tsx` + `src/SignalLab.tsx`) ships 4 live-in-browser
 simulations, all illustrating Dice.tech metrics with hand-tuned synthetic data:
-Signal Lab (GPS 50%→95%), Crash Triage (-80%), Recomposition (92% Compose),
+Signal Lab (GPS 50%→95%), Crash Triage (-85%), Recomposition (92% Compose),
 White-label (80% faster). The animation/interaction quality is good but the
 content is thin: it only covers one employer, some sims don't actually land on
 the numbers they claim to prove, and none of it draws on the much richer real

@@ -13,7 +13,7 @@ describe("emphasise", () => {
     // The whole function is a pass-through with markup — if it ever loses text,
     // a bullet silently ships with words missing.
     for (const s of [
-      "Reduced production crashes 80% at 22,000+ daily users.",
+      "Reduced production crashes 85% at 22,000+ daily users.",
       "a ~964k-LOC Kotlin app serving 50,000+ MAU",
       "from 1.6★ across 67 reviews to 4.5★ across 27,300",
       "no digits here at all",
@@ -24,7 +24,7 @@ describe("emphasise", () => {
   });
 
   it("bolds measured values", () => {
-    expect(render("crashes 80% at 22,000+ users")).toContain("**80%**");
+    expect(render("crashes 85% at 22,000+ users")).toContain("**85%**");
     expect(render("~87% of the UI layer")).toContain("**~87%**");
     expect(render("150+ clients ship")).toContain("**150+**");
   });

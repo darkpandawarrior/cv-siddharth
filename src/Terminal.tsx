@@ -413,7 +413,7 @@ function buildCommands(jump: Go): Cmd[] {
             <Dim> maps the connections · try </Dim>
             <Hi>open doori</Hi>
             <Dim>, </Dim>
-            <Hi>ask how did you cut crashes 80%</Hi>
+            <Hi>ask how did you cut crashes 85%</Hi>
             <Dim> or </Dim>
             <Hi>hire</Hi>
             <Dim> · press </Dim>
@@ -678,7 +678,7 @@ function buildCommands(jump: Go): Cmd[] {
         <div className="space-y-1">
           <div className="text-zinc-200">
             Senior Android engineer, platform owner at <Hi>50k+ MAU</Hi>. Ships the unglamorous
-            reliability work: <Hi>GPS 50%→95%</Hi>, <Hi>-80% crashes</Hi>, <Hi>~87% UI-layer Compose</Hi> across ~964k LOC.
+            reliability work: <Hi>GPS 50%→95%</Hi>, <Hi>-85% crashes</Hi>, <Hi>~87% UI-layer Compose</Hi> across ~964k LOC.
           </div>
           <div className="text-zinc-400">{profile.availability}</div>
           <div className="pt-1">
@@ -827,7 +827,7 @@ function buildCommands(jump: Go): Cmd[] {
       name: "matrix",
       hidden: true,
       help: "",
-      run: () => <span className="text-[var(--t-accent)]">Wake up, Neo… the crashes are down 80%. There is no spoon, only structured concurrency.</span>,
+      run: () => <span className="text-[var(--t-accent)]">Wake up, Neo… the crashes are down 85%. There is no spoon, only structured concurrency.</span>,
     },
     {
       name: "coffee",
@@ -1318,7 +1318,7 @@ function Neofetch() {
     ["kernel", "Kotlin · Jetpack Compose · KMP"],
     ["scale", `${metrics[0].value} MAU · ~964k LOC`],
     ["gps", "50% → 95% accuracy"],
-    ["crashes", "-80% (structured concurrency)"],
+    ["crashes", "-85% (structured concurrency)"],
     ["compose", "~87% of UI-layer code (455k of 523k LOC)"],
     ["builds", projectCards.map((p) => p.name).join(" · ")],
   ];
