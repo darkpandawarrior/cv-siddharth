@@ -6,7 +6,7 @@
 // `sangam-relief.json`, written by hand by `fetch-real-relief.mjs`) and
 // exposes a bilinear, mirror-tiled sampler over it: `realRelief(x, z)`.
 //
-// Lives here, not in the old per-generator math module this lane deletes,
+// Lives here, not in the old per-generator math module this change deletes,
 // and not in `valley.ts` (runtime code that must not decode PNGs — M68).
 // Only `gen-terrain.mjs` (a build-time Node script) ever calls this.
 //
@@ -37,7 +37,7 @@ export const DATA_DIR = join(root, "scripts", "world-v2", "data");
 export const RESIDUAL_PNG = join(DATA_DIR, "sangam-relief-256.png");
 export const RESIDUAL_JSON = join(DATA_DIR, "sangam-relief.json");
 
-/** World metres per residual texel. The residual is 256x256 and this lane's
+/** World metres per residual texel. The residual is 256x256 and this change's
  *  extent is 768x768 (world-v2-spec §3), so 3 m/texel maps the whole
  *  residual across the whole world exactly once (256*3=768) — a deliberate
  *  choice, not a coincidence. The real texel is ~18m (online-tools-spec

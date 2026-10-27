@@ -10,9 +10,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * WAVE 6 LANE X1 (live world feed), end to end. Reuses the same committed
+ * X1 (live world feed), end to end. Reuses the same committed
  * fixtures globe-L7.spec.ts (hazards) and globe-L4.spec.ts (signals) already
- * prove match their real handler shapes — no new fixture of this lane's own
+ * prove match their real handler shapes — no new fixture of this change's own
  * (globe-lanes.md's own "one less place a shape can drift" reasoning).
  */
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -63,7 +63,7 @@ async function setPresence(page: Page, counts: Record<string, number>) {
 
 // One hour after the hazard fixtures' own clock (globe-L7.spec.ts uses noon)
 // so the Launch Library's one near-term entry (net 2026-09-28T12:15:00Z)
-// lands inside the 24h window this lane's launch publisher gates on —
+// lands inside the 24h window this change's launch publisher gates on —
 // noon itself sits 15 minutes past that window and would silently produce
 // zero launch items.
 const CLOCK = new Date("2026-09-27T13:00:00Z");
@@ -99,7 +99,7 @@ test("feed items appear from the hazard and signals fixtures", async ({ page }) 
   await expect(list.getByText(/M5\.6 .*Kokopo/)).toBeVisible({ timeout: 15_000 });
   await expect(list.getByText("tighten the release checklist")).toBeVisible({ timeout: 15_000 });
   // Every row so far is what it claims to be: no invented geography, and a
-  // magnitude below this lane's own 4.5 floor never appears (the fixture's
+  // magnitude below this change's own 4.5 floor never appears (the fixture's
   // M0.7/M2.6 quakes).
   await expect(list.getByText(/M0\.7|M2\.6/)).toHaveCount(0);
 });

@@ -1,4 +1,4 @@
-// WAVE 9 LANE S3 (Open-Meteo marine layer for the hover readout). Same "pure
+// S3 (Open-Meteo marine layer for the hover readout). Same "pure
 // fetch + parse" split as aurora.ts/quake.ts -- no React, no three, testable
 // with a plain fetch mock (useLiveSignal.test.ts's own pattern).
 //

@@ -33,7 +33,7 @@ const SCAN_HORIZON_MIN = 24 * 60;
  *  (stars.ts's own horizon transform, shared with the Moon/planets), not a
  *  closed-form solver. `null` means it stays below (or above, for a
  *  circumpolar radiant at this latitude) the whole scanned day.
- *  ponytail: brute-force 5-minute scan, not moon.ts's closed-form
+ *  brute-force 5-minute scan, not moon.ts's closed-form
  *  moonTimes -- a hover readout needs the right minute, not the right
  *  second; upgrade to a bisection search if finer precision is ever asked
  *  for. */

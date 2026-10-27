@@ -5,7 +5,7 @@ import { Chess, type PieceSymbol } from "chess.js";
  * budget is passed — which is what makes it unit-testable, and what lets
  * ChessSearchLab render the real tree instead of a simulation.
  *
- * ponytail: no transposition table, no quiescence, no move ordering beyond
+ * no transposition table, no quiescence, no move ordering beyond
  * captures-first. Upgrade path in order of payoff if the bot ever needs to
  * be stronger than ~1400: (1) quiescence at the horizon — add it only if the
  * bot visibly hangs pieces at the target rating, and measure before

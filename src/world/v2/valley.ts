@@ -2,7 +2,7 @@
  * "Sangam": the world-v2 valley's single layout source (world-v2-spec.md
  * §2.1, amended by living-ledger-spec.md §3.5/§5.1 and open-data-spec.md
  * §3 A3; master-plan.json M4/M5). Pure, zero three/R3F imports — the same
- * discipline as `craftPhysics.ts` and this lane's siblings — so the
+ * discipline as `craftPhysics.ts` and this change's siblings — so the
  * runtime, `gen-terrain.mjs` (P2-05, after it switches off
  * `valley-math.mjs`) and every test here import the exact same numbers.
  *
@@ -200,7 +200,7 @@ export function riverX(z: number): number {
   return riverXAtScale(z, RIVER_SCALE, SANGAM_Z, BENDS);
 }
 
-// ponytail: vertical offset |x - riverX(z)| rather than a true perpendicular
+// vertical offset |x - riverX(z)| rather than a true perpendicular
 // projection — the same approximation valley-math.mjs shipped, adequate for
 // a quadratic-falloff valley wall and a width/2 collision test. Upgrade to a
 // numerical nearest-point search if the banks ever need to be exact.
@@ -341,7 +341,7 @@ export function tributaries(ledger: Ledger = defaultLedger): Tributary[] {
 // ── placement counts (spec §2.1's own valley.test.ts list) ─────────────────
 //
 // Bells (the bell-toran landmark, one per gateway) are deliberately absent
-// here: they are the hero-prop landmark's own script, not this lane's —
+// here: they are the hero-prop landmark's own script, not this change's —
 // deferred with a documented reason in valley.test.ts until P2-12's own
 // landmark script owns that placement.
 

@@ -9,7 +9,7 @@ const SRC = join(ROOT, "src");
 const ROUTES_DIR = join(SRC, "routes");
 const EXTS = [".ts", ".tsx"];
 
-// ponytail: relative imports only; the repo has no path aliases (tsconfig.app.json, vite.config.ts). Add an alias map if that changes.
+// relative imports only; the repo has no path aliases (tsconfig.app.json, vite.config.ts). Add an alias map if that changes.
 const walk = (d: string, out: string[] = []): string[] => {
   for (const e of readdirSync(d)) {
     const p = join(d, e);

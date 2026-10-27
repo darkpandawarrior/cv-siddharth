@@ -28,7 +28,7 @@ export interface PostProps {
   tier: DeviceTier;
   look: GradeLook;
   /** P3-01c's raymarched volumetric pass (world-v2-spec §7 point 2), T1
-   *  only. This lane leaves the composer slot in the right position but
+   *  only. This change leaves the composer slot in the right position but
    *  does not build the pass — pass `<primitive object={volumetricPass} />`
    *  once P3-01c exists. Ignored on T2/T3 (analytic fog only, already in
    *  atmosphere.ts). */

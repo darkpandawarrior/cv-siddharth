@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { readColor } from "./themeColorThree.ts";
 
-// ponytail: same stub as themeColor.test.ts — this file exists only to keep
+// same stub as themeColor.test.ts — this file exists only to keep
 // readColor's one line of behaviour (Color wraps readToken) covered after the
 // split off themeColor.ts (three.js kept out of the SSR-reachable half).
 const vars = new Map<string, string>();

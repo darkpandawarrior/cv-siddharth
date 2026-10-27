@@ -9,7 +9,7 @@
  * fails inside the ordinary `npx vitest run` gate instead, so a budget
  * change shows up the moment it lands, not just at the diff-review step.
  *
- * budgets.lock.json is a byte copy of budgets.json taken when this lane
+ * budgets.lock.json is a byte copy of budgets.json taken when this change
  * landed (M29). The rule: every value budgets.lock.json ever recorded must
  * still equal budgets.json's value; the ONLY new key a later lane may add is
  * under namedChunks (P2-10b's Globe chunk, the one named exception in G4).

@@ -59,7 +59,7 @@ const SURFACE_SYNONYMS: Record<string, string> = {
 // Most-recently-used command ids, most-recent-first, capped short — a
 // palette that always opens on the same eleven section rows regardless of
 // what's actually used is dead weight for a returning visitor.
-// ponytail: recency (MRU) stands in for "recent/frequent" rather than a
+// recency (MRU) stands in for "recent/frequent" rather than a
 // separate frequency counter — simpler storage, and for a solo visitor's own
 // palette the two rank almost identically. Add real frequency counts if a
 // visitor's habits ever diverge from "what I last used."

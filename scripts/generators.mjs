@@ -100,7 +100,7 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/galleries.ts"], stages: { build: 1, refresh: 5, check: 1 } },
   { id: "compare-sets", script: "gen-compare-sets.mjs", npmName: "gen:compare", kind: "local",
     inputs: [], outputs: ["src/data/compareSets.ts"], stages: { build: 2, check: 2 } },
-  // kind was "local" until this lane: it unconditionally fetches
+  // kind was "local" until this change: it unconditionally fetches
   // the-loopdown's registry.json off raw.githubusercontent.com (see
   // fetchWithTimeout in gen-loopdown.mjs) — the exact live-fetch-in-prebuild
   // shape F3 names for gen-anthology. Same fix: network kind, refresh only.
@@ -186,7 +186,7 @@ export const GENERATORS = [
     inputs: [], outputs: ["src/data/ops.ts", "src/data/generated/evidence.ts"], stages: { refresh: 18, check: 3 } },
   // Sibling kind (scans ../../Android, ../../KMP checkouts) AND a now-stamp
   // (`generatedAt: new Date().toISOString().slice(0,10)`) — refresh only on
-  // both counts. Had no refresh entry at all before this lane (build was its
+  // both counts. Had no refresh entry at all before this change (build was its
   // only automated path), so removing build without adding refresh would
   // have made it purely manual; it keeps its committed output current here.
   { id: "system-graph", script: "gen-system-graph.mjs", npmName: "gen:system-graph", kind: "sibling",

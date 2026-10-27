@@ -264,7 +264,7 @@ function NamedWorld({ world, concluded, hoveredName, onHover, onOpen, season }: 
     // label per named world running this every frame, setState on every
     // fractional wobble would be one re-render per world per frame for a fade
     // nobody can see the difference of at that resolution.
-    // ponytail: one useFrame per world, hoist to a single imperative loop in
+    // one useFrame per world, hoist to a single imperative loop in
     // Scene writing el.style.opacity if a trace shows >16ms frames. Measure
     // first — at 24 worlds this has not been shown to cost anything.
     const quantized = Math.round(eased * 20) / 20;

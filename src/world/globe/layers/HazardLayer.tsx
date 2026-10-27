@@ -27,8 +27,8 @@ import { parseGdacsAlerts, matchGdacsAlerts, GDACS_POLL_MS } from "./hazardAlert
 import { parseOvationGrid, parseLatestKp, AURORA_POLL_MS, KP_POLL_MS } from "./aurora.ts";
 import { type Launch, parseLaunches, getCachedLaunches, setCachedLaunches } from "./launches.ts";
 import { buildHazardStatus } from "./hazardStatus.ts";
-import { setHazardSnapshot } from "./hazardSnapshot.ts"; // WAVE 6 LANE X6: minimal additive edit, see that file's own comment
-import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
+import { setHazardSnapshot } from "./hazardSnapshot.ts"; // X6: minimal additive edit, see that file's own comment
+import { publish } from "../feed.ts"; // X1 (live world feed)
 import { QuakeGlyphs } from "./quakeGlyphs.tsx";
 import { EonetGlyphs } from "./eonetGlyphs.tsx";
 import { HazardHalos } from "./hazardHalos.tsx";
@@ -45,7 +45,7 @@ if (typeof window !== "undefined" && new URLSearchParams(window.location.search)
   void import("../copilot/execute.ts");
 }
 
-// ponytail: EONET (~70 open events), GDACS (~90 orange/red) and Launch
+// EONET (~70 open events), GDACS (~90 orange/red) and Launch
 // Library (capped at 10 by its own query) never approach a count where a
 // per-tier reduction would change anything visible — each glyph file's own
 // MAX_* constant is already the real ceiling. Quakes are the one feed that
@@ -61,9 +61,9 @@ if (typeof window !== "undefined" && new URLSearchParams(window.location.search)
  *  both an eager path (Markers.tsx/LiveDots.tsx already use it) and this
  *  lazy one made Rollup fold a large, unrelated shared chunk into the eager
  *  "Globe" bundle (measured with `vite build` + `check-budget.mjs` against
- *  this lane's own worktree — see this lane's report). A plain global
+ *  this change's own worktree — see this change's report). A plain global
  *  write costs nothing to bundle. Inspector.tsx (L5) isn't built yet, so
- *  this mirrors `selected` for this lane's own e2e spec rather than
+ *  this mirrors `selected` for this change's own e2e spec rather than
  *  depending on another lane's stub. */
 declare global {
   interface Window {
@@ -291,7 +291,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
     // V5: fold the cone layer's own clause into the composite "hazards"
     // detail line (the only place LayerPanel.tsx renders per-layer detail
     // text, so no panel edit is needed) without touching hazardStatus.ts,
-    // which this lane does not own. A failed NHC poll never flips the
+    // which this change does not own. A failed NHC poll never flips the
     // whole "hazards" row to failed on its own -- the other five feeds can
     // still be live -- it only names itself as unreachable in the sentence,
     // same as buildHazardStatus already does per sub-feed.
@@ -356,7 +356,7 @@ export default function HazardLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 
 
   useEffect(() => resetHazardKeys, []);
 
-  // WAVE 6 LANE X1 (live world feed): every qualifying item is published on
+  // X1 (live world feed): every qualifying item is published on
   // every poll, not just "the first time seen" — the feed store's own
   // de-dup by id (feed.ts) is what turns "still true on this poll" into
   // "announced once", so this effect never needs its own tracked-id set.

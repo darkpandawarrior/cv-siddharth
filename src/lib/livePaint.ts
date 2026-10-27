@@ -78,7 +78,7 @@ export function useLivePaint(
     // embedded app itself posting one back (it doesn't), so this reveals on
     // a fixed grace period after the iframe's own `load` fires instead —
     // approximate, not a real paint check.
-    // ponytail: time-based guess, not a real signal. Upgrade path: have each
+    // time-based guess, not a real signal. Upgrade path: have each
     // app's web target postMessage({type:"painted"}) to the parent on first
     // frame, and listen for it here.
     if (url && isCrossOrigin(url)) {

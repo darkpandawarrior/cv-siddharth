@@ -1,4 +1,4 @@
-// WAVE 6 LANE X5 (seamless zoom hand-off, verifier-flagged blocking gap):
+// X5 (seamless zoom hand-off, verifier-flagged blocking gap):
 // pure math turning the orbit camera's actual forward (view) direction into
 // the MapLibre bearing/pitch that "matches" it at the focus point street
 // level opens over. The original hand-off (cameraZoomGate.ts) only ever

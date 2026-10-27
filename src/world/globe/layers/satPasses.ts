@@ -11,7 +11,7 @@ import { SANGAM, type GeoPoint } from "../../../lib/lookAngles.ts";
 
 // Both thresholds restated from satellites.ts's own private
 // isVisiblePassInstant (not imported: that function isn't exported, and a
-// sibling lane's file this lane may not edit) — the same "a pass you could
+// sibling lane's file this change may not edit) — the same "a pass you could
 // actually walk outside and see" floor/twilight bar that function itself
 // documents.
 const VISIBLE_MIN_EL_DEG = 10;
@@ -110,7 +110,7 @@ export function formatDurationMin(durationMin: number): string {
  *  (OBSERVER_DARK_SUN_ALT_DEG); a pass in the pre-dawn hours of a night
  *  that started "yesterday" by the calendar still reads naturally as
  *  "tonight" to someone checking before bed.
- *  ponytail: no "tomorrow morning" branch for a pass past local midnight —
+ *  no "tomorrow morning" branch for a pass past local midnight —
  *  add one if this copy is ever read literally rather than as a status
  *  line. */
 export function tonightLine(pass: VisiblePassDetail | null, now: Date, name: string): string | null {

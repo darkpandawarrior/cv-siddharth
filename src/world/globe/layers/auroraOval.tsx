@@ -146,7 +146,7 @@ export function AuroraOval({ grid, now, reducedMotion }: { grid: AuroraGrid | nu
           `{ vertexShader, fragmentShader, uniforms }` bundle as a
           constructor argument makes `material.uniforms` the exact object
           this component holds, so mutating it in place actually reaches
-          the GPU. Measured on this lane's own build: the aurora rendered
+          the GPU. Measured on this change's own build: the aurora rendered
           nothing, ever, until this changed — same bug the orchestrator
           had already found and fixed the same way in EarthImagery/skyMoon. */}
       <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: FRAG, uniforms }]} transparent depthWrite={false} blending={THREE.AdditiveBlending} />

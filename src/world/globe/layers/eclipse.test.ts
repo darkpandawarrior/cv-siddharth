@@ -6,7 +6,7 @@ import { nextGlobalEclipses, shadowAxisPoint, umbraTrack } from "./eclipse.ts";
 // solar eclipse at https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/SE2027Aug02Tpath.html
 // (Fred Espenak, "Greatest Eclipse and Greatest Duration" section), fetched
 // 2026-09-29: "Time = 10:06:37.7 UT   Lat = 25 deg30.3'N   Long = 033 deg11.0'E".
-// Copied here verbatim rather than recalled, per this lane's brief.
+// Copied here verbatim rather than recalled, per this change's brief.
 const NASA_GSFC_2027AUG02 = {
   sourceUrl: "https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/SE2027Aug02Tpath.html",
   fetchedAt: "2026-09-29",

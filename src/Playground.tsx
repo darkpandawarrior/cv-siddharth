@@ -358,7 +358,7 @@ function PlaygroundInner() {
 
           <DeferredVisitorPlaque />
 
-          {/* ponytail: the spec's visit-chip flash — a one-shot highlight when
+          {/* the spec's visit-chip flash — a one-shot highlight when
               a card's counter ticks — is deliberately not built. It would be
               the only motion this redesign ADDS, on a page that already has the
               card entrance keyframe and a reduced-motion branch guarding it,

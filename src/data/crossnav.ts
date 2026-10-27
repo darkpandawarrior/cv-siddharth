@@ -178,7 +178,7 @@ export const isRevisited = (world: StarWorld): boolean => worldSeasons(world).le
 // The lookup is built over 611..671, which is Starmap's CONCLUDED_START..
 // FIELD_COUNT, so a count outside the slider's domain resolves to null and
 // produces no line, which is the correct behaviour anyway.
-// ponytail: widen the range only when the slider widens. If the generator ever
+// widen the range only when the slider widens. If the generator ever
 // bakes `concluded` into the entry, delete the parser and read the field.
 const ONES = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
   "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];

@@ -18,7 +18,7 @@ const HowItsBuilt = lazy(() => import("./HowItsBuilt.tsx"));
  *  a phone visitor opens it, same as tapping the Pune ring or a future
  *  layer's marker). */
 
-// e2e-only seam (this lane's own brief, task 9): no other lane's layer click
+// e2e-only seam (this change's own brief, task 9): no other lane's layer click
 // handlers exist in this worktree yet, so there is no real way to populate
 // `selected` for a Playwright run without one. Reading an undefined global is
 // a no-op in production -- nobody sets this outside a test -- so this is
@@ -33,7 +33,7 @@ function isTypingTarget(el: EventTarget | null): boolean {
   return el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-// WAVE 6 LANE X6 (craft: inspector sparklines). A tiny inline SVG line
+// X6 (craft: inspector sparklines). A tiny inline SVG line
 // chart, no charting library — a handful of points drawn as one polyline is
 // the whole feature. Never invents a series: every caller passes a real
 // SparkSeries (sparkSeries.ts's own hooks return `null`, not a fake one,
@@ -96,12 +96,12 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   const regionSpark = useQuakeRegionSpark(regionFocus?.lat ?? null, regionFocus?.lon ?? null);
   const kpSpark = useKpSpark();
 
-  // WAVE 7 LANE V7: a plain open/closed flag, not selection-filtered -- most
+  // V7: a plain open/closed flag, not selection-filtered -- most
   // Selection.kind values (quake, guide-place, satellite, ...) name an
   // INSTANCE, not one of the handful of shader/data layers this panel can
   // honestly show (see howItsBuiltData.ts's own "could not wire" note), so
   // there is no clean instance-to-layer mapping to filter on without editing
-  // files outside this lane's scope. The panel always lists every layer it
+  // files outside this change's scope. The panel always lists every layer it
   // knows, organised per layer inside itself.
   const [showBuild, setShowBuild] = useState(false);
   const [lightbox, setLightbox] = useState<{ selectionId: string; index: number } | null>(null);
@@ -150,7 +150,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
   // A real flex-column sibling below the scrollable body, not a `sticky`
   // overlay inside it: `sticky bottom-0` floats on TOP of whatever content
   // is last in the scroll flow, so opening a tall "How it's built" panel
-  // (WAVE 7 LANE V7) covered its first lines on first open, before any
+  // (a separate change) covered its first lines on first open, before any
   // manual scroll -- verifier-caught desktop overlap defect. Giving this row
   // its own flex slot outside the `overflow-y-auto` div means it occupies
   // real layout space instead of floating over it, so nothing it sits above
@@ -169,7 +169,7 @@ export default function Inspector(_props: { tier: 1 | 2 | 3 }) {
           Fly to
         </button>
       )}
-      {/* Street-level entry point for lane W3's surface (this lane only ever
+      {/* Street-level entry point for lane W3's surface (this change only ever
           sets store state - the StreetView surface itself belongs to that
           lane). Any selection anchored to a real point on the globe can hand
           off, not just Pune's own ring. */}

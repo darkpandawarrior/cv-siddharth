@@ -803,7 +803,7 @@ function WebFigure() {
             cx={WEB.left} cy={py(i)} r="4"
             /* The literal expression leverageRows uses, copied rather than
                re-derived, so the dot and the row below it cannot disagree.
-               ponytail: two call sites do not earn a stateForModules(). */
+               two call sites do not earn a stateForModules(). */
             fill={l.modules > 0 ? STATE_COLOR.OK : STATE_COLOR.DEGRADED}
           />
         ))}
@@ -998,7 +998,7 @@ function MttrFigure() {
    said so, but a caption loses to a bar. It also cost more than it saved: 204px
    of figure to collapse 53px of rows. The rows already say "2 commits behind"
    in words, which at two distinct values is the whole of the finding.
-   ponytail: revisit only if the spread ever needs a shape to be read at all. */
+   revisit only if the spread ever needs a shape to be read at all. */
 
 /**
  * THE LOOP TRACE. The five stations, wired.
@@ -1019,7 +1019,7 @@ function MttrFigure() {
  *
  * No return arc and no arrowheads. Both would need an SVG overlay aligned
  * against text that reflows, and neither carries a fact the order does not.
- * ponytail: add the arrowheads the day someone reads this as five unrelated
+ * add the arrowheads the day someone reads this as five unrelated
  * stats; the return arc after that.
  *
  * Grid, not SVG, for one concrete reason: at 40rem the five stations stack and

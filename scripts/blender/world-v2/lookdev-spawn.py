@@ -257,7 +257,7 @@ def terrain_height(x, z):
     if dz > GHAT_BAND_HALF + 1.2 or dx < 0 or dx > GHAT_RAMP_LEN:
         return base_h
     t = dx / GHAT_RAMP_LEN
-    # ponytail: matching the ramp to the staircase's own LINEAR AVERAGE (no
+    # matching the ramp to the staircase's own LINEAR AVERAGE (no
     # margin) cuts straight through the step volume — the terrain grid is
     # 1.6 m/vertex (SPACING above) while individual treads are 0.8 m
     # (GHAT_RUN*GHAT_XY_SCALE), so the mesh can't resolve actual risers
@@ -742,7 +742,7 @@ fmix.location = (150, 0)
 ffres = fnt.nodes.new('ShaderNodeLayerWeight')
 ffres.inputs['Blend'].default_value = 0.75
 ffres.location = (-150, 100)
-# ponytail: LayerWeight's Facing alone (fed straight into the mix factor)
+# LayerWeight's Facing alone (fed straight into the mix factor)
 # is what made the fog cards read as an opaque wall in spawn-v2.png. A near-
 # horizontal camera views a horizontal card at an extreme grazing angle, and
 # at Blend=0.75 that pushes Facing toward ~1.0 (mostly the Emission branch,
@@ -767,7 +767,7 @@ except (AttributeError, TypeError):
 fog_mat.show_transparent_back = False
 
 FOG_CARDS = [(0.35, 0.22), (1.4, 0.12), (2.6, 0.06)]  # (height, opacity-ish via alpha)
-# ponytail: a card sized to the whole CROP_X/CROP_Z rectangle turns into a
+# a card sized to the whole CROP_X/CROP_Z rectangle turns into a
 # solid wall from this shot's low, near-horizontal camera — every ray at a
 # given screen row crosses the SAME huge flat plane, and 3 cards stacked at
 # the original alpha compounded to ~74% opaque (that's the flat brown bar
@@ -807,7 +807,7 @@ wbg = wtree.nodes.new('ShaderNodeBackground')
 wenv = wtree.nodes.new('ShaderNodeTexEnvironment')
 wenv.image = bpy.data.images.load(str(TEX / 'kloppenheim_06_puresky_1k.hdr'))
 wout2 = wtree.nodes.new('ShaderNodeOutputWorld')
-# ponytail: kloppenheim_06_puresky is a neutral daylight sky (spec §9 only
+# kloppenheim_06_puresky is a neutral daylight sky (spec §9 only
 # promises it for the foliage-atlas bake and offline lookdev, not that it's
 # golden-hour colored). Fed straight into Background at strength 1.1 it read
 # as flat pale blue/white and washed out every other cue in spawn-v2.png's
@@ -873,7 +873,7 @@ wbg.inputs['Strength'].default_value = 0.3
 wtree.links.new(wbg.outputs['Background'], wout2.inputs['Surface'])
 
 # --- atmosphere: a uniform-density world volume (art-direction fix — height
-# fog + god rays through the bridge arch). ponytail: uniform density, not a
+# fog + god rays through the bridge arch). uniform density, not a
 # true exponential-height falloff (a height-varying Gradient-Texture density
 # would need Geometry>Position wired into the volume, more graph for a
 # single establishing shot from near water level); upgrade path is that
@@ -892,7 +892,7 @@ vnt.nodes.clear()
 vout = vnt.nodes.new('ShaderNodeOutputMaterial')
 pvol = vnt.nodes.new('ShaderNodeVolumePrincipled')
 pvol.inputs['Density'].default_value = 0.013  # up a little from 0.012 (art-
-# direction fix — "visible volumetric god-rays"). ponytail: an earlier pass
+# direction fix — "visible volumetric god-rays"). an earlier pass
 # at 0.016 density / 0.78 anisotropy, stacked with the Compositor Glare pass
 # below, blew the whole sun side of frame into one solid white dome instead
 # of a shaft — this shot looks almost straight into the sun, so strong
@@ -901,7 +901,7 @@ pvol.inputs['Density'].default_value = 0.013  # up a little from 0.012 (art-
 # what supplies the directional "ray" read, not the volume's own bulk glow.
 pvol.inputs['Color'].default_value = (0.90, 0.80, 0.68, 1)  # warm dust, not grey
 pvol.inputs['Anisotropy'].default_value = 0.6  # a modest bump from 0.55, not
-# the 0.78 that overwhelmed the shot — see the ponytail note above.
+# the 0.78 that overwhelmed the shot — see the shortcut note above.
 vnt.links.new(pvol.outputs['Volume'], vout.inputs['Volume'])
 bpy.ops.mesh.primitive_cube_add(size=2, location=(0, (CROP_Z[0] + CROP_Z[1]) / 2, 60))
 atmo_vol = bpy.context.object
@@ -931,7 +931,7 @@ print('ATMOSPHERE_VOLUME_BUILT')
 
 sun_data = bpy.data.lights.new('SunKey', 'SUN')
 sun_data.energy = 11.0  # up from an original 4.2, but pulled back from an
-# intermediate 14 (art-direction pass 4, ponytail note): looking almost
+# intermediate 14 (art-direction pass 4, shortcut note): looking almost
 # straight down the sun's own direction (spec's backlit composition) means
 # the disc, its water reflection AND the volume's in-scattering all scale
 # together off this one number — 14 plus the volume/Glare tuning below
@@ -1438,7 +1438,7 @@ def scatter_branch(coll, density_max, seed, min_scale, max_scale, y_off, use_wat
     dist = gnodes.new('GeometryNodeDistributePointsOnFaces')
     dist.distribute_method = 'RANDOM'
     dist.location = (-1100, y_off)
-    # ponytail: GeometryNodeDistributePointsOnFaces' `inputs[name]` lookup is
+    # GeometryNodeDistributePointsOnFaces' `inputs[name]` lookup is
     # broken in this Blender 5.2.2 build (raises/returns None for a socket
     # that demonstrably exists — verified interactively) while every other
     # node's name lookup works fine. Index the sockets this node needs by
@@ -1692,7 +1692,7 @@ bpy.context.scene.camera = cam_obj
 CAM_Z = Z_CAM
 cam_obj.location = (CAMERA_X, CAM_Z, WATER_Y + 1.65)
 look_target = Vector((river_x(BRIDGE_Z - 15), BRIDGE_Z - 15, WATER_Y + 1.0))
-# ponytail: aiming at WATER_Y+5 (the bridge's mid-height) over a ~105 m
+# aiming at WATER_Y+5 (the bridge's mid-height) over a ~105 m
 # distance pitches the camera up by only ~1.8 deg, but that's still enough
 # to push the near boat (7.5 m out, at the waterline) below this lens's
 # ~27 deg vertical FOV at the 2.35:1 crop. WATER_Y+1.0 (near eye height)
@@ -1742,7 +1742,7 @@ scene.compositing_node_group = comp_ng
 comp_rl = comp_ng.nodes.new('CompositorNodeRLayers')
 comp_bloom = comp_ng.nodes.new('CompositorNodeGlare')
 comp_bloom.inputs['Type'].default_value = 'Bloom'
-comp_bloom.inputs['Highlights Threshold'].default_value = 1.15  # ponytail:
+comp_bloom.inputs['Highlights Threshold'].default_value = 1.15  # 
 # 0.85 caught nearly everything near the already-bright sun/sky and, chained
 # with the volume above, produced one giant blown-out dome instead of a
 # handful of legible glows (niches, lanterns, diyas) — 1.15 only catches

@@ -13,7 +13,7 @@ import { projectCards, type ProjectCard } from "./data/profile/projectCards.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 import { ANSWERS } from "./data/source/answers.ts";
 import { matchAnswer, offlineAnswerText } from "./lib/answersMatch.ts";
-// ponytail: ChatWidgets pulls in react-markdown, and this widget mounts on
+// ChatWidgets pulls in react-markdown, and this widget mounts on
 // every route as a closed button. Rendering a message is the FIRST moment any
 // of it is needed, and it cannot happen before someone opens the panel — so
 // the whole markdown renderer was arriving before `load` on every page for a
@@ -119,7 +119,7 @@ function formatProviderLabel(label: string): string {
 
 /**
  * Streams `/api/chat` exactly like chatClient.ts's shared `streamReply`, but
- * also surfaces this lane's two provenance signals: the provider-label header
+ * also surfaces this change's two provenance signals: the provider-label header
  * (known as soon as the response arrives) and the per-reply token count chat-
  * handler.ts appends as a final `{"tokens":N}` event just before `[DONE]`
  * (only chatClient's `{"text":...}` shape is otherwise recognised, so that
@@ -795,7 +795,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
   // explicit retry rather than "paste it again" — a long turn (only a JD can
   // exceed MAX_TURN_CHARS.user, same signal canRegenerate above already reads)
   // whose settled reply is one of the two "every provider failed" strings.
-  // ponytail: detected by substring match on chatErrorText's own output
+  // detected by substring match on chatErrorText's own output
   // rather than a threaded status enum — cheap and correct as long as those
   // two strings stay unique to the exhausted-provider path; promote to a
   // real status field if a third failure string ever needs the same signal.

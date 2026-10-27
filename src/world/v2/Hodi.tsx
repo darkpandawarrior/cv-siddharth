@@ -19,7 +19,7 @@ import { useReducedMotion } from "../../SceneActivity.tsx";
  * drag-to-orbit chase camera as its own separate layer on top.
  */
 
-// ── C1: SpawnFlyIn constants, named at the top of this file (this lane's own
+// ── C1: SpawnFlyIn constants, named at the top of this file (this change's own
 // task list, not v1's SpawnFlyIn.tsx — see the module doc below) ───────────
 
 /** world-v2-spec §4 "Fly-in": "descends from 60 m over the east ridge... in
@@ -81,7 +81,7 @@ export interface HodiProps {
  *  state every frame — mounted permanently (not remounted when autopilot
  *  toggles), so the curve's internal damped offset stays continuous and
  *  never has to catch up from a stale position when autopilot re-engages
- *  (see the module-level ponytail note on `motionTargetRef` below). */
+ *  (see the module-level shortcut note on `motionTargetRef` below). */
 function AutopilotProgressDriver({
   hodiStateRef,
   zStart,

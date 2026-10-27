@@ -26,7 +26,7 @@ export interface GlobeRow {
   source: string;
 }
 
-// The exact claim sentences named in this lane's own task list - verbatim,
+// The exact claim sentences named in this change's own task list - verbatim,
 // so claim-audit and a human reading both specs side by side see one wording.
 export const REACH_INSTALLS_CLAIM = `install floor across ${fleetStats.live} live listings (Play's own install bands, summed as floors)`;
 export const REACH_UPSTREAM_CLAIM = `${upstreamMergedPRs} merged PRs in a repository starred ${upstreamStars} times`;

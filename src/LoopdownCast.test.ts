@@ -8,7 +8,7 @@ import { writing } from "./data/writing.ts";
 
 // Named .test.ts, not .test.tsx, matching VoiceMeasured.test.ts / AnimatedMetric.test.ts:
 // written with createElement rather than JSX so it needs no change to
-// vitest.config.ts's include pattern (a file this lane does not own), which
+// vitest.config.ts's include pattern (a file this change does not own), which
 // only picks up src/**/*.test.ts.
 const html = renderToStaticMarkup(createElement(LoopdownCast));
 

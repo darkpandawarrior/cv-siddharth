@@ -21,13 +21,13 @@ import {
 } from "../streetPhotos.ts";
 import StreetPhotoViewer from "./streetPhotoViewer.tsx";
 
-/** WAVE 2 LANE W3 (street level: vector map, 3D buildings, street photos) owns this file. */
+/** W3 (street level: vector map, 3D buildings, street photos) owns this file. */
 
 const STREET_ZOOM = 16.5;
 const STREET_PITCH = 60;
 const STREET_BEARING = 0;
 const QUERY_DEBOUNCE_MS = 400;
-// WAVE 10 LANE P10B: real 3D terrain (AWS elevation-tiles-prod, Terrarium
+// P10B: real 3D terrain (AWS elevation-tiles-prod, Terrarium
 // PNG DEM, proxied through api/_lib/terrain-handler.ts — see that file for
 // the curl verification of the source's own zoom ceiling and encoding).
 // Tier 3 (throttled) stays flat per the brief; tier 1/2 get relief only once
@@ -37,25 +37,25 @@ const TERRAIN_HILLSHADE_LAYER_ID = "terrain-hillshade";
 const TERRAIN_MIN_ZOOM = 10;
 const TERRAIN_EXAGGERATION = 1.3; // modest — real relief, not a cartoon
 const TERRAIN_ATTRIBUTION = "Terrain: SRTM, courtesy of the U.S. Geological Survey, via AWS Open Data";
-// WAVE 6 LANE X5 hand-off hooks: below this the visitor is trying to zoom
+// X5 hand-off hooks: below this the visitor is trying to zoom
 // OUT past the surface's own floor -- "past its min zoom returns to the
 // globe" (the brief's own words). Below altitudeToStreetZoom's own MIN_Z
 // (12, cameraZoomGate.ts) with margin, so the widest seamless-zoom hand-off
 // never opens already sitting at/under this floor.
 const STREET_MIN_ZOOM = 11;
-// WAVE 6 LANE X5: a feed that never resolves (hangs, not fails) would
+// X5: a feed that never resolves (hangs, not fails) would
 // otherwise leave "Looking for street photos…" up forever -- the house rule
 // is "no invented/stale data", not "eventually say something", so this is a
 // real watchdog, not a repeat of the already-existing "loaded, zero results"
 // message below.
 const NO_FEATURES_TIMEOUT_MS = 3000;
-// "For Pune only" (this lane's brief): a loose radius, not an exact-equality
+// "For Pune only" (this change's brief): a loose radius, not an exact-equality
 // check — a fly-to that lands a few metres off Pune's own coordinate (e.g. a
 // registered entity's current position) should still count as Pune.
 const PUNE_EPSILON_DEG = 0.05;
 const FADE_MS = 300;
-// WAVE 6 LANE X5: restated from GlobeScene.tsx's own OrbitControls
-// min/maxDistance (out of this lane's file ownership; CameraDirector.tsx --
+// X5: restated from GlobeScene.tsx's own OrbitControls
+// min/maxDistance (out of this change's file ownership; CameraDirector.tsx --
 // a Canvas-side sibling this file can't reach into -- already restates the
 // same two numbers as its own fallback default when `controls` isn't
 // mounted). altitudeToStreetZoom's inverse needs the exact same band its
@@ -66,7 +66,7 @@ const ORBIT_MAX_ALTITUDE = GLOBE_RADIUS * 7 - GLOBE_RADIUS; // 36
 
 declare global {
   interface Window {
-    /** e2e-only seam (this lane's own brief, task 9), same shape as
+    /** e2e-only seam (this change's own brief, task 9), same shape as
      *  Inspector.tsx's own `__GLOBE_TEST_SELECT__`: no trigger lane's UI
      *  lives in this worktree, so a test flies here directly and switches
      *  the view itself. Read once on mount; a no-op in production since
@@ -94,7 +94,7 @@ function formatLatLon(lat: number, lon: number): string {
 
 /** Where the street map centres: `focus`'s own latlon, a registered entity's
  *  CURRENT position converted back to latlon, or Pune as the documented
- *  fallback (this lane's brief, task 1). */
+ *  fallback (this change's brief, task 1). */
 function resolveCenter(focus: Focus | null): { lat: number; lon: number } {
   if (focus?.kind === "latlon") return { lat: focus.lat, lon: focus.lon };
   if (focus?.kind === "entity") {
@@ -125,7 +125,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   const [photoStatus, setPhotoStatus] = useState<"loading" | "loaded" | "failed">("loading");
   const [selectedPhoto, setSelectedPhoto] = useState<StreetPhoto | null>(null);
   const [visible, setVisible] = useState(false);
-  // WAVE 10 LANE P10B: drives the attribution line's terrain credit — only
+  // P10B: drives the attribution line's terrain credit — only
   // true while the DEM source is actually loaded, tier-eligible, and past
   // TERRAIN_MIN_ZOOM (never claim a credit for a layer that isn't drawing).
   const [terrainState, setTerrainState] = useState<"off" | "loading" | "enabled" | "unreachable">("off");
@@ -134,7 +134,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   // that one only ever fires once a query has actually FINISHED).
   const [noFeaturesTimedOut, setNoFeaturesTimedOut] = useState(false);
   const noFeaturesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // WAVE 6 LANE X5: guards the zoom-out hand-off firing more than once per
+  // X5: guards the zoom-out hand-off firing more than once per
   // open — MapLibre's own "zoom" event fires on every frame of a wheel/pinch
   // gesture, not just the one that first crosses STREET_MIN_ZOOM.
   const exitedRef = useRef(false);
@@ -163,7 +163,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     photosRef.current = photos;
   }, [photos]);
 
-  // Fade in over the canvas; instant under reduced motion (this lane's
+  // Fade in over the canvas; instant under reduced motion (this change's
   // brief). Every branch sets state from inside a callback (rAF, or a 0ms
   // timeout standing in for one) rather than synchronously at the top of the
   // effect body, so a re-open always restarts the fade from 0 instead of
@@ -223,14 +223,14 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
   }, [active, selectedPhoto]);
 
   // Esc, handled locally as well as by CameraDirector's own global listener
-  // (out of this lane's file ownership — see the note on the `view ===
+  // (out of this change's file ownership — see the note on the `view ===
   // "street"` no-op there). Belt and braces: measured empirically (lane W3
   // QA), a keydown fired in the first ~second after this surface's own brand
   // new WebGL context is created sometimes never reaches — or never gets
   // acted on by — that OTHER listener (a real, reproducible race outside
   // this file's own code; a >=1s delay before the SAME keypress always
   // works). A surface the brief calls out by name ("Back to globe (Esc)")
-  // closing reliably belongs to this lane regardless of where the race
+  // closing reliably belongs to this change regardless of where the race
   // actually lives; setView is idempotent, so this firing alongside
   // CameraDirector's own handler on a normal press costs nothing.
   useEffect(() => {
@@ -256,10 +256,10 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
     const isTestMode = Boolean(window.__GLOBE_TEST_STREET__);
     const limit = TIER_PHOTO_LIMIT[tier];
     exitedRef.current = false;
-    // WAVE 6 LANE X5: read-once hand-off from the seamless zoom-in gesture
+    // X5: read-once hand-off from the seamless zoom-in gesture
     // (CameraDirector.tsx armed it right before calling setView("street")).
     // Absent one (the explicit street button, or a re-open), STREET_ZOOM/
-    // STREET_BEARING/STREET_PITCH are the pre-existing defaults this lane's
+    // STREET_BEARING/STREET_PITCH are the pre-existing defaults this change's
     // brief says to keep. Bearing/pitch matching the globe camera (not just
     // zoom) is the verifier-flagged blocking gap this pass fixes --
     // cameraOrientation.ts's cameraForwardToBearingPitch is what
@@ -303,7 +303,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
 
     (async () => {
       // maplibre-gl needs its own web worker for EVERY GeoJSON source and
-      // vector tile it parses (this lane's own photo-marker circle layer
+      // vector tile it parses (this change's own photo-marker circle layer
       // included) — without it, `map.loaded()`/`isSourceLoaded()` never turn
       // true and nothing queryable ever renders, though the map still LOOKS
       // fine (paint-only layers keep working). At runtime maplibre computes
@@ -325,7 +325,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
       // Re-copy both after any maplibre-gl version bump.
       const [{ Map: MaplibreMapCtor }] = await Promise.all([
         import("maplibre-gl"),
-        // CSS only ever loads from here — this lane's brief: maplibre-gl and
+        // CSS only ever loads from here — this change's brief: maplibre-gl and
         // its stylesheet load ONLY inside street view, their own lazy chunk.
         import("maplibre-gl/dist/maplibre-gl.css"),
       ]);
@@ -342,7 +342,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         // MapLibre's own default maxPitch is 60 -- below cameraOrientation.ts's
         // clamp ceiling of 85, so a real matched hand-off past 60 would
         // otherwise get silently re-clamped a second time, right here,
-        // regardless of what this lane computed.
+        // regardless of what this change computed.
         maxPitch: 85,
         attributionControl: false,
       });
@@ -385,7 +385,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         });
         void queryPhotos();
 
-        // WAVE 10 LANE P10B: raster-dem source over api/_lib/terrain-handler.ts
+        // P10B: raster-dem source over api/_lib/terrain-handler.ts
         // (Terrarium encoding — the format that route's PNG bytes are in).
         // Tier 3 never gets this source at all (house tier rule: "T3 minimal
         // or off", and a DEM source is real per-frame GPU/network cost this
@@ -469,7 +469,7 @@ export default function StreetView({ tier }: { tier: 1 | 2 | 3 }) {
         debounceRef.current = setTimeout(() => void queryPhotos(), QUERY_DEBOUNCE_MS);
       });
 
-      // WAVE 6 LANE X5: "zooming out of the street map past its min zoom
+      // X5: "zooming out of the street map past its min zoom
       // returns to the globe at the matching orbit distance over the same
       // point" (the brief's own words). `map.getCenter()` — not `focus`,
       // which is only where this surface OPENED — so panning around inside

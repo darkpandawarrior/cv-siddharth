@@ -11,7 +11,7 @@ import { xyzToLatLon } from "../cameraMath.ts";
  *  here through a local cast rather than a `declare global` augmentation
  *  (that file already augments the same global with its own, larger shape;
  *  two conflicting augmentations of the same property is a TS2717 error).
- *  `topQuakes` and `filters` are this lane's additions to that existing
+ *  `topQuakes` and `filters` are this change's additions to that existing
  *  debug object — see HazardLayer.tsx's own comment. */
 interface HazardDebugSlice {
   quakes: number;

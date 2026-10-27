@@ -271,7 +271,7 @@ const siteSurfaces = [
   },
   {
     slug: "resume",
-    deep: true, // ponytail: was the /#resume hash-redirect target pre-SSR; now just a truthy flag for the filter below
+    deep: true, // was the /#resume hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
       accent: "#3ddc84",
       ink: "#05070a",
@@ -286,7 +286,7 @@ const siteSurfaces = [
   },
   {
     slug: "writing",
-    deep: true, // ponytail: was the /#loopdown hash-redirect target pre-SSR; now just a truthy flag for the filter below
+    deep: true, // was the /#loopdown hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
       accent: "#8f74ff",
       ink: "#0b0a14",

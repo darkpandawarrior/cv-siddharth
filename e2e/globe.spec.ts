@@ -10,7 +10,7 @@ import { fleetStats } from "../src/data/store.ts";
 import type { Page } from "@playwright/test";
 
 /**
- * /globe, end to end (living-ledger-spec.md#6.3, this lane's own acceptance
+ * /globe, end to end (living-ledger-spec.md#6.3, this change's own acceptance
  * list). Fixed clock, every /api/* the route touches routed to a committed
  * fixture (G10). The Black Marble mask is NOT mocked: it ships same-origin
  * from public/sky/, and mocking it is how a production 404 once passed this
@@ -43,7 +43,7 @@ type Box = { x: number; y: number; width: number; height: number };
 
 /** Splits the globe's own screen square into the day/night halves that
  *  `data-day-side` (GlobeScene's SubsolarProbe) names — the "clip regions
- *  computed from the subsolar point projection" this lane's acceptance line
+ *  computed from the subsolar point projection" this change's acceptance line
  *  asks for, computed once in-page and read here as a plain string. */
 function dayNightClips(box: Box, daySide: string): { day: Box; night: Box } {
   const half = (b: Box, side: "left" | "right" | "top" | "bottom"): Box => {

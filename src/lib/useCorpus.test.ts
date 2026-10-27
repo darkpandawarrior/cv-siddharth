@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fetchCorpus } from "./useCorpus.ts";
 
-// ponytail: same shape as useLiveSignal.test.ts — the extracted plain function
+// same shape as useLiveSignal.test.ts — the extracted plain function
 // is the whole contract (URL, parse, throw-on-not-ok), so no renderHook and no
 // new devDependency.
 describe("fetchCorpus", () => {

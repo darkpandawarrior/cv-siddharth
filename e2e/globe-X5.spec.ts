@@ -10,8 +10,8 @@ import type { Locator, Page } from "@playwright/test";
  * cinematic skippable first-visit intro. Fixed clock, every /api/* route
  * mocked (G10, same discipline as e2e/globe.spec.ts). Street level's own
  * vector tiles/photos fixtures are lane W3's (e2e/fixtures/street/) --
- * reused rather than duplicated, same as this lane's own StreetView.tsx
- * hand-off hooks sit inside a file this lane doesn't otherwise own.
+ * reused rather than duplicated, same as this change's own StreetView.tsx
+ * hand-off hooks sit inside a file this change doesn't otherwise own.
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
@@ -155,7 +155,7 @@ test.describe(`seamless zoom into street level and back at ${width}px`, () => {
   // Two different orbit orientations, through the seam StreetView.tsx arms
   // with (the exact StreetHandoff box the real zoom-hold gesture uses, not a
   // shortcut around it) -- proving the hand-off actually reaches MapLibre's
-  // own camera, not just this lane's pure math module (cameraOrientation.test.ts
+  // own camera, not just this change's pure math module (cameraOrientation.test.ts
   // already covers that in isolation). A separate `test()` per orientation
   // (not a loop over one `page`) so each gets Playwright's own fresh
   // page/context -- `addInitScript` accumulates across navigations on a

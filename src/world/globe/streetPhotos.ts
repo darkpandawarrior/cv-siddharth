@@ -1,4 +1,4 @@
-// WAVE 2 LANE W3 (street level). Pure Panoramax parsing, bbox math and the
+// W3 (street level). Pure Panoramax parsing, bbox math and the
 // MapLibre source/layer ids the street map's photo-marker layer draws from —
 // no maplibre, no three, no DOM, no React. Same "render layer wraps pure
 // math" split as quake.ts/eonet.ts (layers/) elsewhere in this house.
@@ -14,7 +14,7 @@
 // panoramax.openstreetmap.fr with CORS "*", a different host than the search
 // API — both need their own CSP entries (see csp.ts).
 
-/** The one style this lane's street map ever loads — verified 200, CORS "*",
+/** The one style this change's street map ever loads — verified 200, CORS "*",
  *  and already ships a `building-3d` fill-extrusion layer (source-layer
  *  "building", `render_min_height`/`render_height` properties, minzoom 14)
  *  — no custom extrusion layer needed, the style already draws it. */
@@ -22,7 +22,7 @@ export const LIBERTY_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
 
 export const PANORAMAX_SEARCH_ENDPOINT = "https://api.panoramax.xyz/api/search";
 
-// ponytail: a flat cap, not an adaptive density budget — Panoramax bboxes at
+// a flat cap, not an adaptive density budget — Panoramax bboxes at
 // street zoom are small enough (a few hundred metres) that a real query
 // rarely nears this; raise it if a dense city ever does.
 export const PANORAMAX_QUERY_LIMIT = 200;

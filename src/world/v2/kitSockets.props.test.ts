@@ -8,11 +8,11 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import hullProfile from "./hullProfile.json" with { type: "json" };
 
 /**
- * P2-07d's own gate (this lane's acceptance list): hodi-boatman.glb's hull
+ * P2-07d's own gate (this change's acceptance list): hodi-boatman.glb's hull
  * half-beam, sampled from the exported mesh, matches hullProfile.json
  * within 2 cm at 9 stations (the single-source contract master-plan.md#M44
  * makes, restated by this file's own break-it test); misc-kit.glb carries
- * the six new nodes this lane's task list names; diya-kit.glb stays
+ * the six new nodes this change's task list names; diya-kit.glb stays
  * commit-diyas-only (living-ledger-spec §10 C7); every GLB stays within its
  * world-v2-spec.md §6 byte budget. "Not built yet" skips rather than
  * fails, this repo's usual convention (kitSockets.arch1/2, .audit, .nature).
@@ -93,7 +93,7 @@ describe("kitSockets.props (P2-07d: hodi + boatman, diya kit, misc kit)", () => 
   });
 });
 
-// world-v2-spec.md §6 per-asset byte budgets, this lane's acceptance list.
+// world-v2-spec.md §6 per-asset byte budgets, this change's acceptance list.
 const GLB_BUDGET_KB: Record<string, number> = {
   "hodi-boatman": 380,
   "diya-kit": 15,
@@ -140,7 +140,7 @@ function stationZ(t: number): number {
   return -t * (HULL_LENGTH / 2);
 }
 
-const HULL_TOLERANCE_M = 0.02; // 2 cm, this lane's acceptance list
+const HULL_TOLERANCE_M = 0.02; // 2 cm, this change's acceptance list
 const STATIONS = [-0.8, -0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8] as const;
 
 async function loadGlbScene(path: string): Promise<THREE.Group> {

@@ -13,7 +13,7 @@ import bpy
 # compressed mesh in an extra decode-transform parent node (quantization
 # requires it; only -noq, full precision with no meshopt benefit at all,
 # turns it off), which would silently break that lookup at all three call
-# sites. None of them are owned by this lane, and there is no size reason to
+# sites. None of them are owned by this change, and there is no size reason to
 # risk it.
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / '.showcase-work/blender-20260923/signal-marker'

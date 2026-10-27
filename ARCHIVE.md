@@ -11,7 +11,7 @@ flags a row whose `reviewBy` has passed. Removal then follows the row's
 ## Marker format
 
 ```
-// ponytail: archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>
+// archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>
 ```
 
 `<id>` matches an entry in `src/archive/registry.ts` (`ARCHIVE`), and

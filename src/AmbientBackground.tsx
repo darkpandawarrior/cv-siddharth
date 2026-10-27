@@ -28,7 +28,7 @@ export function AmbientBackground() {
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const isSmallScreen = window.matchMedia("(max-width: 767px)").matches;
-    // ponytail: navigator.connection is unstandardised (no DOM lib type), so this
+    // navigator.connection is unstandardised (no DOM lib type), so this
     // stays a duplicated inline check like supportsWebGL() above rather than a
     // shared hook for one boolean.
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;

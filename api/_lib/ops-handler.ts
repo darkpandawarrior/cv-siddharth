@@ -100,7 +100,7 @@ const EMPTY: Ops = { connected: false, stale: false, repo: REPO, runs: [], never
 /**
  * The last-good read of each independent source, kept per warm instance.
  *
- * ponytail: module-scope only — it resets on a cold start and is never
+ * module-scope only — it resets on a cold start and is never
  * shared across instances. A KV/edge-cache-backed store would survive both;
  * add one if the board is still going empty after a cold start in practice.
  * Injectable (default param, same shape as chat-handler.ts's rate-limit

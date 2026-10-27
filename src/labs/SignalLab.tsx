@@ -53,7 +53,7 @@ import { Figure } from "./Figure.tsx";
 // tile came back stamped "API KEY REQUIRED", which is what a visitor actually
 // saw under the route, on phone and desktop alike. Standard OSM raster tiles
 // need no key at all and never have.
-// ponytail: light basemap only — a genuinely free dark tile source would need
+// light basemap only — a genuinely free dark tile source would need
 // a paid/keyed provider (Stadia, Mapbox) wired through an env var. Swap
 // TILE_URL for one if the dark theme parity is ever worth that setup.
 const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";

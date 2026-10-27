@@ -33,7 +33,7 @@ const outRoot = join(root, "heavy", "excelsior", "text");
 const force = process.argv.includes("--force");
 
 // Uniform block of text — a reasonable default for a magazine's justified
-// columns. ponytail: this is a one-line calibration knob, not a heuristic;
+// columns. this is a one-line calibration knob, not a heuristic;
 // if a specific edition comes back unusably garbled, re-run it by hand with
 // a different --psm rather than building multi-pass PSM detection for a
 // three-edition corpus.

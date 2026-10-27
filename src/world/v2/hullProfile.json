@@ -1,5 +1,5 @@
 {
-  "note": "Hodi hull half-beam (m), sampled along normalized hull length t in [-1,1] (bow..midship..stern). Single source for the water shader wake term (this lane, world-v2-spec section 6 heroprops) and the Blender hull mesh (P2-07d, master-plan M44). Formula: halfBeam(t) = maxHalfBeam * cos(pi/2*abs(t))^1.35, a smooth symmetric taper to a point at both ends, sampled every 0.05 of t.",
+  "note": "Hodi hull half-beam (m), sampled along normalized hull length t in [-1,1] (bow..midship..stern). Single source for the water shader wake term (this change, world-v2-spec section 6 heroprops) and the Blender hull mesh (P2-07d, master-plan M44). Formula: halfBeam(t) = maxHalfBeam * cos(pi/2*abs(t))^1.35, a smooth symmetric taper to a point at both ends, sampled every 0.05 of t.",
   "length": 9.5,
   "samples": [
     [

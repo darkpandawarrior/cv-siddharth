@@ -161,7 +161,7 @@ for (const slug of liveTargetSlugs) {
     // The src is whatever HEAVY_ASSET_BASE resolves to in this run's build —
     // asserting it is non-empty and matches the asset-base doc's own
     // production default confirms the iframe points at the moved origin, not
-    // a leftover same-origin public/ path this lane's whole point was to kill.
+    // a leftover same-origin public/ path this change's whole point was to kill.
     await expect(frame).toHaveAttribute("src", /^(https:\/\/darkpandawarrior\.github\.io\/cv|https?:\/\/localhost(:\d+)?)\/.+-app\/index\.html$/);
     await expect(frame).toHaveCSS("opacity", "1", { timeout: 90_000 });
   });

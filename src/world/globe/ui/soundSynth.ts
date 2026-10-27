@@ -1,16 +1,16 @@
-// WAVE 6 LANE X6 (opt-in sound). WebAudio-synthesized cues only — no audio
+// X6 (opt-in sound). WebAudio-synthesized cues only — no audio
 // files, per the brief. One shared AudioContext + master gain, created
 // lazily on the toggle's own click (a real user gesture; every browser
 // blocks audio before one). Each play* function wires a short-lived
 // oscillator or noise burst straight to the master gain and disconnects
 // itself on `onended` — a handful of cues a minute never needs a node pool.
-// ponytail: no unit test here — this is the impure "make a sound" glue
+// no unit test here — this is the impure "make a sound" glue
 // (same as HexbinLayer.tsx's own instancing has none); the decision logic
 // this glue is driven by lives in soundTriggers.ts and IS tested there.
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 
-// ponytail: one fixed master level, add a user-facing slider if the field
+// one fixed master level, add a user-facing slider if the field
 // ever asks for one — the brief's own UI for this is "a small icon button".
 const MASTER_VOLUME = 0.35;
 

@@ -508,7 +508,7 @@ const entryOfKey = (k: string) => anthologyEntries.find((e) => keyOfEntry(e) ===
 // widens to an array the moment one teller carries several, so both shapes are
 // accepted here rather than this needing a second edit that day.
 //
-// ponytail: a record with no key at all files under no season and does not
+// a record with no key at all files under no season and does not
 // render. That is caught upstream, where build-registry.mjs holds both the
 // keys and the entries and can throw on one that resolves to nothing; it
 // cannot be caught here, because here there is nothing to compare against.
@@ -939,7 +939,7 @@ function StarmapTab({ world, at }: { world?: string; at?: number }) {
   // world's own key names the season. The season is raised, and every other
   // world keeps its position, its state colour and its click target, so the
   // sky stays the same sky.
-  // ponytail: derived from the arrival, with no control of its own. A season
+  // derived from the arrival, with no control of its own. A season
   // picker down here would be a fourth way to choose a season on a page whose
   // switch row is already one of the other three.
   // The earliest record the arriving world carries. A place the account came

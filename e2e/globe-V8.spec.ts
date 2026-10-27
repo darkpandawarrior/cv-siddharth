@@ -11,8 +11,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * WAVE 7 LANE 8 (eclipse paths on the time machine). Fixed clock, every
- * /api/* the base page touches routed to a fixture (G10) -- this lane's own
+ * 8 (eclipse paths on the time machine). Fixed clock, every
+ * /api/* the base page touches routed to a fixture (G10) -- this change's own
  * layer makes no network call at all, astronomy-engine runs entirely
  * client-side, so nothing here needs a new fixture.
  */
@@ -101,14 +101,14 @@ test.describe("time scrubber: Next eclipse jump", () => {
     await page.waitForTimeout(500);
     expect(eclipseChunkUrls, `eclipse chunk requested before the jump was clicked:\n${eclipseChunkUrls.join("\n")}`).toEqual([]);
 
-    // Keyboard, not a mouse click: measured (this lane's own report) that
-    // ExploreBar's reserved centre band (Globe.tsx, not owned by this lane)
+    // Keyboard, not a mouse click: measured (this change's own report) that
+    // ExploreBar's reserved centre band (Globe.tsx, not owned by this change)
     // already overlaps this row's rightmost ~45px even with the eclipse
     // button removed entirely (x 531.5 vs the row's own x 574.5) -- a real,
-    // pre-existing composition gap this lane's one small icon button did not
+    // pre-existing composition gap this change's one small icon button did not
     // create. Focusing and pressing Enter proves the button is keyboard-
     // reachable (a house requirement either way) without depending on a
-    // mouse hit-test this lane cannot fix from inside TimeScrubber.tsx alone.
+    // mouse hit-test this change cannot fix from inside TimeScrubber.tsx alone.
     const jumpButton = page.getByRole("button", { name: "Next eclipse" });
     await expect(jumpButton).toBeVisible();
     await jumpButton.focus();

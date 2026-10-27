@@ -1,4 +1,4 @@
-// ponytail: no .test.tsx here — vitest.config.ts runs this project with no
+// no .test.tsx here — vitest.config.ts runs this project with no
 // jsdom and an `include` glob scoped to `*.test.ts` (see EvidenceChip.test.ts,
 // themeColor.test.ts and friends: this repo deliberately tests React logic as
 // plain functions and reaches for `renderToString` only, never

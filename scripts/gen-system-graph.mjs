@@ -21,7 +21,7 @@
  * computed by BFS layering from "sid" rather than hand-placed, and the
  * project → portfolio `runs-here` edges are pulled from the graph rather than
  * re-declared.
- * // ponytail: the constellation's node/label/color manifest and its
+ * // the constellation's node/label/color manifest and its
  * // "declared" hub-spoke wiring stay a small hand-curated table (same
  * // shape as RELATED_SERIES — a legibility choice, not a measurement).
  * // Upgrade path if the full graph ever needs its own view: a second,

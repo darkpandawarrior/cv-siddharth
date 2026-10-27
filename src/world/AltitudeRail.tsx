@@ -22,7 +22,7 @@ const STOPS: { altitude: Altitude; label: string }[] = [
  *
  * Navigation prefers `document.startViewTransition` (Chromium), falls back
  * to a plain 180 ms opacity swap done with inline styles (no shared CSS file
- * is owned by this lane), and cuts instantly under reduced motion: exactly
+ * is owned by this change), and cuts instantly under reduced motion: exactly
  * the three-tier contract the spec names, and the one place it is decided so
  * neither mount duplicates it.
  */

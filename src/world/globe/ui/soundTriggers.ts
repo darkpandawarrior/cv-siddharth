@@ -1,6 +1,6 @@
-// WAVE 6 LANE X6 (opt-in sound and haptics). Pure "does this real event
+// X6 (opt-in sound and haptics). Pure "does this real event
 // deserve a cue" logic — no WebAudio, no DOM, no React — same split as every
-// other *.ts/*.tsx pair in this lane (hexbin.ts / HexbinLayer.tsx,
+// other *.ts/*.tsx pair in this change (hexbin.ts / HexbinLayer.tsx,
 // sparkSeries.ts / Inspector.tsx). soundSynth.ts is the only file that
 // actually touches an AudioContext; this file decides WHEN to call it, and
 // is what SoundToggle.tsx's own effects and this file's own test cover.

@@ -1,4 +1,4 @@
-// ponytail: .test.ts, not .test.tsx — see GatewayCompare.test.ts's own note.
+// .test.ts, not .test.tsx — see GatewayCompare.test.ts's own note.
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";

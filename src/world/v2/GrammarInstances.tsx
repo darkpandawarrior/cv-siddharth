@@ -1,5 +1,5 @@
 /**
- * Placeholder-grammar instances (this lane's own task list): every
+ * Placeholder-grammar instances (this change's own task list): every
  * `Feature` in a `WorldModel` whose `form` no `kits.ts` entry claims yet is
  * drawn as one of three coarse instanced primitives — a basalt box, a kite
  * quad or a niche ring (visual-catalogue.md's own placeholder language) —
@@ -10,7 +10,7 @@
  * assets resolve") — a placeholder itself has nothing to resolve FROM, so
  * this file does not call `useReveal`; the first kit that swaps a
  * placeholder for a real GLB is what wraps its own load in it.
- * ponytail: wire `useReveal` in here too the day this file needs to hide a
+ * wire `useReveal` in here too the day this file needs to hide a
  * genuine pop (a large batch of features appearing at once, say, on a
  * cache-cold load) — nothing about `reveal.ts`'s contract needs to change
  * for that, it just needs a caller.

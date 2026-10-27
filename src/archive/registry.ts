@@ -10,7 +10,7 @@
 // the lane adds a row here, an ARCHIVE.md section under the matching anchor,
 // and reaches it through at least one easter-egg entry point with an e2e
 // test, then marks every touchpoint:
-//   // ponytail: archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>
+//   // archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>
 // registry.test.ts enforces that every marker has a row and every row is
 // real (files, tests and entry points all exist) - see that file for what
 // it checks and, just as important, what it deliberately does not.
@@ -34,5 +34,5 @@ export type ArchiveEntry = {
 };
 
 // The world-v1 row arrives with P3-07 (world-v1 archived behind five hidden
-// entry points per M70); this lane ships the type and the empty registry.
+// entry points per M70); this change ships the type and the empty registry.
 export const ARCHIVE: ArchiveEntry[] = [];

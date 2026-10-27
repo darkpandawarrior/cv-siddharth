@@ -9,7 +9,7 @@ import type { Page } from "@playwright/test";
 test.use({ serviceWorkers: 'block' });
 
 /**
- * WAVE 7 LANE V6 (non-visual scene summary). Fixed clock, every /api/* route
+ * V6 (non-visual scene summary). Fixed clock, every /api/* route
  * mocked (G10, same discipline as e2e/globe.spec.ts) — this spec never
  * depends on a live network. `2026-09-24T12:27:00+05:30` is `06:57:00Z`, so
  * the daily VIIRS base's own `lagDays: 1` date is `2026-09-23` (the same

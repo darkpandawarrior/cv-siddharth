@@ -24,7 +24,7 @@ export const DEFAULT_MIRRORS = [
   "https://overpass.kumi.systems/api/interpreter",
 ];
 
-// world-v2's drawn river axis extent (valley.ts, not owned by this lane) --
+// world-v2's drawn river axis extent (valley.ts, not owned by this change) --
 // pinned as a constant here so `scale` (world m per real m) is self-contained.
 const BASIN_CHORD_M = 620;
 

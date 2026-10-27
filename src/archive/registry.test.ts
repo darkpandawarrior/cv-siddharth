@@ -22,7 +22,7 @@ import { ARCHIVE, type ArchiveEntry } from "./registry.ts";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const MARKER_RE =
-  /ponytail: archive\(([^)]+)\) until (\d{4}-\d{2}-\d{2}); removal recipe in ARCHIVE\.md#(\S+)/g;
+  /archive\(([^)]+)\) until (\d{4}-\d{2}-\d{2}); removal recipe in ARCHIVE\.md#(\S+)/g;
 const ANCHOR_RE = /<a id="([^"]+)">/g;
 
 // Binary/compiled extensions a marker could never legibly live in - mirrors
@@ -126,7 +126,7 @@ describe("archive registry (real scan)", () => {
       const archiveMd = readFileSync(join(root, "ARCHIVE.md"), "utf8");
       expect(validate(ARCHIVE, markers, anchorsIn(archiveMd))).toEqual([]);
     },
-    // ponytail: scanning ~2k git-tracked files synchronously is fine alone
+    // scanning ~2k git-tracked files synchronously is fine alone
     // (~4s) but can miss the 5s default under full-suite CPU contention;
     // raise the ceiling here rather than optimizing the scan.
     15000,
@@ -135,7 +135,7 @@ describe("archive registry (real scan)", () => {
   it("ARCHIVE.md carries the marker format verbatim", () => {
     const archiveMd = readFileSync(join(root, "ARCHIVE.md"), "utf8");
     expect(archiveMd).toContain(
-      "// ponytail: archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>",
+      "// archive(<id>) until <reviewBy>; removal recipe in ARCHIVE.md#<id>",
     );
   });
 });

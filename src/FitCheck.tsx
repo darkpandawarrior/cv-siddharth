@@ -8,7 +8,7 @@ import { CHAT_FALLBACK, CHAT_UNAVAILABLE, JD_MAX_CHARS, isJdNearCap } from "./li
 import { useJdFit } from "./lib/useJdFit.ts";
 import { ChatMessageBody } from "./ChatWidgets.tsx";
 
-// ponytail: ChatWidgets pulls in react-markdown — `<Hydrate when={load()} split>`
+// ChatWidgets pulls in react-markdown — `<Hydrate when={load()} split>`
 // below keeps it in its own chunk so the home page's initial bundle doesn't pay
 // for it until a JD is actually submitted, same pattern src/FloatingChat.tsx
 // already uses for the same component.
@@ -52,7 +52,7 @@ export function FitCheck() {
 
   // Only the two "every provider failed" strings get a retry — a 429 or a
   // too-long rejection isn't fixed by trying again with the same text.
-  // ponytail: same substring-match heuristic as FloatingChat's canRetryJd —
+  // same substring-match heuristic as FloatingChat's canRetryJd —
   // see its comment for the ceiling.
   const canRetry = fit.done && (fit.content.includes(CHAT_UNAVAILABLE) || fit.content.includes(CHAT_FALLBACK));
 

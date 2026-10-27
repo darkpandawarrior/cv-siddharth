@@ -38,7 +38,7 @@ export const QUESTIONS = [
  * else, especially a trailing colon or a bare word, is the truncation shape
  * this probes for.
  *
- * ponytail: a heuristic, not a parser — same ceiling as chat-handler.ts's
+ * a heuristic, not a parser — same ceiling as chat-handler.ts's
  * lastSentenceEnd, which this deliberately mirrors so the probe and the fix
  * agree on what "complete" means.
  */

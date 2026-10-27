@@ -134,7 +134,7 @@ describe("EOX_LEVELS (WGS84 / GoogleCRS84Quad)", () => {
   });
 
   // Break-it: without the `levels` default staying GIBS_LEVELS, every existing
-  // GIBS caller (tileSelect.ts, unowned by this lane) would silently read the
+  // GIBS caller (tileSelect.ts, unowned by this change) would silently read the
   // wrong table the moment EOX_LEVELS existed alongside it.
   it("break-it: omitting the levels param still reads GIBS_LEVELS, not EOX_LEVELS", () => {
     expect(lonStepDeg(1)).not.toBeCloseTo(lonStepDeg(1, EOX_LEVELS));

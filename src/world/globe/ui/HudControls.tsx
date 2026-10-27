@@ -82,7 +82,7 @@ export interface GlobeHudProps {
  *
  * LANE U1 (composition): used to wrap itself in its own absolutely
  * positioned top-left corner. Six lanes each doing that independently is the
- * bug this lane exists to fix — this now returns a flat run of pills, and
+ * bug this change exists to fix — this now returns a flat run of pills, and
  * Globe.tsx's single shared top-row bar lays them out alongside the time bar
  * and the tour/back-to-orbit pills, so the whole row wraps together instead
  * of five components silently overlapping. Every pill keeps the same ~30px
@@ -102,7 +102,7 @@ export default function GlobeHud({ sky, tier, hasWebGL, onZoomIn, onZoomOut, aut
   // LANE C2: "x" toggles X-ray mode from anywhere on the page, not just
   // while a control has focus -- inlined rather than a shared helper: the
   // only other typing-target guard in this tree (GlobeScene.tsx's own, for
-  // +/- zoom) lives in a file this lane doesn't own.
+  // +/- zoom) lives in a file this change doesn't own.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "x" && e.key !== "X") return;

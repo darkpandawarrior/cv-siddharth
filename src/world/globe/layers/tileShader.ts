@@ -1,9 +1,9 @@
-// WAVE 2 LANE W1 (deep zoom): the two tile fragment shaders. Both reuse
+// W1 (deep zoom): the two tile fragment shaders. Both reuse
 // sun.ts's shared VERT (vW world normal, vN view normal, vV view dir, vUv) —
 // every earth-adjacent mesh in this scene compiles the same vertex stage, per
 // that file's own comment. Uniforms are always passed via `args` at material
 // construction (never as a `uniforms` prop) — shaderUniforms.test.ts guards
-// this repo-wide; see gibs.test.ts's twin (this lane may not edit that file,
+// this repo-wide; see gibs.test.ts's twin (this change may not edit that file,
 // but the same rule applies here).
 
 /** The base-imagery tile shader: samples the tile's own texture and fades

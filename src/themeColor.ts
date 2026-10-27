@@ -17,7 +17,7 @@
 
 /** Raw token value, e.g. "#3ddc84". For canvas ctx and CSS string props. */
 export function readToken(varName: string, fallback: string): string {
-  // ponytail: no cache. getComputedStyle is cheap next to a WebGL frame, and a
+  // no cache. getComputedStyle is cheap next to a WebGL frame, and a
   // cache would need invalidating on every theme change — that is the bug we
   // are fixing, reintroduced one layer up.
   if (typeof document === "undefined") return fallback; // SSR / test env
