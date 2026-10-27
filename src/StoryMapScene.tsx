@@ -154,7 +154,7 @@ function rectsOverlap(a: DOMRect, b: DOMRect): boolean {
  *  interval rather than every frame — text position is what changes (camera
  *  drag/orbit), and re-measuring 14-ish DOM rects at 60fps buys nothing a
  *  visitor could perceive.
- *  // ponytail: O(n²) pairwise-via-linear-scan below — fine at this node
+ *  // O(n²) pairwise-via-linear-scan below — fine at this node
  *  // count; a spatial index only earns its keep past ~50 nodes. */
 function useLabelCollision(hoverRef: { current: string | null }) {
   const labels = useRef<Map<string, HTMLElement>>(new Map());

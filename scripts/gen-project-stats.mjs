@@ -37,8 +37,8 @@
 // today has that field. Adding a member without it is a real `tsc` error at
 // every such call site, and even where it slipped past the type checker it
 // printed "undefined modules" on the live Candidai card. Neither of those
-// reader files is owned by this lane (P1-10) or any other, so the fix has to
-// hold on this lane's side of the fence: candidai/portfolio's fields live
+// reader files is owned by this change (P1-10) or any other, so the fix has to
+// hold on this change's side of the fence: candidai/portfolio's fields live
 // next to `projectStats` in this same file, under their own name, so no
 // existing reader's assumption about `projectStats`'s shape changes.
 //

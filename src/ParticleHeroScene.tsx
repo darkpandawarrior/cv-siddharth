@@ -140,7 +140,7 @@ function Swarm({ count, reducedMotion, interactive }: { count: number; reducedMo
   const drag = useRef({ on: false, x: 0, startX: 0, startY: 0, moved: false, vel: 0 });
   const parallax = useRef(0);
   // Tap/click kick: a single decaying scalar (0..1), not a per-point buffer —
-  // ponytail: pulses every point outward from the swarm's own center rather
+  // pulses every point outward from the swarm's own center rather
   // than raycasting the exact tap position onto a morphing point cloud (points
   // are sparse and hard to hit-test precisely); upgrade to a localized kick if
   // that precision is ever worth the raycast cost.

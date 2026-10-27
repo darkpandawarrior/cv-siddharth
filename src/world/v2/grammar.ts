@@ -4,12 +4,12 @@
  *
  * Every rule's `source` reads ONLY through the `Ledger` object — never
  * `src/data/*` directly (ledger.ts is the sole importer; purity.test.ts and
- * this lane's own `rg` check hold that line for every module here).
+ * this change's own `rg` check hold that line for every module here).
  *
  * NOTE ON PER-SOURCE STAMPS. Several table rows in living-ledger-spec §3.3
  * name a specific source file's own `generatedAt` (e.g. "projectStats
  * generatedAt", "writingGeneratedAt"). `Ledger` (frozen by P2-03a, which
- * this lane does not own) exposes only ONE combined `generatedAt` — the max
+ * this change does not own) exposes only ONE combined `generatedAt` — the max
  * of every source's stamp. Every rule below uses that combined stamp for
  * dateless/snapshot dating rather than reaching around the ledger into
  * `src/data/*` for a narrower one. This is a deliberate, honest
@@ -189,7 +189,7 @@ interface BenchSlug {
   modules: number | null;
 }
 // projectStats' own registry (ledger.ts, P2-03a) has no slot for slugs with
-// no measured `modules` field — Ledger doesn't expose kmpAdoption (this lane
+// no measured `modules` field — Ledger doesn't expose kmpAdoption (this change
 // doesn't own ledger.ts to add it). The two unmeasured slugs are named here
 // as a plain fact, not read from src/data/* (living-ledger §3.3 G3: "4
 // measured, 2 unmeasured").
@@ -317,7 +317,7 @@ type StoneRow =
 // `Ledger` (frozen by P2-03a) exposes `upstreamMergedPRs` for career-ops-hq
 // specifically (its own doc comment says so) but no per-org total for any
 // other upstream. For every OTHER org, the curated `openSource` array is the
-// only total this lane can honestly read through the ledger, and the house
+// only total this change can honestly read through the ledger, and the house
 // invariant (ossNumbers.test.ts: "the curated list is exhaustive here" for
 // openMF) is exactly what makes that total correct today, not a guess.
 function orgTotal(ledger: Ledger, org: string, curatedCount: number): number {
@@ -683,7 +683,7 @@ const G13_SITE_COURSES: GrowthRule<CourseRow> = {
 // G14 w:<landmark>:<field> — the structural facets world-v2's own kits read
 // (bridge, doori, gaddi, paymentslab-kmp, employer flights). Fields the
 // ledger cannot answer (case-study registers, room-chhatri counts,
-// repoStats-driven tile counts) are out of this lane's reach — see the lane
+// repoStats-driven tile counts) are out of this change's reach — see the lane
 // report.
 // ─────────────────────────────────────────────────────────────────────────
 interface FacetRow {

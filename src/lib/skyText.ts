@@ -1,4 +1,4 @@
-// Pure row formatters for this lane's computed sky values (moon, stars,
+// Pure row formatters for this change's computed sky values (moon, stars,
 // festival/meteor calendar, season) — the counterpart to ledgerText.ts
 // (weather/air/river) and signalsText.ts (chess/CI/downloads). Every place
 // that renders one of these reads the same sentence (master-plan.md#M17):
@@ -49,7 +49,7 @@ export function normalMmForDate(date: Date): number {
   return PUNE_NORMALS_MM[idx] ?? 0;
 }
 
-/** Thin wrapper over ledgerText's seasonRow (P1-00): this lane's only job for
+/** Thin wrapper over ledgerText's seasonRow (P1-00): this change's only job for
  *  the season row is supplying the normal it was built without yet — the
  *  wording itself stays in one place. */
 export function seasonRow(s: Season | null, date: Date): string {

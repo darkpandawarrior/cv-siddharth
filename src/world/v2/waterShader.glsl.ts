@@ -282,7 +282,7 @@ vec4 sampleFlow(vec2 xz) {
 // Mirrors hullProfile.json's own cos^1.35 taper (hullProfile.test.ts pins
 // the sampled curve; this reconstructs its SHAPE from the profile's own
 // length/max-half-beam rather than a hand-typed second literal).
-// ponytail: an analytic envelope, not a per-sample texture lookup of the
+// an analytic envelope, not a per-sample texture lookup of the
 // full curve — adequate for a wake silhouette seen through moving water.
 // Upgrade to a 1D LUT baked straight from hullProfile.json's samples if the
 // wake ever needs the exact cross-section rather than its envelope.

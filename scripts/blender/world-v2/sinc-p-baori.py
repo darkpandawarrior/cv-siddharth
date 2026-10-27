@@ -11,7 +11,7 @@ already quotes publicly.
 Kit: 4 named `level.*` rings (widest/shallowest to narrowest/deepest) + 7
 `pillar.*` sockets ringing the rim, one of them `pillar.deepseek` (the
 runtime lights this one cyan and hovers the published dissent line; the
-other six are this lane's task list's generic "7 pillar sockets", not
+other six are this change's task list's generic "7 pillar sockets", not
 individually named model families this repo has no public source for).
 
 Run with: blender --background --factory-startup --disable-autoexec

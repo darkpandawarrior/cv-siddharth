@@ -1,4 +1,4 @@
-// WAVE 6 LANE X1 (live world feed): one situation-room timeline of
+// X1 (live world feed): one situation-room timeline of
 // everything happening on /globe right now. Every other layer (hazards,
 // pulses, satellites, presence, together) calls `publish()` with a small,
 // self-describing item; this file only owns the ring buffer and the pure

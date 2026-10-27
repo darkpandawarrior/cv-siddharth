@@ -42,7 +42,7 @@ const PROJECT_WORDS: { slug: string; words: Set<string> }[] = projects.map((p) =
  * word-overlap match rather than a semantic one (a skill and a project share
  * a real, non-stopword word). Good enough for "1-3 project links under a
  * filtered skill", not for anything asserting a project does NOT use a skill.
- * ponytail: O(skills × projects × words), fine at this corpus size — index by
+ * O(skills × projects × words), fine at this corpus size — index by
  * word if the registry ever grows past a few dozen projects.
  */
 export function provenIn(skill: string): string[] {

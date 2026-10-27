@@ -169,7 +169,7 @@ const ELEVATION_LINE =
 // does not itself produce. Documents scripts/blender/world-v2/
 // fetch-polyhaven-models.py's raw (gitignored) model source fetches, used
 // by lookdev-spawn.py's geometry-nodes scatter -- a sibling script, not
-// this lane's repacked committed GLBs in the table above.
+// this change's repacked committed GLBs in the table above.
 const MODELS_SECTION = `## Models (lookdev scatter kit + props)
 
 Fetched from Poly Haven (CC0) by \`scripts/blender/world-v2/fetch-polyhaven-models.py\` into

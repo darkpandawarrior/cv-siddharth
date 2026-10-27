@@ -19,7 +19,7 @@
  * sentence-worthy value in `Now`/`NowModelRaw` yet (worldModel.ts's own
  * `valueFor()` comment says the same for the ones it switches on: "driven
  * by their own live/local source ... not by Now's shape"). Those five stay
- * out of the body sections here rather than getting a row this lane cannot
+ * out of the body sections here rather than getting a row this change cannot
  * honestly fill in; STREAMS' own `chess-presence` will get PEOPLE placement
  * the day a lane threads that state through (a one-line addition to
  * SECTION_BY_STREAM_ID below, not a redesign).
@@ -186,7 +186,7 @@ function buildAmbientRows(): AmbientRow[] {
 /** living-ledger-spec §5.1's own relief attribution, hand-authored because
  *  it describes the terrain generator itself (P2-05's gen-terrain.mjs +
  *  fetch-real-relief.mjs) rather than a GRAMMAR rule or a STREAMS row — the
- *  wording is this lane's own task list, verbatim. */
+ *  wording is this change's own task list, verbatim. */
 export const RELIEF_ROW: SectionRow = {
   id: "relief-srtm",
   section: "LAND",

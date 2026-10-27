@@ -5,7 +5,7 @@
  * load (never per frame — the same "displaced/baked ONCE" contract v1
  * Terrain.tsx's own doc comment states for its geometry).
  *
- * Amended by this lane (idea-atlas REC-6): `aAux.z` carries the west
+ * Amended by this change (idea-atlas REC-6): `aAux.z` carries the west
  * terraces' second splat weight — texture grain density from
  * `history.ts`'s real `filesChanged`, so "width is commits [G2 river width]
  * and grain is breadth [this]". Reads `ledger.ts`/`valley.ts` directly —
@@ -122,7 +122,7 @@ function bake(req: SplatBakeRequest): SplatBakeResponse {
       const concavity = Math.max(0, neighbourMean - h);
       const curvatureAo = 1 - smooth01(concavity / 2);
 
-      // Canopy mask: no banyan placement data reaches this lane (a later
+      // Canopy mask: no banyan placement data reaches this change (a later
       // props lane's job — P2-07c/e), so this stays honestly 0 everywhere
       // rather than a guessed pattern.
       const canopyMask = 0;

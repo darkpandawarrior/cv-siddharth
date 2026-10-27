@@ -62,10 +62,10 @@ describe("diyas — G11's fleet niches", () => {
 
 describe("bells", () => {
   // Deferred: the bell-toran landmark (one bell per PaymentsLab-KMP
-  // gateway) is P2-12's own hero-prop script, not owned by this lane
+  // gateway) is P2-12's own hero-prop script, not owned by this change
   // (master-plan.json P2-03b acceptance: "bells vs providers skipped with
   // reason until P2-12 lands"). valley.ts exposes no bells field.
-  it.skip("bells vs providers — owned by P2-12's landmark script, not this lane", () => {});
+  it.skip("bells vs providers — owned by P2-12's landmark script, not this change", () => {});
 });
 
 describe("stepping stones — G6's itemised + cairn reconciliation", () => {

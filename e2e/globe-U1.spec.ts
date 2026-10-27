@@ -77,7 +77,7 @@ const OPAQUE_PANEL_SELECTORS = ["[data-globe-layer-panel]", "[data-globe-inspect
 //     edge fades to nothing over whatever is behind it — same reasoning as
 //     the topbar, just the opposite edge.
 // Forbidding either from ever touching the sphere would outlaw the app's
-// own established, shipped design, not just the real bugs this lane found
+// own established, shipped design, not just the real bugs this change found
 // (the opaque icon buttons sitting on the globe's rim on a narrow phone,
 // and the Inspector card's top edge).
 const OVERLAY_SELECTORS = ["[data-globe-topbar] > div", "[data-globe-panel]"] as const;
@@ -137,7 +137,7 @@ for (const size of DESKTOP_SIZES) {
     // own matchMedia default gives it for this width (open at >=1280,
     // collapsed below it) - not forced either way, since forcing BOTH the
     // panel open and the inspector active at once asks the golden-ratio
-    // globe (this lane may not resize) to fit a gap narrower than its own
+    // globe (this change may not resize) to fit a gap narrower than its own
     // diameter at 1024px, a pre-existing camera-sizing tension from an
     // earlier lane that a composition-only fix can't close without also
     // shrinking the globe.

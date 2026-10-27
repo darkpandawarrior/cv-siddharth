@@ -7,10 +7,10 @@ import { useGlobe } from "../globeStore.ts";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { useTogetherPresence } from "../togetherPresence.ts";
 import { GLIDE_MS, MAX_RENDERED, hoverLabel, interpolateLatLon, quantizeLatLon, shouldPublish, zoomBucket, type ViewPresence } from "../together.ts";
-import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
+import { publish } from "../feed.ts"; // X1 (live world feed)
 
 /**
- * WAVE 5 LANE W15 (together: anonymous live viewports of other explorers,
+ * W15 (together: anonymous live viewports of other explorers,
  * living-earth lanes doc's Wave 2/5 addendum). Publishes THIS tab's own
  * camera-centre direction (quantized 3 degrees), a coarse zoom bucket and
  * the view mode on `globe-view-v1` (togetherPresence.ts) -- never a
@@ -130,7 +130,7 @@ export default function TogetherLayer({ tier: _tier }: { tier: 1 | 2 | 3 }) {
   const hitRef = useRef<THREE.InstancedMesh>(null);
   const trailRef = useRef<THREE.LineSegments>(null);
   const trailMap = useRef(new Map<string, PeerTrail>());
-  // WAVE 6 LANE X1 (live world feed): true until the first sync effect has
+  // X1 (live world feed): true until the first sync effect has
   // run once, so the peers already on the channel at mount are a baseline,
   // not a burst of "N explorers joined" the instant this tab opens
   // (PulseLayer's own prevRef === null / ArcLayer's own seenCountriesRef

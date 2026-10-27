@@ -6,7 +6,7 @@ import { useCanvasLoop } from "./useCanvasLoop.ts";
 import { projectBySlug } from "../data/profile.ts";
 import { ChessSearchLab } from "./ChessSearchLab.tsx";
 
-// ponytail: split via the `<Hydrate split>` boundary below, not hoisted to
+// split via the `<Hydrate split>` boundary below, not hoisted to
 // the top of LabBench.tsx. The chess engine worker + chess.js only need to
 // load when a visitor actually flips the radiogroup to "real" — mounting the
 // merged tab (or leaving it on "simulated") must not pull either in, the same

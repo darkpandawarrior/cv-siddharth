@@ -3,7 +3,7 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 /**
- * The whole point of this lane: nothing heavy rides along in the Vercel
+ * The whole point of this change: nothing heavy rides along in the Vercel
  * deployment anymore. Vercel's free tier caps deployment storage at 10 GB —
  * hit 100% on 2026-09-07 — and this site redeploys on every merge to main, so
  * a single oversized file re-lands on every one of those deploys.
@@ -15,7 +15,7 @@ import { join } from "node:path";
  * CI run. `npm run build && npm test` locally is what actually proves this.
  *
  * The hashed JS/CSS bundles under assets/ are the one exemption: Vite already
- * content-hashes and code-splits them, and they are the ~12 MB this lane's
+ * content-hashes and code-splits them, and they are the ~12 MB this change's
  * own brief says stays.
  */
 describe("dist/client stays under the Vercel deployment-size budget", () => {

@@ -15,7 +15,7 @@ import { mapsReviews } from "../src/data/generated/mapsPlaces.ts";
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const weatherFixture = JSON.parse(readFileSync(join(FIXTURES, "weather-2026-09-24.json"), "utf8"));
 const tleFixture = JSON.parse(readFileSync(join(FIXTURES, "tle.json"), "utf8"));
-// An empty aircraft list, not the real fixture -- this lane's click target is
+// An empty aircraft list, not the real fixture -- this change's click target is
 // the Pune guide marker, and a real aircraft happens to sit right on top of
 // it on screen at the fixed clock (the same overlap e2e/globe-T2.spec.ts's
 // "pune" sub-test hits), stealing the click before it ever reaches the globe.
@@ -36,7 +36,7 @@ async function withApiFixtures(page: Page) {
 }
 
 /** Same discipline as e2e/globe-X3.spec.ts's abortUnrelatedFeeds: nothing
- *  this lane cares about, just kept off the real network (G10). */
+ *  this change cares about, just kept off the real network (G10). */
 async function abortUnrelatedFeeds(page: Page) {
   await page.route(ALL_DAY_URL, (route) => route.abort());
   await page.route("https://eonet.gsfc.nasa.gov/api/v3/events**", (route) => route.abort());

@@ -5,7 +5,7 @@
  * policy as production instead of nothing), and vercelHeaders.test.ts (so
  * adding a new external origin without registering it here fails a test).
  *
- * Report-only, deliberately (see this lane's brief): the point right now is
+ * Report-only, deliberately (see this change's brief): the point right now is
  * a truthful, mechanically-checked record of every origin this site's own
  * pages actually reach — not enforcement. The four external hosts below are
  * every one this audit found reachable from a route this site serves (grep
@@ -45,7 +45,7 @@ export const CSP_DIRECTIVES: Readonly<Record<string, readonly string[]>> = {
   "script-src": ["'self'", "'wasm-unsafe-eval'"], // hashes spliced in by buildCspHeader
   "style-src": [
     "'self'",
-    "'unsafe-inline'", // Tailwind + inline style attrs; out of this lane's scope
+    "'unsafe-inline'", // Tailwind + inline style attrs; out of this change's scope
     // playhtml (the shared-interaction layer every room mounts) injects its
     // own <link rel=stylesheet> from its own CDN at runtime — not a choice
     // this app's source makes, so it can't be routed same-origin without

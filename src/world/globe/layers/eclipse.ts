@@ -1,4 +1,4 @@
-// WAVE 7 LANE 8 (eclipse paths): pure astronomy, no three, no React, no DOM
+// 8 (eclipse paths): pure astronomy, no three, no React, no DOM
 // -- EclipseLayer.tsx (a lazy chunk) and ui/TimeScrubber.tsx's jump (a
 // dynamic import at click time) are the only callers, so this file and its
 // "astronomy-engine" import never reach the eager Globe chunk.
@@ -7,7 +7,7 @@
 // gives the Moon and Sun's real geocentric positions -- skyMoonMath.ts's low-
 // order Meeus series is accurate enough to draw the Moon in the sky, but not
 // to draw a shadow: 0.1 deg of lunar position error moves the umbra about
-// 670 km, wider than the umbra itself (this lane's own plan, Lane 8).
+// 670 km, wider than the umbra itself (this change's own plan, Lane 8).
 import { EquatorFromVector, GeoMoon, GeoVector, MakeTime, NextGlobalSolarEclipse, RotateVector, Rotation_EQJ_EQD, SearchGlobalSolarEclipse, SiderealTime, Body, Vector, type AstroTime } from "astronomy-engine";
 
 /** Solar EclipseKind values astronomy-engine's global search actually
@@ -93,7 +93,7 @@ function sunMoonKm(t: AstroTime): { sun: { x: number; y: number; z: number }; mo
  *  ascension -- the standard inertial-to-geographic step, since EQD is still
  *  fixed to the equinox of date, not to Earth's own rotation.
  *
- *  Verified (this lane's report) against NASA GSFC's published greatest-
+ *  Verified (this change's report) against NASA GSFC's published greatest-
  *  eclipse point for 2027-08-02 to within 0.5 deg -- see eclipse.test.ts's
  *  fixture for the exact published value and source URL. */
 export function shadowAxisPoint(t: Date): { lat: number; lon: number } | null {

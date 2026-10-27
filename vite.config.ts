@@ -356,7 +356,7 @@ export default defineConfig(async () => ({
         // narrow fix; decoupling those three files' own import from
         // `projects` to `projectCards` (they only need slug/name/detail-
         // exists, never the heavy fields) is the fuller one and out of this
-        // lane's file scope — see this lane's final report.
+        // lane's file scope — see this change's final report.
         manualChunks(id: string) {
           // data/surfaces.ts is a genuinely light, EVERY-route module (rooms.tsx,
           // CommandPalette and Launcher all read it, mounted from __root.tsx on
@@ -415,7 +415,7 @@ export default defineConfig(async () => ({
           // store.ts (141 KB, gen-store.mjs's full Play Store fleet listing)
           // ends in a 13-line `fleetStats` summary object openSource.ts reads
           // for one recentGrowth line — same "whole module for one small
-          // export" shape as projects.ts above, just in a file this lane
+          // export" shape as projects.ts above, just in a file this change
           // does not own (see final report: out of scope to slim further).
           if (id.includes("/src/data/store.ts")) return "store-fleet-heavy";
           // The "fuller fix" the comment above named as out of scope, applied
@@ -484,7 +484,7 @@ export default defineConfig(async () => ({
       // analysis; `crawlLinks` (on by default) would follow <a href> on each
       // rendered page and prerender whatever it finds. Either makes the
       // prerendered set a function of page content instead of `allRoutes`,
-      // which is exactly the drift this lane exists to close — e2e's
+      // which is exactly the drift this change exists to close — e2e's
       // prerender-coverage test asserts dist/client's page set equals
       // public/sitemap.xml's <loc> set, and that equality only holds when
       // both sides are the same array.

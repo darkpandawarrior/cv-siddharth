@@ -249,7 +249,7 @@ function CaseStudyObelisks({ monuments }: { monuments: CaseStudyMonument[] }): J
 /** The one project slug that stands for this site itself (`profile.ts`'s
  *  `"portfolio"` entry, repo `cv-siddharth`) — M2's "portfolio monument,"
  *  the one tower the site's own CI is allowed to light. Never the KMP
- *  keystone (FoundationHub.tsx, untouched by this lane). */
+ *  keystone (FoundationHub.tsx, untouched by this change). */
 const PORTFOLIO_SLUG = "portfolio";
 
 /** M2/idea-atlas §3.1: `--state-ok` IS `--color-signal` and `--state-degraded`

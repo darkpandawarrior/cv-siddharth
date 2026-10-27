@@ -1,10 +1,10 @@
-// ponytail: same gap GuardLab.test.tsx already flagged (P2-13b): this file is
+// same gap GuardLab.test.tsx already flagged (P2-13b): this file is
 // `.test.tsx` per the lane's owns list, but vitest.config.ts's `include` is
 // `src/**/*.test.ts` only, so a plain `npx vitest run` collects ZERO tests
 // from it today. That include glob belongs to a wire lane, not this one
 // (G2), so it is not widened here. Verified real and passing with
 // `npx vitest run --config <override include: .test.tsx> src/labs/RoutingLab.test.tsx`;
-// flagged again in this lane's handoff notes.
+// flagged again in this change's handoff notes.
 import { describe, expect, it } from "vitest";
 import {
   CAPTAIN_TASK_MS,

@@ -6,7 +6,7 @@ import { offsetToSlider } from "../src/world/globe/timeMachine/rangeModel.ts";
 import type { Page, Locator } from "@playwright/test";
 
 /**
- * WAVE 9 LANE S4 (sources-owner.md): the Local Guide ring's cumulative-to-
+ * S4 (sources-owner.md): the Local Guide ring's cumulative-to-
  * date scaling as the Time Machine scrubs, the career-ops-hq org marker
  * (Spain, org-published, country level only), the recent-public-GitHub-
  * activity-by-hour histogram gated to >= 5 events, and the Q&A answers
@@ -36,7 +36,7 @@ async function withApiFixtures(page: Page, activity: unknown) {
   await page.route("**/api/aircraft", (route) => route.abort());
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
   await page.route("**/api/github-activity", (route) => route.fulfill({ json: activity }));
-  // PulseLayer's other two feeds (this lane never draws anything from
+  // PulseLayer's other two feeds (this change never draws anything from
   // them) — aborted so they settle into their own honest "failed" state
   // instead of reaching a real network (G10).
   await page.route("**/api/ops", (route) => route.abort());
@@ -101,7 +101,7 @@ test("the guide layer's status line surfaces the real Q&A answers count, compute
   // automated prompts). This is the literal number the generated data
   // carries today; a future re-export changing it is expected to move this
   // assertion, not to be a hardcoded 6 baked into GuideLayer.tsx itself (see
-  // this lane's own status-line template, which reads the field rather than
+  // this change's own status-line template, which reads the field rather than
   // a copied literal).
   expect(debug?.statusDetail).toContain("6 Q&A answers");
   expect(debug?.statusDetail).toContain("670 automated-prompt answers");
@@ -151,7 +151,7 @@ test("career-ops-hq's org marker is a self-published, country-level location, di
   await openGlobe(page, "2026-09-24T12:27:00+05:30");
   const debug = await readGuideDebug(page);
   // Spain's country centroid, not a city (sources-owner.md's own live check
-  // of api.github.com/orgs/career-ops-hq, re-verified this lane's session).
+  // of api.github.com/orgs/career-ops-hq, re-verified this change's session).
   expect(debug?.orgMarker).toEqual({ lat: 40.0, lon: -4.0 });
 });
 

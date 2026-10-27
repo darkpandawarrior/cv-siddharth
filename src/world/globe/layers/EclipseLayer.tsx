@@ -1,4 +1,4 @@
-// WAVE 7 LANE 8 (eclipse paths): a lazy chunk (GlobeScene.tsx mounts it
+// 8 (eclipse paths): a lazy chunk (GlobeScene.tsx mounts it
 // under Suspense, only fetched when `layers.eclipse` is on) -- astronomy-
 // engine's ~47 KB gzip never touches the eager Globe chunk (eclipse.ts's own
 // header comment). Draws the umbra/antumbra ground track of the next global

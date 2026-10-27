@@ -114,7 +114,7 @@ function readHazardDebug(page: Page) {
 
 test("the whole Pune stack (columns, app ring, CI ring, live dot, hazard halo, together reticle) mounts together with no thrown JS error", async ({ page }) => {
   // pageerror only -- an UNCAUGHT exception (e.g. a broken shaderMaterial/
-  // constructor arg from this lane's own edits). console "error" messages
+  // constructor arg from this change's own edits). console "error" messages
   // are deliberately NOT collected here: every layer this test deliberately
   // aborts/leaves unmocked (WindLayer's Open-Meteo call, the aborted
   // EONET/quake/aurora/kp/launch feeds) logs its own "Failed to load

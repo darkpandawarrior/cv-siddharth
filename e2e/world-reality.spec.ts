@@ -80,7 +80,7 @@ async function canvasLuma(page: Page, testInfo: TestInfo, name: string): Promise
 }
 
 /**
- * THE NIGHT SURVEY BASELINE (M49) — captured live against this lane's own
+ * THE NIGHT SURVEY BASELINE (M49) — captured live against this change's own
  * SkyBinding, not guessed: `worldLighting` pins the night rig to
  * NIGHT_SURVEY's exact literals (skyBinding.test.ts's deep-equal), so this
  * number is the same look the world shipped with before R4, re-measured
@@ -224,7 +224,7 @@ test.describe("reduced motion and low-tier rain rendering", () => {
    * !matchMedia("(prefers-reduced-motion: reduce)").matches`, and gated
    * BOTH the default landing view AND the "drive the 3D world instead"
    * button/`showWorld()` — so a reduced-motion visitor could never reach
-   * the drivable `<World>` (this lane's Hud/Rain tree) at all, by default
+   * the drivable `<World>` (this change's Hud/Rain tree) at all, by default
    * or by choice, and `[data-reality-rain]` could never appear in the DOM.
    * `Rain.tsx`'s own `rainMode()` was already correct (tier checked before
    * reducedMotion, `motion-reduced` returned whenever `reducedMotion` is

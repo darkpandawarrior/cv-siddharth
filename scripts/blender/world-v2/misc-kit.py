@@ -1,6 +1,6 @@
 """Misc kit: mooring post + signal lamp (the prototypes gaddi-ghat's
 socket.mooring.NN empties were built for but had nothing to mount, art-
-direction critic finding #2), plus this lane's (P2-07d) own additions --
+direction critic finding #2), plus this change's (P2-07d) own additions --
 kite, bell, marigold garland, paper lantern and a surveyor's peg -- each a
 standalone instance prototype with nothing landmark-specific baked in, so
 whichever socket or stream binds it just mounts the node by name.

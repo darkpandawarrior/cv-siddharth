@@ -38,7 +38,7 @@ interface Stop {
   title: string;
   body: (props: { presence: Record<string, number> }) => React.ReactNode;
   /** Runs once on entering this stop -- flies the camera / switches the
-   *  view, per this lane's own brief ("each stop flies the camera"). */
+   *  view, per this change's own brief ("each stop flies the camera"). */
   enter: (actions: { flyTo: ReturnType<typeof useGlobe.getState>["flyTo"]; setView: ReturnType<typeof useGlobe.getState>["setView"] }) => void;
 }
 

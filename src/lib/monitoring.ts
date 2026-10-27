@@ -18,7 +18,7 @@ export async function initMonitoring(): Promise<void> {
     integrations: [Sentry.browserTracingIntegration()],
     // Real-user Core Web Vitals sampling. 20% keeps the free-tier quota safe
     // on a portfolio site while still giving a representative RUM sample —
-    // ponytail: fixed rate, revisit if traffic ever outgrows Sentry's quota.
+    // fixed rate, revisit if traffic ever outgrows Sentry's quota.
     tracesSampleRate: 0.2,
   });
 }

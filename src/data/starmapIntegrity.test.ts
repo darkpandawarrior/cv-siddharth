@@ -39,7 +39,7 @@ const worlds = anthology.starmap.worlds.filter((w) => w.o !== null);
 // Directory), and the tightest the tuning has ever held is 60.5, so 55 clears
 // the real map and still fails a stack. Labels are drei Html portals at
 // distanceFactor 120: below this they overlap on screen at the default camera.
-// ponytail: a season written as one dense city will trip this, because
+// a season written as one dense city will trip this, because
 // districts inside a single system sit closer than 55. That is the moment to
 // decide whether districts get labels at all, not now.
 const LABEL_FLOOR = 55;

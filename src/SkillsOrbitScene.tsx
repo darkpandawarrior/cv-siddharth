@@ -79,7 +79,7 @@ const FACING_CHECK_INTERVAL = 0.15;
 
 // Mono 12px button, "3px 9px" padding + 1px border each side (SkillMarker's
 // own <Html> style below) — close enough to the real rendered box without
-// measuring a DOM ref per label every check, ponytail: swap for a measured
+// measuring a DOM ref per label every check, swap for a measured
 // offsetWidth/offsetHeight (WorldLabels.tsx's own approach) if a label ever
 // visibly over- or under-claims its box.
 const CHAR_PX = 7.3;

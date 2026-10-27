@@ -1,4 +1,4 @@
-// ponytail: this file is named `.test.tsx` (not `.test.ts`) because the
+// this file is named `.test.tsx` (not `.test.ts`) because the
 // lane's owns list names it that way, but vitest.config.ts's `include` is
 // `src/**/*.test.ts` only (src/FaqDock.test.tsx hit the same gap first),
 // so `npx vitest run` collects ZERO tests from this file today. That include

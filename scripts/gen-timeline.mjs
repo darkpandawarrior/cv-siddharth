@@ -56,7 +56,7 @@ const chesscomCachePath = join(root, ".chess-cache/chesscom-months.json");
 /**
  * Monthly game counts from chess.com.
  *
- * This lane was lichess-only, and it was telling a FALSE story. Lichess ends
+ * This change was lichess-only, and it was telling a FALSE story. Lichess ends
  * in early 2023, so the terrain said chess mountained in lockdown and then
  * died as the career took over — a tidy narrative, and wrong. He moved
  * platforms. chess.com holds 2,017 games in 2023, 1,043 in 2024, 590 in 2025

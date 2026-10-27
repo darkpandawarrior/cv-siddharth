@@ -19,7 +19,7 @@ import {
   type PulseKind,
   type PulseSources,
 } from "./pulseEvents.ts";
-import { publish, type FeedKind } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
+import { publish, type FeedKind } from "../feed.ts"; // X1 (live world feed)
 
 // streams.ts's own pollMs for ci-site (endpoint /api/ops) -- shared cadence
 // for the github-activity/ops feeds below.
@@ -132,7 +132,7 @@ export default function PulseLayer({ tier }: { tier: 1 | 2 | 3 }) {
       angle: (angleSeq.current * 137.5) % 360, // golden-angle jitter, same idea as fibonacciLattice's spread
     });
     statsRef.current = { total: statsRef.current.total + 1, lastAt: event.at };
-    // WAVE 6 LANE X1 (live world feed): the brief's own list is "CI
+    // X1 (live world feed): the brief's own list is "CI
     // pass/fail, pushes, dev.to, lichess" -- downloads counts are excluded
     // (a download tally isn't a moment-in-time occurrence the way the other
     // five are). Every pulse is drawn over Pune (this file's own "reach

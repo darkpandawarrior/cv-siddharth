@@ -1,4 +1,4 @@
-// WAVE 2 LANE W1 (deep zoom): level-of-detail selection and horizon/frustum
+// W1 (deep zoom): level-of-detail selection and horizon/frustum
 // culling. Pure vector math (plain {x,y,z}, not three.Vector3) so this is
 // unit-testable with no WebGL and no React — TileLayer.tsx is the only
 // caller that touches three.
@@ -67,7 +67,7 @@ export function selectLevel(distance: number, fovRadians: number, canvasHeightPx
  *  centre) is behind the sphere as seen from `cameraPos` — the same
  *  `cos(horizon) = GLOBE_RADIUS / camDist` test SatelliteLayer.tsx's own
  *  `isOccluded` already uses for label visibility, restated here per this
- *  lane's file-ownership rule rather than imported from a file this lane may
+ *  lane's file-ownership rule rather than imported from a file this change may
  *  not edit.
  *
  *  `extraAngleRadians` widens the horizon by that much (relaxing the
@@ -130,8 +130,7 @@ export function isInViewCone(
  *  the sub-camera point (looking straight down at it), falling to 0 at the
  *  grazing horizon. Exported for TileLayer.tsx to darken/fade tiles whose
  *  screen footprint the flat `pixelWorldSize` formula above under-counts,
- *  without folding that per-tile cost into `selectLevel` itself (ponytail:
- *  one shared level per frame, not a per-tile LOD walk — the visible cap at
+ *  without folding that per-tile cost into `selectLevel` itself ( *  one shared level per frame, not a per-tile LOD walk — the visible cap at
  *  this globe's own min distance (9 units, radius 6) never spans enough
  *  angle for the difference to read as a seam; upgrade path if a future
  *  closer min-distance ever makes one visible). */

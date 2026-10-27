@@ -313,7 +313,7 @@ const pageSurfaces: SurfaceInput[] = [
     // full-screen chrome (routes/globe.tsx, P2-10a), but declaring it in
     // `roomSurfaces` would add it to `siteRooms`/`ROOMS`, the next-room
     // pager's own registry, and surfaces.test.ts pins that array's exact
-    // eight-room order (a back-compat test this lane does not own, see
+    // eight-room order (a back-compat test this change does not own, see
     // owns). GLOBE's own onward navigation is the altitude rail
     // (AltitudeRail.tsx), a deliberately separate concern from the room
     // pager's "next room" sequence, so leaving it out of that sequence is

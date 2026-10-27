@@ -17,7 +17,7 @@ import type { Page } from "@playwright/test";
  * is what's under test, so a flat colour whose value we chose is a cleaner
  * signal than a photo whose luminance we'd have to measure first anyway.
  * "Bloom on" and "bloom off" are the SAME composer pipeline (GlobePost
- * always mounts at tier 1/2 imagery — this lane's whole point is that the
+ * always mounts at tier 1/2 imagery — this change's whole point is that the
  * shader, not a toggle, decides what blooms): a night texture bright enough
  * that `* uNightGain` (1.6) clears the composer's `luminanceThreshold`
  * (1.0) versus one dim enough that it never does. That is exactly what
@@ -74,7 +74,7 @@ async function withApiFixtures(page: Page) {
   await page.route("**/api/tle", (route) => route.fulfill({ json: tleFixture }));
   await page.route("**/api/aircraft", (route) => route.fulfill({ json: aircraftFixture }));
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
-  // Every other live feed this lane doesn't care about, aborted rather than
+  // Every other live feed this change doesn't care about, aborted rather than
   // left to hit the real network — same discipline as globe-X3.spec.ts's own
   // withApiFixtures, and the reason this test used to intermittently stall
   // on an unmocked feed's real (slow, sometimes 429'd) response mid-run.
@@ -244,7 +244,7 @@ test.describe("GlobePost: city-light bloom", () => {
     expect(Math.abs(brightDayRgb.g - dimDayRgb.g)).toBeLessThanOrEqual(2);
     expect(Math.abs(brightDayRgb.b - dimDayRgb.b)).toBeLessThanOrEqual(2);
 
-    // Frame-time: reported, not asserted. This lane's own gate run measured
+    // Frame-time: reported, not asserted. This change's own gate run measured
     // this dev machine's load average over 90 (six-plus other lanes building
     // and testing in parallel, globe-lanes.md's own "six lanes share one
     // machine" warning) — under that contention a page's own

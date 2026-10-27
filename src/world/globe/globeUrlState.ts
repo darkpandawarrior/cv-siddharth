@@ -177,7 +177,7 @@ export function parseShareState(search: string | URLSearchParams, nowMs = Date.n
 /** Whether a parsed result carries anything worth restoring -- ui/ShareView.tsx
  *  uses this to decide whether to suppress the first-visit intro and apply a
  *  fly-in at all; a bare `/globe` (no query, or every field invalid) must
- *  behave exactly as before this lane existed. */
+ *  behave exactly as before this change existed. */
 export function hasShareFields(s: Partial<ShareState>): boolean {
   return Object.keys(s).length > 0;
 }
@@ -186,7 +186,7 @@ export function hasShareFields(s: Partial<ShareState>): boolean {
  *  GLOBE_RADIUS -- duplicated for the same chunk-isolation reason that
  *  file's header documents (importing from it, or from geoMath.ts, would
  *  give either module a second, differently-chunked consumer and promote it
- *  out of this lane's own lazy chunk). This lane's own lazy chunk is the
+ *  out of this change's own lazy chunk). This change's own lazy chunk is the
  *  only consumer of the tiny inverse-trig pair below, so a THIRD duplicate
  *  copy is the lazy, correct choice here, not a shared import. */
 const GLOBE_RADIUS = 6;

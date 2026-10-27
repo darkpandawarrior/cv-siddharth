@@ -61,7 +61,7 @@ describe("ledgerCoverage: every GRAMMAR rule yields exactly one row", () => {
     const featureIds = new Set(wm.features.map((f) => f.id));
     const featureForms = new Set(wm.features.map((f) => f.form));
     const featureRules = new Set(wm.features.map((f) => f.rule));
-    // KNOWN UPSTREAM DEFECT (grammar.ts, not owned by this lane, so not
+    // KNOWN UPSTREAM DEFECT (grammar.ts, not owned by this change, so not
     // fixed here): G7 lesson-kite's `placementSeed` is `` `/${r.slug}` ``
     // (grammar.ts:407, the leading "/" documented there as a
     // check-old-names.mjs boundary requirement), so a real feature's id is
@@ -92,7 +92,7 @@ describe("ledgerCoverage: every Now-backed claim:true STREAM yields exactly one 
   const sections = buildLedgerSections([], raw);
   const allRows = [...sections.SKY, ...sections.RIVER, ...sections.LAND, ...sections.PEOPLE, ...sections.REACH];
 
-  // The streams this lane's ledgerRows.ts declares a section for — see its
+  // The streams this change's ledgerRows.ts declares a section for — see its
   // own SECTION_BY_STREAM_ID doc comment for which ones and why.
   const COVERED_STREAM_IDS = [
     "sun", "moon", "weather", "air", "aircraft", "satellites", "stars",
@@ -122,7 +122,7 @@ describe("ledgerCoverage: every ambient (class:'ambient') stream is in the Ambie
     expect(new Set(sections.ambient.map((r) => r.id))).toEqual(new Set(ambientClassIds));
   });
 
-  it("birds is one of them (this lane's own task list)", () => {
+  it("birds is one of them (this change's own task list)", () => {
     expect(ambientClassIds).toContain("birds");
     expect(sections.ambient.some((r) => r.id === "birds")).toBe(true);
   });

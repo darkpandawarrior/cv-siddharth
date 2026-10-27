@@ -4,7 +4,7 @@
  * ONLY module under src/world/v2 that imports src/data/* — every grammar
  * rule and renderer reads through the `Ledger` object this file builds,
  * never the data files directly (streamFence.test.ts and the `rg` ownership
- * check in this lane's acceptance both hold that line).
+ * check in this change's acceptance both hold that line).
  *
  * `anthology.ts` (fiction) is never imported here, so it is excluded from
  * `Ledger` by type, not by convention (living-ledger-spec §3.1).

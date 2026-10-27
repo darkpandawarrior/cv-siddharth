@@ -416,7 +416,7 @@ describe("validateRequest (mode)", () => {
  * src/data/profile.ts, which is CHAT-00's evidence that the mechanism is
  * already the fix: a number wrong here means profile.ts (or the generator)
  * drifted, not that chat-handler.ts hard-codes prose. The "44-module" figure
- * named in this lane's spec was stale in src/data/profile/openSource.ts's
+ * named in this change's spec was stale in src/data/profile/openSource.ts's
  * changelog line, a file the chat prompt never reads from — this only pins
  * what Panda actually says. */
 describe("SYSTEM_PROMPT facts (regression: the stale PaymentsLab-KMP count)", () => {

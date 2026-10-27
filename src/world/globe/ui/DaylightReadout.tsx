@@ -55,7 +55,7 @@ function CityRow({ status, onPick }: { status: DaylightCityStatus; onPick: (stat
 }
 
 /**
- * WAVE 8 LANE C4 ("Living daylight"): "a small readout listing up to five
+ * C4 ("Living daylight"): "a small readout listing up to five
  * sizeable cities where the sun is setting right now and five where it is
  * rising ... each clickable to fly there. It follows the time scrubber."
  * Self-contained like ui/HoverReadout.tsx (own store reads, own effects,

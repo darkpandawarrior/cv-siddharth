@@ -9,7 +9,7 @@
 // (IAU id, English name, centroid), both BSD-3-Clause (Olaf Frohn) — an
 // OSI permissive licence, MIT-redistribution-compatible, deliberately NOT
 // Stellarium's western skyculture (CC BY-SA + Free Art License, share-alike,
-// excluded by this lane's own brief).
+// excluded by this change's own brief).
 
 const RAD = Math.PI / 180;
 

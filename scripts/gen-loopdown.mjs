@@ -19,7 +19,7 @@ const banner =
 // Kept named PostLinks/links, not renamed to "engagement": WritingView.tsx
 // already reads l.links?.[platform] to decide which icons to show, and this
 // lane fixes what the field is POPULATED from (see engagementOf below), not
-// its name — a rename would touch a file this lane does not own for no
+// its name — a rename would touch a file this change does not own for no
 // behavioural gain.
 const TYPES = `export type PostLinks = { devto?: string; linkedin?: string; medium?: string; hashnode?: string };
 export type DevtoEngagement = { reactions: number; comments: number };
@@ -79,7 +79,7 @@ export function uniqueRecords(records, key) {
  * leftover shape from before per-platform URLs existed — which is why the
  * previous version of this function read `l.links` and got `{}` back even on
  * lessons the source's own `url_devto` field showed as published. That is the
- * one bug this lane's brief calls out by name.
+ * one bug this change's brief calls out by name.
  */
 export function engagementOf(l) {
   const e = {};

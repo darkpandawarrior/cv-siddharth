@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { readToken } from "./themeColor";
 
-// ponytail: stub the two globals rather than pull in jsdom. readToken touches
+// stub the two globals rather than pull in jsdom. readToken touches
 // exactly `document.documentElement` + `getComputedStyle`, so this exercises the
 // real logic — and keeps the repo off a devDependency it does not otherwise need.
 const vars = new Map<string, string>();

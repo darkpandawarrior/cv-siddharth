@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
  * /globe, LANE W6 (the owner's own data on the globe: per-app reach ring,
  * CI family ring, now playing, lichess). Reuses `live/signals.json`, the
  * committed fixture reality-footer.spec.ts / globe-L4.spec.ts already prove
- * matches signals-handler.ts's real shape, plus this lane's own spotify
+ * matches signals-handler.ts's real shape, plus this change's own spotify
  * fixtures (no other lane or spec had one). Every /api/* route this spec
  * depends on is fixed or explicitly left unmocked (the 404-draws-nothing
  * case), never live network (G10).
@@ -30,7 +30,7 @@ const SPOTIFY_EMPTY = fixture("live/reach-spotify-empty.json");
 
 // /globe mounts every layer together (GlobeScene.tsx), and HazardLayer.tsx's
 // own external feeds (quakes, EONET, GDACS...) are real internet calls, not
-// same-origin /api/* -- so mocking only this lane's two routes still leaves
+// same-origin /api/* -- so mocking only this change's two routes still leaves
 // this spec hitting live network for those, breaking G10 (measured: a real
 // EONET flood glyph's hit target can sit right over Pune and swallow every
 // click meant for the reach-app ring underneath it). Abort them all so this
@@ -148,7 +148,7 @@ test("clicking the biggest-install app column selects it, with the install-band 
   // radius (CI_RING_RADIUS 0.85 vs APP_RING_RADIUS 0.55) -- with segments
   // present, a ray aimed at the app column's own centre can resolve to the
   // CI ring's nearer geometry instead (measured: consistently "doori", the
-  // first CI segment, this lane's own report). buildReachStatus's "snapshot"
+  // first CI segment, this change's own report). buildReachStatus's "snapshot"
   // branch (ci null) is already covered by the third test below.
   await mockReachFeeds(page, { ...SIGNALS_MIXED, ci: undefined }, SPOTIFY_EMPTY);
   await page.goto("/globe");
@@ -191,7 +191,7 @@ test("clicking the biggest-install app column selects it, with the install-band 
 
   // A single click at the exact computed pixel was measured to miss the
   // ring's own raycastable geometry by anywhere from nothing to ~40px in
-  // this headless/SwiftShader environment (this lane's own report; the
+  // this headless/SwiftShader environment (this change's own report; the
   // computed pixel itself checks out against the hit mesh's own
   // `matrixWorld`, so this is downstream of that, not a coordinate bug
   // here) -- a small spiral around it is the same margin a visitor's own

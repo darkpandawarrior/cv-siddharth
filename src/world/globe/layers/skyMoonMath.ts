@@ -2,7 +2,7 @@
 // purpose: that file's own header says "Distance ... is dropped: nothing
 // here needs the Moon's distance, only its direction" (M41), and its
 // D/M/M'/F mean-anomaly terms are computed inside a private, unexported
-// `moonEcliptic` - not reusable from outside that file. This lane's
+// `moonEcliptic` - not reusable from outside that file. This change's
 // inspector row wants a real number ("true distance km"), so the same
 // three low-order mean-anomaly polynomials (Meeus, Astronomical Algorithms
 // ch. 47) are re-derived here, and paired with the top four terms BY

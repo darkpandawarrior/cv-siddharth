@@ -1,4 +1,4 @@
-// ponytail: .test.ts, not .test.tsx — see GatewayCompare.test.ts's own note.
+// .test.ts, not .test.tsx — see GatewayCompare.test.ts's own note.
 // vitest.config.ts's `include` glob only picks up `*.test.ts`.
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";

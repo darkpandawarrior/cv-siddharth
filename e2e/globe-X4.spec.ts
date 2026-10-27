@@ -34,7 +34,7 @@ async function openGlobe(page: Page, width: number, height: number) {
   const canvas = page.locator("[data-globe-root] canvas").first();
   await expect(canvas).toBeVisible({ timeout: 30_000 });
   // Camera settle + Globe.tsx's own desktop-first-load Pune preselect
-  // (which is exactly why this lane's entry point has two forms: the
+  // (which is exactly why this change's entry point has two forms: the
   // compact one is what's actually on screen the moment the page opens).
   await page.waitForTimeout(700);
 }

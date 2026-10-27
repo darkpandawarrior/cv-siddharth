@@ -446,7 +446,7 @@ export const projects: Project[] = [
       {
         platform: "Android",
         deviceFrame: "phone",
-        // ponytail: dropped track_miles_idle_screen / expense_entry_screen /
+        // dropped track_miles_idle_screen / expense_entry_screen /
         // approvals_screen_pending_tab / analytics_home_screen — an older
         // capture batch (Jun 29) taken in the app's green Matrix theme,
         // inconsistent against the current amber theme used everywhere

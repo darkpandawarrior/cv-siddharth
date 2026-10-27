@@ -99,7 +99,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
   const meshRef = (earthRef ?? localRef) as RefObject<THREE.Mesh>;
   const [dayTex, setDayTex] = useState<THREE.Texture | null>(null);
   const [failed, setFailed] = useState(false);
-  // WAVE 6 LANE X3: bumped once per time-lapse frame that finishes loading.
+  // X3: bumped once per time-lapse frame that finishes loading.
   // tlTexturesRef is a plain ref (deliberately: it never needs its own
   // re-render, dozens of frames may resolve independently), but a ref
   // mutation alone never re-triggers the effect below that reads it, so the
@@ -119,10 +119,10 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
       uCloudReady: { value: 0 },
       uRelief: { value: PLACEHOLDER as THREE.Texture },
       uReliefReady: { value: 0 },
-      // WAVE 7 LANE V2: night-lights gain feeding GlobePost.tsx's Bloom
+      // V2: night-lights gain feeding GlobePost.tsx's Bloom
       // threshold (>= 1.0) — see earthImageryShader.ts's own comment.
       uNightGain: { value: 1.6 },
-      // WAVE 6 LANE X3: daily time-lapse (crossfade between two preloaded
+      // X3: daily time-lapse (crossfade between two preloaded
       // VIIRS days) and swipe compare (a chosen past day vs literal today).
       // Both start inactive (0) so an ordinary visitor who never scrubs
       // pays nothing beyond four extra float/texture uniforms.
@@ -142,7 +142,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
     sunDirection(now, uniforms.uSun.value);
   }, [now, uniforms]);
 
-  // WAVE 6 LANE X3: daily time-lapse. gl_FragCoord is in physical pixels,
+  // X3: daily time-lapse. gl_FragCoord is in physical pixels,
   // so the shader's screen-space compare split needs the drawing buffer's
   // real size (CSS size * devicePixelRatio), not R3F's CSS-pixel `size`.
   // Selector form, not bare `useThree()`: that subscribes to the WHOLE R3F
@@ -156,7 +156,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
   }, [size, gl, uniforms]);
 
   const offset = useGlobe((s) => s.timeOffsetMin);
-  // ponytail: anchored once at mount/tier change, not rebuilt across a real
+  // anchored once at mount/tier change, not rebuilt across a real
   // UTC midnight mid-session (gibsDates.test.ts's own guidance: "rebuild on
   // a day/tier change" — a session that happens to span midnight just keeps
   // showing the frame list it started with until a reload; low odds, low
@@ -217,7 +217,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
     useGlobe.getState().setStatus("earth", { state: "live", detail: `NASA GIBS VIIRS true colour (time machine), ${shownDate}` });
   }, [timeline, offset, now, uniforms, tlVersion]);
 
-  // WAVE 6 LANE X3: swipe compare. Only the chosen past-date texture is
+  // X3: swipe compare. Only the chosen past-date texture is
   // this layer's own concern — the split position and which two dates are
   // being compared live in compareStore.ts, shared with the divider UI
   // (ui/CompareDivider.tsx, mounted from TimeScrubber.tsx).
@@ -265,7 +265,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
 
   // Re-fetch only when the UTC calendar day (or the tier) actually changes,
   // never on every minute tick of `now` — a daily mosaic has one frame a
-  // day. WAVE 6 LANE X3: anchored to REAL today, not the scrubbed `now`
+  // day. X3: anchored to REAL today, not the scrubbed `now`
   // prop — a visitor scrubbing into the past used to trigger a full GIBS
   // refetch (and a visible cut) on every day boundary crossed. Showing a
   // different past day while scrubbing is gibsDates' job now (the
@@ -273,7 +273,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
   // network round-trip on the one "live" day texture every other layer in
   // this file (base, night, relief, ice) also depends on.
   //
-  // ponytail: fetched once per tier (not re-checked against a real UTC-day
+  // fetched once per tier (not re-checked against a real UTC-day
   // rollover mid-session, same simplification as the time-lapse timeline
   // above) — `new Date()` is read inside the effect body, never during
   // render, so this stays a pure component.
@@ -386,7 +386,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
   }, [tier]);
 
   const showDots = tier === 3 || failed || !dayTex;
-  // WAVE 6 LANE X3: the status detail string (day-fetch/time-lapse/compare
+  // X3: the status detail string (day-fetch/time-lapse/compare
   // effects above all write it via setStatus("earth", ...)) has nowhere else
   // to surface — "earth" is a StatusKey but not a LayerId, so LayerPanel's
   // own health rows (which map LAYER_IDS) never render it. Read live rather
@@ -429,7 +429,7 @@ export default function EarthImagery({ count, now, tier, earthRef }: EarthLayerP
           <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: EARTH_IMAGERY_FRAG, uniforms }]} />
         </mesh>
         <Atmosphere uniforms={uniforms} />
-        {/* Thinner inner-limb haze, this lane's own addition alongside the shared Atmosphere. */}
+        {/* Thinner inner-limb haze, this change's own addition alongside the shared Atmosphere. */}
         <mesh scale={1.02}>
           <sphereGeometry args={[GLOBE_RADIUS, segments[0], segments[1]]} />
           <shaderMaterial args={[{ vertexShader: VERT, fragmentShader: INNER_HAZE_FRAG, uniforms }]} side={THREE.BackSide} blending={THREE.AdditiveBlending} transparent depthWrite={false} />

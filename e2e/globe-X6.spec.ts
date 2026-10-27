@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 
 /**
  * LANE X6 (density + craft: hexbin columns, inspector sparklines, opt-in
- * sound). Fixed clock, every /api/* and external feed this lane's own code
+ * sound). Fixed clock, every /api/* and external feed this change's own code
  * touches routed to a fixture (G10) — the same hazards fixtures
  * globe-L7.spec.ts already proves match the real feed shapes, plus the two
  * feeds sparkSeries.ts owns (the USGS weekly feed, the Kp feed).
@@ -52,7 +52,7 @@ test.describe("density layer (hexbin columns)", () => {
 
     // The panel opens by default at this width (globeStore's own matchMedia
     // default, >=1280) — same LABEL text LayerPanel.tsx's own LABEL record
-    // gives this lane's layer id ("density").
+    // gives this change's layer id ("density").
     await page.getByRole("button", { name: "Quake and fire density" }).click();
 
     const seam = page.locator("[data-density-layer]");

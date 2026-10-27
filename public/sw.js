@@ -122,7 +122,7 @@ self.addEventListener("fetch", (event) => {
 
 async function trimCache(cache, max) {
   const keys = await cache.keys();
-  // ponytail: FIFO drop-oldest, good enough for a bounded asset cache; swap for
+  // FIFO drop-oldest, good enough for a bounded asset cache; swap for
   // an LRU only if eviction churn ever shows up in practice.
   if (keys.length > max) await cache.delete(keys[0]);
 }

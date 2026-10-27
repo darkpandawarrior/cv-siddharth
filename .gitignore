@@ -118,3 +118,15 @@ heavy/world/models/polyhaven/
 
 # Blender's bytecode cache for the world-v2 kit scripts (scripts/blender/world-v2/*.py).
 __pycache__/
+
+# Agent tooling (local only)
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+CAPABILITIES.md
+.capabilities-notes.md
+.claude/
+.codex/
+.cursor/
+.ralph/
+docs/superpowers/

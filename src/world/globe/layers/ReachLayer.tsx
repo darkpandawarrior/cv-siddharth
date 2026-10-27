@@ -1,4 +1,4 @@
-/** WAVE 3 LANE W6 (the owner's own data on the globe: per-app reach, CI
+/** W6 (the owner's own data on the globe: per-app reach, CI
  *  family ring, now playing, lichess) owns this file.
  *
  * The integration point: owns every fetch and the one composite "reach"

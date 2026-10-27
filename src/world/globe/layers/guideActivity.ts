@@ -26,7 +26,7 @@ export function cumulativeFraction(years: readonly number[], simYear: number): n
  *  has reached. `scaleFor` is passed in rather than imported so this module
  *  stays free of GuideLayer.tsx's own MIN_SCALE/MAX_SCALE tuning constants —
  *  one direction of dependency, not two files agreeing on a magic number. */
-// ponytail: active-year proxy; use per-city annual totals when the export supplies them.
+// active-year proxy; use per-city annual totals when the export supplies them.
 export function scaleForYear(scaleFor: (reviews: number, photos: number) => number, reviews: number, photos: number, years: readonly number[], simYear: number): number {
   return scaleFor(reviews, photos) * cumulativeFraction(years, simYear);
 }

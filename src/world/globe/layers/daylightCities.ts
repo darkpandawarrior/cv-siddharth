@@ -1,9 +1,9 @@
 // LANE C4 ("Living daylight"): a small bundled subset of Natural Earth's
 // ne_110m_populated_places, so DaylightReadout.tsx never makes a network
-// request (globe-lanes.md's "Zero network" rule for this lane). Every
+// request (globe-lanes.md's "Zero network" rule for this change). Every
 // row is [name, lat, lon, population], population is POP_MAX (falling
 // back to POP_MIN), sorted descending -- the whole dataset the 1:110m
-// scale ships (243 places, under the 300-city ceiling this lane's brief
+// scale ships (243 places, under the 300-city ceiling this change's brief
 // set), not a hand-picked shorter list, so "sizeable" tracks the same
 // cut Natural Earth itself already made rather than a second opinion.
 //

@@ -1,10 +1,10 @@
-// WAVE 2 LANE W1 (deep zoom): the curated NASA GIBS layer catalog — bases and
+// W1 (deep zoom): the curated NASA GIBS layer catalog — bases and
 // overlays LayerCatalog.tsx lists and TileLayer.tsx draws. Pure data plus the
 // WMTS tile URL builder; no three, no React.
 //
 // Every entry below was curled once against the real endpoint (2026-09-27/28,
 // a fixed in-range tile per its own matrix set) and kept only on a 200 with
-// `access-control-allow-origin: *` — see this lane's report for the exact
+// `access-control-allow-origin: *` — see this change's report for the exact
 // curl transcript. Two things that name-matched the brief's own suggested
 // list did NOT survive that check and are deliberately absent:
 //  - every VIIRS/MODIS "Thermal_Anomalies" (fires) layer on this endpoint is
@@ -14,7 +14,7 @@
 //    offered; the VIIRS false-colour BASE below (BandsM11-I2-I1) is GIBS's
 //    own standard composite for spotting active fire glow and burn scars,
 //    which is the nearest honest substitute without shipping an MVT parser
-//    for one overlay (ponytail: no new rendering path for a single layer;
+//    for one overlay (no new rendering path for a single layer;
 //    upgrade path is a real vector-tile decoder if more MVT layers turn up).
 //  - the reference layers (labels/borders/coastlines) ride "15.625m", not
 //    "31.25m" — GetCapabilities names it plainly; "31.25m" is a different,

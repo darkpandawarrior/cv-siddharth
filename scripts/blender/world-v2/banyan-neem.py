@@ -3,7 +3,7 @@ and branch skeleton merged with tapered aerial-root curves, plus two smaller
 neem trunks grown by the same algorithm at a smaller scale. Budget: 30k tris
 / 700 KB for the whole banyan-neem.glb (banyan + both neem trees). Canopy
 foliage is NOT baked here -- world-v2-spec.md §7 puts instanced cross-cards
-(this lane's foliage-atlas.py texture) on the runtime side (P3-01b), so this
+(this change's foliage-atlas.py texture) on the runtime side (P3-01b), so this
 script only exports bark geometry plus the socket the atlas system needs.
 
 Algorithm (classic space colonisation, Runions et al. 2007): grow a straight
@@ -124,7 +124,7 @@ def node_depths(nodes):
 def add_tube(bm, p0, p1, r0, r1, sides=6):
     """A capped tapered cylinder from p0 (radius r0) to p1 (radius r1),
     triangulated directly (no quads) so tri_estimate/inspect_asset counts
-    match what actually exports. ponytail: each skeleton edge is its own
+    match what actually exports. each skeleton edge is its own
     disjoint segment (no shared ring at branch joints) -- a real pipe-model
     join is unnecessary polish for a background bark silhouette; upgrade to
     shared branch-joint rings if a close-up shot ever needs it."""

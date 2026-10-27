@@ -71,7 +71,7 @@ const STICK_RADIUS = 34;
 // down is the one throttle gesture auto can't substitute for, so it still
 // commands a proportional brake/reverse.
 //
-// ponytail: no live in-HUD toggle between auto and the old proportional-Y
+// no live in-HUD toggle between auto and the old proportional-Y
 // stick — this constant IS the fallback switch. Flip it to `false` if
 // auto-throttle proves worse than the manual stick once actually driven on
 // a phone; every other line below is written to make that a one-line
@@ -636,7 +636,7 @@ export function Hud(props: {
           // Lamps.tsx's own approach card (reality-spec §4.2: "fires the
           // existing Landmarks onPrompt HUD card") — reusing this same
           // `PromptCard` component is that reuse: Landmarks.tsx's own
-          // sensor is untouched (out of this lane's ownership), so a lamp's
+          // sensor is untouched (out of this change's ownership), so a lamp's
           // proximity is edge-detected independently (Lamps.tsx) and
           // rendered through the identical card language. "View" opens the
           // commit on GitHub in a new tab rather than navigating this page

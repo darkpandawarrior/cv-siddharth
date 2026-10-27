@@ -15,7 +15,7 @@ import { GIBS_CATALOG, catalogDate, tileUrl, type GibsCatalogEntry } from "./gib
 import type { StatusKey } from "../globeStore.ts";
 
 /**
- * WAVE 2 LANE W1 (deep zoom): draws real NASA GIBS tiles a hair above the
+ * W1 (deep zoom): draws real NASA GIBS tiles a hair above the
  * whole-globe EarthImagery sphere (radius TILE_RADIUS), swapping in finer
  * detail as the camera moves closer — one base layer plus the overlay stack
  * from `store.imagery`, each tile's own patch mesh crossfading in as its
@@ -135,8 +135,8 @@ interface RoleState {
 
 /** Module-level integration seam (brief: "keep your own detail in a module
  *  export for integration"), mirroring how globeStore.ts's own status map
- *  works but scoped to this lane's own numbers — tile-request counts and
- *  cache sizes a QA script or another lane can read without this lane
+ *  works but scoped to this change's own numbers — tile-request counts and
+ *  cache sizes a QA script or another lane can read without this change
  *  needing to edit globeStore.ts or GlobeScene.tsx. Updated in place
  *  (mutated, not replaced) so a reader holding the reference always sees the
  *  latest values, same convention as entityPositions in globeStore.ts.
@@ -332,7 +332,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
   function ensureRole(roleId: string, catalogId: string, shader: "day" | "plain", opacity: number): void {
     const catalogEntry = GIBS_CATALOG[catalogId];
     if (!catalogEntry) {
-      // Not one of this lane's verified catalog entries (a stray id in the
+      // Not one of this change's verified catalog entries (a stray id in the
       // store, or a layer that failed its own curl check) — draw nothing
       // for it rather than requesting a URL nobody verified.
       removeRole(roleId);
@@ -362,8 +362,8 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     // LANE V1 (wave 7, step B): EOX's s2cloudless base rides a genuinely
     // different tile matrix (tileMatrix.ts's own EOX_LEVELS, 256px tiles) —
     // tileSelect.ts's shared `selectVisibleTiles` always reads GIBS_LEVELS
-    // (a file this lane doesn't own, see tileSelectEox.ts's own header), so
-    // "WGS84" is the one matrixSet routed to this lane's own EOX-scoped
+    // (a file this change doesn't own, see tileSelectEox.ts's own header), so
+    // "WGS84" is the one matrixSet routed to this change's own EOX-scoped
     // selector instead.
     const selected = matrixSet === "WGS84" ? selectVisibleEoxTiles(maxLevel, cam) : selectVisibleTiles(matrixSet, maxLevel, cam);
 
