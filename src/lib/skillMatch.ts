@@ -150,7 +150,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Crash & analytics tooling",
     depth: "deep",
-    evidence: "Crashlytics + Sentry + Mixpanel; drove an 80% crash reduction",
+    evidence: "Crashlytics + Sentry + Mixpanel; drove an 85% crash reduction",
     aliases: ["crashlytics", "sentry", "firebase", "analytics", "mixpanel", "observability", "monitoring", "logging", "instrumentation"],
   },
   {
@@ -174,7 +174,7 @@ export const SKILLS: Skill[] = [
   {
     name: "Performance engineering",
     depth: "working",
-    evidence: "Compose compiler metrics run during the migration push, recomposition/stability work; 80% crash reduction at 50k MAU",
+    evidence: "Compose compiler metrics run during the migration push, recomposition/stability work; 85% crash reduction at 50k MAU",
     aliases: ["performance", "optimization", "optimisation", "profiling", "memory management", "anr", "jank", "baseline profile", "app startup", "rendering"],
   },
   {

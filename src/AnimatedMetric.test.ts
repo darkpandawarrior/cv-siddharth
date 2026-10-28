@@ -27,7 +27,7 @@ describe("AnimatedMetric server markup", () => {
   const cases = [
     { value: "50k+", label: "monthly active users" },
     { value: "95%", label: "GPS accuracy" },
-    { value: "80%", label: "crash reduction" },
+    { value: "85%", label: "crash reduction" },
     { value: "~87%", label: "Compose migration" },
   ];
 

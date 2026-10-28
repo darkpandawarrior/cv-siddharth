@@ -345,7 +345,7 @@ const pageSurfaces: SurfaceInput[] = [
     to: "/hire",
     label: "Hire",
     blurb:
-      "Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 80%. Résumé, numbers, contact.",
+      "Senior Android engineer, platform owner of a ~964k-LOC app serving 50,000+ monthly users. GPS accuracy 50%→95%, crashes down 85%. Résumé, numbers, contact.",
     tag: "90 seconds",
     group: "proof",
     tint: ACCENT,
