@@ -262,7 +262,7 @@ function MobileMenu() {
                 onClick={() => { setOpen(false); openChat(); }}
                 className="ctrl col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"
               >
-                Ask my AI
+                Ask about my work
               </button>
             </div>
           </nav>
@@ -1135,7 +1135,7 @@ function Contact() {
         </span>
         <h2 className="font-display mt-6 text-h2 font-bold tracking-tight">Hiring for a senior Android role?</h2>
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
-          Ask my AI assistant anything about my work, or reach out directly. I reply fast.
+          Ask Panda anything about my work, or reach out directly. I reply fast.
         </p>
         {/* The ask, sized like it matters, and the one control the sentence
             above it names. A five-chip row used to sit here (copy email,
@@ -1151,7 +1151,7 @@ function Contact() {
             onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
-            <MessageCircle size={16} /> Ask my AI
+            <MessageCircle size={16} /> Ask about my work
           </button>
         </div>
       </Reveal>

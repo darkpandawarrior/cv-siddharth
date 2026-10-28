@@ -164,7 +164,7 @@ export const NODES: StoryNode[] = [
   },
   {
     "id": "chat",
-    "label": "Ask my AI",
+    "label": "Ask about my work",
     "sub": "knows all of this",
     "r": 13,
     "color": "#5ee6ff",

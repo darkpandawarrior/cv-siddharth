@@ -146,7 +146,7 @@ export const NODES: NodeSpec[] = [
   ...PROJECT_NODES,
   ...SERIES_NODES,
   { key: "books", x: 2500, y: 950, w: 260, h: 110, geo: "cloud", color: "orange", fill: "semi", label: "Books Before Bros\nthe origin blog (2018–2020)" },
-  { key: "chat", x: 1180, y: 120, w: 240, h: 100, geo: "ellipse", color: "light-blue", fill: "semi", label: "Ask my AI\nhas read all of this" },
+  { key: "chat", x: 1180, y: 120, w: 240, h: 100, geo: "ellipse", color: "light-blue", fill: "semi", label: "Ask about my work\nhas read all of this" },
 ];
 
 /**

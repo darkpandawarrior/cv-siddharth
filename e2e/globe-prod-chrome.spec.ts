@@ -126,7 +126,7 @@ for (const [width, height] of [[1440, 900], [1280, 800], [1024, 768], [390, 844]
       const ask = page.locator('[data-globe-chat]');
       await expect(ask).toBeVisible();
       if (width < 640) await ask.tap(); else await ask.click();
-      await expect(page.getByRole('dialog', { name: 'Panda, Siddharth’s AI assistant', exact: true })).toBeVisible();
+      await expect(page.getByRole('dialog', { name: 'Panda, ask about Siddharth’s work', exact: true })).toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Ask Panda, or type a slash command', exact: true })).toBeVisible();
       await page.getByRole('button', { name: 'Close chat', exact: true }).click();
       if (width < 640) await ask.tap(); else await ask.click();

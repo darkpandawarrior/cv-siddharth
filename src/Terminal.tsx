@@ -659,12 +659,12 @@ function buildCommands(jump: Go): Cmd[] {
     {
       name: "ask",
       usage: "ask <question>",
-      help: "ask the AI assistant, answered right here",
+      help: "ask Panda about my work, answered right here",
       run: (args) => {
         const q = args.join(" ").trim();
         if (!q) {
           openChat();
-          return <span>opening <Hi>Panda</Hi>, the AI assistant…</span>;
+          return <span>opening <Hi>Panda</Hi>, who knows my work…</span>;
         }
         // The answer streams into this block — the shell doesn't punt you to
         // the chat panel any more.

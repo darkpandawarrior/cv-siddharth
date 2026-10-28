@@ -62,7 +62,7 @@ export function FitCheck() {
         <p className="section-eyebrow mb-2">// fit check</p>
         <h2 className="font-display mb-2 text-h2 font-bold tracking-tight">Hiring? Paste the job description.</h2>
         <p className="mb-6 max-w-2xl text-zinc-400">
-          My AI assistant reads it against what I've actually shipped and answers the only question that matters:
+          Panda reads it against what I've actually shipped and answers the only question that matters:
           where I fit, and where I don't. No score inflation — the gaps come with the strengths.
         </p>
         <div className="mb-8 flex flex-wrap gap-2">

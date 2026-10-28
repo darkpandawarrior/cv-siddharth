@@ -14,7 +14,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 
 const NOW = "2026-09-24T12:27:00+05:30"; // spine.spec.ts / faq-dock.spec.ts's shared fixed instant
 const CHAT_INPUT_LABEL = "Ask Panda, or type a slash command";
-const DIALOG_NAME = "Panda, Siddharth’s AI assistant";
+const DIALOG_NAME = "Panda, ask about Siddharth’s work";
 
 async function openConsole(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Open chat" }).click();
