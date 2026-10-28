@@ -303,7 +303,7 @@ function PulseInner() {
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask <span className="label-wide">my AI</span>
+              Ask <span className="label-wide">about my work</span>
             </button>
           </div>
         </nav>

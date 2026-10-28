@@ -254,7 +254,7 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
       },
       {
         id: "chat",
-        label: "Ask my AI assistant",
+        label: "Ask about my work",
         hint: "Open chat",
         keywords: "sid ai assistant chatbot",
         icon: <MessageCircle size={15} />,

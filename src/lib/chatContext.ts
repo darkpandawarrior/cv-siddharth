@@ -133,7 +133,7 @@ export const QUICK_PROMPTS = [
 ];
 
 export const HOME_GREETING =
-  "Hi, I'm **Panda** — Siddharth's AI assistant. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.\n\nHiring? Type `/jd`, paste the job description, and I'll score the fit honestly — gaps included. Type `/` for the rest of the commands.";
+  "Hi, I’m **Panda**. I know Siddharth’s work. Ask me about his Android work (GPS engineering, the Compose migration, crash hunts), or ask me to show you around — I can link you straight to the demos, case studies and writing on this site.\n\nHiring? Type `/jd`, paste the job description, and I'll score the fit honestly — gaps included. Type `/` for the rest of the commands.";
 
 // Only /resume gets its own copy — its questions are about a person, not about
 // a thing on a page, so no template produces them. Every other page falls back

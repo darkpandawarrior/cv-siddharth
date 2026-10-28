@@ -45,7 +45,7 @@ test("FloatingChat is not requested until the launcher is clicked, then the pane
   await expect(launcher).toBeVisible();
   await launcher.click();
 
-  const dialog = page.getByRole("dialog", { name: "Panda, Siddharth’s AI assistant" });
+  const dialog = page.getByRole("dialog", { name: "Panda, ask about Siddharth’s work" });
   await expect(dialog).toBeVisible();
   expect(chatChunkUrls.length, "clicking the launcher never requested the FloatingChat chunk").toBeGreaterThan(0);
 });

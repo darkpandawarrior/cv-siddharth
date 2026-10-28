@@ -834,7 +834,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
         <div
           ref={panelRef}
           role="dialog"
-          aria-label="Panda, Siddharth’s AI assistant"
+          aria-label="Panda, ask about Siddharth’s work"
           className={`sheet panel fixed z-50 flex flex-col overflow-hidden shadow-2xl print:hidden ${ expanded ? "inset-2 sm:inset-6 lg:inset-10" : "bottom-6 right-6 h-[560px] max-h-[calc(100dvh-3rem)] w-[min(400px,calc(100vw-2rem))]" }`}
         >
           {/* A plain div, not <header>: inside a role="dialog" this is the
@@ -846,7 +846,7 @@ export function FloatingChat({ initialDetail }: { initialDetail?: OpenChatDetail
             <div className="min-w-0">
               <p className="font-display text-sm font-bold">
                 <span className="mr-1.5 font-mono text-[11px] font-normal text-accent">sid@android:~$</span>
-                Panda <span className="font-normal text-muted">· Siddharth’s AI assistant</span>
+                Panda <span className="font-normal text-muted">· ask about my work</span>
               </p>
               <p className="truncate text-xs text-muted">
                 Answers as Siddharth · <span className="font-mono text-accent2">/</span> for commands

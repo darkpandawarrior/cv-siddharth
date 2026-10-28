@@ -88,7 +88,7 @@ export function WritingView() {
               onClick={() => openChat()}
               className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim"
             >
-              Ask my AI
+              Ask about my work
             </button>
           </div>
         </nav>

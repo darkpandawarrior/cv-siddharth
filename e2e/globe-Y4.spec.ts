@@ -19,7 +19,7 @@ for (const viewport of [{ width: 360, height: 740 }, { width: 390, height: 844 }
       const box = await header.boundingBox();
       console.log(`Y4 header ${route} ${viewport.width}: ${box?.height}px`);
       expect(box!.height).toBeLessThanOrEqual(60);
-      for (const control of [header.getByRole("button", { name: "Surfaces" }), header.getByRole("button", { name: "Portfolio" }), ...["STREET", "ORBIT", "GLOBE"].map((name) => header.getByRole("link", { name, exact: true })), header.getByRole("button", { name: "Ask my AI" })]) {
+      for (const control of [header.getByRole("button", { name: "Surfaces" }), header.getByRole("button", { name: "Portfolio" }), ...["STREET", "ORBIT", "GLOBE"].map((name) => header.getByRole("link", { name, exact: true })), header.getByRole("button", { name: "Ask about my work" })]) {
         await expect(control).toBeVisible();
         const rect = await control.boundingBox();
         expect(rect!.width).toBeGreaterThanOrEqual(44);
