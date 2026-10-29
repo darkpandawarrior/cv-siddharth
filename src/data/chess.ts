@@ -6,28 +6,28 @@
 export type ChessData = typeof chess;
 
 export const chess = {
-  "generatedAt": "2026-10-28T05:15:00.487Z",
+  "generatedAt": "2026-10-29T13:45:44.708Z",
   "username": "darkpandawarrior",
   "totals": {
-    "games": 19406,
-    "wins": 9440,
-    "losses": 9469,
+    "games": 19416,
+    "wins": 9449,
+    "losses": 9470,
     "draws": 497,
     "hours": 763
   },
   "boardTime": {
     "scope": "both platforms, two measurements",
     "lichessHours": 763,
-    "chesscomHours": 319,
-    "combinedHours": 1082,
+    "chesscomHours": 320,
+    "combinedHours": 1083,
     "note": "lichess self-reports playTime.total; the chess.com half is derived from live-game PGN wall clock (UTCDate/StartTime to EndDate/EndTime). Two measurement methods, not one uniform metric.",
     "chesscom": {
-      "games": 4982,
+      "games": 4992,
       "skipped": 0,
       "excludedDaily": 305,
       "byClass": {
         "bullet": 28.7,
-        "blitz": 275.5,
+        "blitz": 276.2,
         "rapid": 14.8
       },
       "meanMinutes": 3.8
@@ -35,9 +35,9 @@ export const chess = {
   },
   "length": {
     "scope": "chess.com",
-    "games": 4982,
+    "games": 4992,
     "median": 32,
-    "mean": 33.959,
+    "mean": 33.948,
     "max": 90,
     "winMedian": 29,
     "lossMedian": 33,
@@ -45,29 +45,29 @@ export const chess = {
       {
         "lo": 0,
         "hi": 20,
-        "n": 748,
-        "winRate": 0.584,
+        "n": 749,
+        "winRate": 0.585,
         "flagShareOfLosses": 0.125
       },
       {
         "lo": 20,
         "hi": 30,
-        "n": 1409,
-        "winRate": 0.562,
+        "n": 1414,
+        "winRate": 0.564,
         "flagShareOfLosses": 0.3
       },
       {
         "lo": 30,
         "hi": 40,
-        "n": 1312,
+        "n": 1314,
         "winRate": 0.49,
         "flagShareOfLosses": 0.354
       },
       {
         "lo": 40,
         "hi": 50,
-        "n": 644,
-        "winRate": 0.466,
+        "n": 646,
+        "winRate": 0.467,
         "flagShareOfLosses": 0.334
       },
       {
@@ -85,7 +85,7 @@ export const chess = {
         "flagShareOfLosses": 0.325
       }
     ],
-    "decided": 4785
+    "decided": 4795
   },
   "material": {
     "scope": "chess.com",
@@ -98,7 +98,7 @@ export const chess = {
     "moves": [
       {
         "move": "d4",
-        "n": 1894
+        "n": 1898
       },
       {
         "move": "g3",
@@ -124,18 +124,18 @@ export const chess = {
   },
   "clutch": {
     "scope": "chess.com",
-    "n": 622,
-    "wins": 190,
-    "rate": 0.305
+    "n": 624,
+    "wins": 191,
+    "rate": 0.306
   },
   "checkmate": {
     "scope": "chess.com",
-    "delivered": 756,
+    "delivered": 758,
     "received": 1113
   },
   "span": {
     "from": "2019-02-09",
-    "to": "2026-10-27"
+    "to": "2026-10-29"
   },
   "activityByYear": [
     {
@@ -176,7 +176,7 @@ export const chess = {
     {
       "year": "2026",
       "lichess": 0,
-      "chesscom": 1618
+      "chesscom": 1628
     }
   ],
   "platforms": [
@@ -214,8 +214,8 @@ export const chess = {
       "id": "chess.com",
       "url": "https://www.chess.com/member/darkpandawarrior",
       "joined": "2021-01-22",
-      "lastActive": "2026-10-27",
-      "games": 5287,
+      "lastActive": "2026-10-29",
+      "games": 5297,
       "peaks": [
         {
           "format": "blitz",
@@ -240,7 +240,7 @@ export const chess = {
   "thesis": {
     "decidedOnClock": 0.408,
     "lossesOnTime": 0.493,
-    "winsOnTime": 0.324,
+    "winsOnTime": 0.323,
     "deciles": [
       {
         "bucket": 0,
@@ -256,7 +256,7 @@ export const chess = {
       },
       {
         "bucket": 2,
-        "win": 0.893,
+        "win": 0.894,
         "loss": 0.86,
         "gap": 0.034
       },
@@ -294,7 +294,7 @@ export const chess = {
         "bucket": 8,
         "win": 0.437,
         "loss": 0.355,
-        "gap": 0.082
+        "gap": 0.081
       },
       {
         "bucket": 9,
@@ -303,11 +303,11 @@ export const chess = {
         "gap": 0.082
       }
     ],
-    "sampleSize": 3694
+    "sampleSize": 3704
   },
   "discipline": {
-    "distinctDays": 2351,
-    "spanDays": 2818,
+    "distinctDays": 2353,
+    "spanDays": 2820,
     "longestDayStreak": 298,
     "longestWin": 12,
     "longestLoss": 14
@@ -315,28 +315,28 @@ export const chess = {
   "tilt": {
     "afterWin": 0.501,
     "afterLoss": 0.47,
-    "n": 8552
+    "n": 8555
   },
   "sessionDecay": [
     {
       "position": 1,
       "winRate": 0.485,
-      "n": 10607
+      "n": 10614
     },
     {
       "position": 2,
       "winRate": 0.484,
-      "n": 4324
+      "n": 4325
     },
     {
       "position": 3,
       "winRate": 0.49,
-      "n": 2065
+      "n": 2066
     },
     {
       "position": 4,
-      "winRate": 0.53,
-      "n": 1037
+      "winRate": 0.531,
+      "n": 1038
     },
     {
       "position": 5,
@@ -595,23 +595,23 @@ export const chess = {
       "openings": [
         {
           "name": "Scandinavian Defense Mieses Kotrc Variation",
-          "count": 235,
-          "share": 0.29
+          "count": 238,
+          "share": 0.291
         },
         {
           "name": "Scandinavian Defense",
           "count": 64,
-          "share": 0.079
+          "share": 0.078
+        },
+        {
+          "name": "Queens Pawn Opening",
+          "count": 26,
+          "share": 0.032
         },
         {
           "name": "Queens Pawn Opening Zukertort Chigorin Variation",
           "count": 26,
           "share": 0.032
-        },
-        {
-          "name": "Queens Pawn Opening",
-          "count": 25,
-          "share": 0.031
         },
         {
           "name": "French Defense Advance Variation",
@@ -623,20 +623,20 @@ export const chess = {
   ],
   "colour": {
     "white": {
-      "games": 9706,
+      "games": 9710,
       "winRate": 0.489
     },
     "black": {
-      "games": 9700,
+      "games": 9706,
       "winRate": 0.484
     }
   },
   "accuracy": {
-    "mean": 70.832,
-    "inWins": 73.876,
+    "mean": 70.835,
+    "inWins": 73.84,
     "inLosses": 63.787,
-    "covered": 578,
-    "total": 5287
+    "covered": 583,
+    "total": 5297
   },
   "bestUpset": {
     "opRating": 1867,
@@ -647,26 +647,24 @@ export const chess = {
     "speed": "rapid"
   },
   "puzzle": {
-    "id": "VTLk5",
-    "fen": "4K3/3P4/pb6/2p3p1/2P3k1/1P6/P7/8 w - - 1 1",
+    "id": "Ba42D",
+    "fen": "rn5r/ppp3pp/2kbQn2/8/2N1p3/1P2B3/P1P2PPP/qN2K2R w K - 0 1",
     "solution": [
-      "b3b4",
-      "c5b4",
-      "c4c5",
-      "b6c5",
-      "d7d8q"
+      "c4a5",
+      "c6b5",
+      "e6c4",
+      "b5a5",
+      "c4a4"
     ],
-    "rating": 1825,
+    "rating": 1679,
     "themes": [
-      "deflection",
-      "endgame",
-      "advancedPawn",
-      "advantage",
+      "exposedKing",
+      "middlegame",
       "long",
-      "promotion",
-      "bishopEndgame"
+      "mateIn3",
+      "sacrifice"
     ],
-    "lastMove": "d8b6"
+    "lastMove": "d4a1"
   },
   "arc": [
     {
@@ -1238,12 +1236,8 @@ export const chess = {
           "r": 1287
         },
         {
-          "t": 1792926263000,
-          "r": 1275
-        },
-        {
-          "t": 1793122908000,
-          "r": 1251
+          "t": 1793279673000,
+          "r": 1314
         }
       ]
     },
