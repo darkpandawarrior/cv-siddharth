@@ -25,9 +25,9 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-10-20T12:06:09.053Z",
+  "generatedAt": "2026-11-01T13:52:12.844Z",
   "from": "2019-01",
-  "to": "2026-10",
+  "to": "2026-11",
   "months": [
     "2019-01",
     "2019-02",
@@ -122,7 +122,8 @@ export const timeline: Timeline = {
     "2026-07",
     "2026-08",
     "2026-09",
-    "2026-10"
+    "2026-10",
+    "2026-11"
   ],
   "lanes": [
     {
@@ -225,9 +226,10 @@ export const timeline: Timeline = {
         "2026-07": 19,
         "2026-08": 19,
         "2026-09": 19,
-        "2026-10": 2
+        "2026-10": 2,
+        "2026-11": 2
       },
-      "total": 900,
+      "total": 902,
       "milestones": [
         {
           "ym": "2026-04",
@@ -236,13 +238,13 @@ export const timeline: Timeline = {
           "label": "Neev Consulting: Consulting Engineer, Platform & AI"
         },
         {
-          "ym": "2026-05",
+          "ym": "2026-06",
           "lane": "work",
           "kind": "delivered",
           "label": "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test provin"
         },
         {
-          "ym": "2026-09",
+          "ym": "2026-10",
           "lane": "work",
           "kind": "delivered",
           "label": "Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of"
@@ -521,9 +523,10 @@ export const timeline: Timeline = {
         "2026-07": 272,
         "2026-08": 205,
         "2026-09": 240,
-        "2026-10": 150
+        "2026-10": 4,
+        "2026-11": 0
       },
-      "total": 19352,
+      "total": 19206,
       "peak": {
         "ym": "2020-12",
         "v": 619
@@ -629,7 +632,8 @@ export const timeline: Timeline = {
         "2026-07": 2,
         "2026-08": 2,
         "2026-09": 1,
-        "2026-10": 0
+        "2026-10": 0,
+        "2026-11": 0
       },
       "total": 25,
       "milestones": [
@@ -753,13 +757,14 @@ export const timeline: Timeline = {
         "2026-03": 58,
         "2026-04": 103,
         "2026-05": 49,
-        "2026-06": 1410,
-        "2026-07": 3105,
-        "2026-08": 1681,
-        "2026-09": 2923,
-        "2026-10": 1088
+        "2026-06": 1415,
+        "2026-07": 3223,
+        "2026-08": 1768,
+        "2026-09": 3003,
+        "2026-10": 1547,
+        "2026-11": 3
       },
-      "total": 10735,
+      "total": 11487,
       "milestones": [
         {
           "ym": "2026-08",
@@ -878,7 +883,7 @@ export const timeline: Timeline = {
       ],
       "peak": {
         "ym": "2026-07",
-        "v": 3105
+        "v": 3223
       }
     }
   ]
