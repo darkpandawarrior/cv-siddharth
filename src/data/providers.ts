@@ -17,7 +17,7 @@ export interface Provider {
   status: string;
 }
 
-export const generatedAt = "2026-10-20";
+export const generatedAt = "2026-10-28";
 
 export const ARCHETYPES = [
   {

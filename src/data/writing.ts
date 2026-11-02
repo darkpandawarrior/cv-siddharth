@@ -15,9 +15,9 @@ export const writing: Writing = {
       "slug": "the-captain-never-rows",
       "pillar": "engineering-practice",
       "series": "notes-from-the-loop",
-      "status": "ready",
+      "status": "published",
       "created": "2026-09-02",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/the-captain-routes-the-captain-never-rows-4o2p",
       "tags": [
         "ai-assisted-development",
         "orchestration",
@@ -25,16 +25,24 @@ export const writing: Writing = {
         "tooling"
       ],
       "project": "AgentHarness",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/the-captain-routes-the-captain-never-rows-4o2p"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "I audited my own migrations. It was not fine.",
       "slug": "the-ferryman-rows-one-way",
       "pillar": "data-integrity",
       "series": "crossing-the-schema",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-31",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/i-audited-my-own-migrations-it-was-not-fine-f45",
       "tags": [
         "android",
         "room",
@@ -43,16 +51,24 @@ export const writing: Writing = {
         "kotlin"
       ],
       "project": "Doori",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/i-audited-my-own-migrations-it-was-not-fine-f45"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "Plausible is worse than wrong",
       "slug": "the-borrowed-hand",
       "pillar": "engineering-practice",
       "series": "notes-from-the-loop",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-29",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/plausible-is-worse-than-wrong-2dl2",
       "tags": [
         "ai-assisted-development",
         "code-review",
@@ -61,16 +77,24 @@ export const writing: Writing = {
         "android"
       ],
       "project": "The Loopdown",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/plausible-is-worse-than-wrong-2dl2"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 1,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "Your thresholds do not belong in constants",
       "slug": "thresholds-in-config",
       "pillar": "data-integrity",
       "series": "chain-of-custody",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-27",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/your-thresholds-do-not-belong-in-constants-3loe",
       "tags": [
         "architecture",
         "configuration",
@@ -79,16 +103,24 @@ export const writing: Writing = {
         "tuning"
       ],
       "project": "Doori",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/your-thresholds-do-not-belong-in-constants-3loe"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 1
+        }
+      }
     },
     {
       "title": "Invariants are cheap. Silent corruption is not.",
       "slug": "invariants-are-cheap",
       "pillar": "data-integrity",
       "series": "chain-of-custody",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-25",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/invariants-are-cheap-silent-corruption-is-not-c9m",
       "tags": [
         "data-integrity",
         "validation",
@@ -97,7 +129,15 @@ export const writing: Writing = {
         "testing"
       ],
       "project": "Doori",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/invariants-are-cheap-silent-corruption-is-not-c9m"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "Every filter needs a documented exception",
@@ -640,4 +680,4 @@ export const writing: Writing = {
   ]
 };
 
-export const writingGeneratedAt = "2026-10-28";
+export const writingGeneratedAt = "2026-11-02";

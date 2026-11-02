@@ -204,11 +204,6 @@
     0,
     0
   ],
-  "benchmark:work:2026-05:delivered": [
-    1.717725,
-    0,
-    0
-  ],
   "benchmark:work:2026-06:delivered": [
     1.991253,
     0,
@@ -219,8 +214,8 @@
     0,
     0
   ],
-  "benchmark:work:2026-09:delivered": [
-    -0.816744,
+  "benchmark:work:2026-10:delivered": [
+    0.760789,
     0,
     0
   ],
@@ -3026,6 +3021,11 @@
   ],
   "river-width:2026-10": [
     0.568792,
+    0,
+    0
+  ],
+  "river-width:2026-11": [
+    0.302184,
     0,
     0
   ],
