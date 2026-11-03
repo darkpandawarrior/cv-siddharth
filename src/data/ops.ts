@@ -5,61 +5,61 @@
 export const perimeter = [
   {
     "file": "anthology.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:anthology"
   },
   {
     "file": "archiveText.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:archive-text"
   },
   {
     "file": "chess.ts",
-    "generatedAt": "2026-10-28",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:chess"
   },
   {
     "file": "chessDeep.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:chess-deep"
   },
   {
     "file": "history.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:history"
   },
   {
     "file": "kmpGraph.ts",
-    "generatedAt": "2026-10-16",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:stats"
   },
   {
     "file": "lanes.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:lanes"
   },
   {
     "file": "loopdownArt.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:loopdown-art"
   },
   {
     "file": "projectStats.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:stats"
   },
   {
     "file": "providers.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:providers"
   },
@@ -77,31 +77,31 @@ export const perimeter = [
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 30,
     "generator": "npm run gen:system-graph"
   },
   {
     "file": "timeline.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:timeline"
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:weeb"
   },
   {
     "file": "weebTitles.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-03",
     "slaDays": 45,
     "generator": "npm run gen:weeb"
   },
   {
     "file": "writing.ts",
-    "generatedAt": "2026-10-28",
+    "generatedAt": "2026-11-03",
     "slaDays": 21,
     "generator": "npm run gen:loopdown"
   }
@@ -226,61 +226,61 @@ export const leverage = [
 export type Drift = { repo: string; upstream: string; pin: string; behind: number | null; pinnedAt: string | null };
 export const drift: Drift[] = [
   {
-    "repo": "Gaddi",
+    "repo": "Doori",
     "upstream": "kmp-build-logic",
     "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "behind": null,
+    "pinnedAt": null
+  },
+  {
+    "repo": "Doori",
+    "upstream": "kmp-toolkit",
+    "pin": "59dee39",
+    "behind": null,
+    "pinnedAt": null
+  },
+  {
+    "repo": "Gaddi",
+    "upstream": "kmp-build-logic",
+    "pin": "c2d31a0",
+    "behind": null,
+    "pinnedAt": null
   },
   {
     "repo": "Gaddi",
     "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "f2c83f8",
+    "behind": 0,
+    "pinnedAt": "2026-10-27"
   },
   {
     "repo": "PaymentsLab-KMP",
     "upstream": "kmp-build-logic",
-    "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "c2d31a0",
+    "behind": null,
+    "pinnedAt": null
   },
   {
     "repo": "PaymentsLab-KMP",
     "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "f2c83f8",
+    "behind": 0,
+    "pinnedAt": "2026-10-27"
   },
   {
     "repo": "kmp-app-template",
     "upstream": "kmp-build-logic",
-    "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "1b7f221",
+    "behind": null,
+    "pinnedAt": null
   },
   {
     "repo": "kmp-app-template",
     "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
-  },
-  {
-    "repo": "Candidai",
-    "upstream": "kmp-build-logic",
-    "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
-  },
-  {
-    "repo": "Candidai",
-    "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "f2c83f8",
+    "behind": 0,
+    "pinnedAt": "2026-10-27"
   }
 ];
 
-export const opsGeneratedAt = "2026-10-28";
+export const opsGeneratedAt = "2026-11-03";
