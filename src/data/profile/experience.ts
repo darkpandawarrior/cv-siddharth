@@ -28,25 +28,23 @@ export interface Experience {
 export const experience: Experience[] = [
   {
     company: "Neev Consulting",
-    role: "Consulting Engineer, Platform & AI",
+    role: "Founding Engineer, Tech Lead",
     period: "April 2026 - Present",
-    location: "Contract, India",
+    location: "India",
     points: [
       {
-                text: "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end.",
-        // Deliberately not tier 1. Four months of concurrent consulting reads as
-        // a side engagement next to the Dice platform ownership, and on a single
-        // page it was spending a heading plus four lines to say so. Dropping the
-        // whole role off the one-pager bought back the leadership and security
-        // bullets below, which is what a Lead loop actually asks about. Full record
-        // only, per the settled decision that Neev stays off both send cuts.
+        // Neev now shows on both send cuts (owner ruling 2026-11-04): the work is
+        // a platform, an AI layer and business systems, and the evidence is 488 of
+        // 647 merged PRs. Tier 1 survives into the one-pager and the two-pager.
+        tier: 1,
+        text: "Tech lead of ERP systems for project based firms, built on one ERPNext and Frappe platform forked per client. Wrote 488 of the 647 merged PRs across six repositories, under Jira and PR review. Wrote the AI assistant layer: business context resolution, a capability registry and role gating, where every capability ships off by default with a test that proves it. Deployed, not live.",
       },
       {
-                text: "Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.",
-        // Full record only. Promoting the leadership bullet above pushed the
-        // two-pager 15px past its budget, and a second bullet about a
-        // concurrent Python engagement is the cheapest thing on an Android
-        // résumé to spend — the role still states itself on the two-pager.
+        tier: 2,
+        text: "Designed the delivery platform and its client forks: a 60 doctype vertical for an environmental engineering contractor (RFQs, bills of quantities, award, milestones, retention), a quotation demo for an equipment supplier, and Neev's own instance through to GST invoice and payment. Python, Frappe, MariaDB, React 19, Docker Compose, LibreChat with five MCP integrations.",
+      },
+      {
+        text: "Built the guard rails for coding agents on client code: a gate that keeps client amounts, names and contacts out of the repo, core edit guards, a plan gate and a release register. Most code volume comes from agents inside the harness I built.",
       },
     ],
   },
@@ -58,7 +56,7 @@ export const experience: Experience[] = [
     // a rankable-seniority parser needs on the position line itself without
     // asserting an employer-issued title he doesn't hold.
     role: "Senior Android Engineer (SDE-2) & Product Owner",
-    period: "June 2023 - September 2026",
+    period: "June 2023 - October 2026",
     location: "Pune, India",
     points: [
       {
@@ -213,10 +211,14 @@ export const experience: Experience[] = [
         // unmaintainable within a year" — it argues for the decision rather
         // than reporting it, and the line bought the crash bullet its space.
         text: "I built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase rather than a fork per client, with vertical enablement on server driven feature flags. Cut per-client delivery time 80%.",
+        // Back at tier 1 2026-11-04 once the print-only body padding was removed and the
+        // one-pager had room again.
         tier: 1,
       },
       {
                 text: "I owned requirements and delivery for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build.",
+        // Demoted to tier 2 earlier on 2026-11-04 when Neev took a tier-1 slot and the one-pager ran
+        // to two pages. Back at tier 1 after the print-only body padding went (about 71px freed).
         tier: 1,
       },
       {

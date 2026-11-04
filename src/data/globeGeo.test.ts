@@ -8,7 +8,7 @@ describe("globeGeo", () => {
     expect(employersUnresolved).toEqual(expected);
     // Pinned to the two known-unresolved locations so a silent GEOCODE edit,
     // or a new employer row, fails loudly here instead of drifting quiet.
-    expect(employersUnresolved).toEqual(["Contract, India"]);
+    expect(employersUnresolved).toEqual(["India"]);
   });
 
   it("never invents a coordinate for an unresolved location", () => {

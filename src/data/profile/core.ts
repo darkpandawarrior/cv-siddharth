@@ -4,7 +4,7 @@
 export const profile = {
   name: "Siddharth Pandalai",
   title: "Senior Android Engineer",
-  resumeTitle: "Senior Android Engineer, Mobile Architecture & Platform",
+  resumeTitle: "Senior Android & Kotlin Multiplatform Engineer, Mobile, Platform & Agentic Systems",
   tagline: "I take Android apps from prototype to platform.",
   location: "Pune, India",
   email: "siddharthpandalai990@gmail.com",
@@ -31,7 +31,7 @@ export const profile = {
   availabilityShort: "Remote or Pune / Bengaluru",
   // Casual blurb shown on the portfolio homepage hero
   intro:
-    "5+ years building production Android. I owned the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users. I joined it with zero Kotlin in the codebase. I took the UI layer to ~87% Compose. Location accuracy, crash-free sessions, architecture a team can move fast in.",
+    "5+ years building production Android. I owned the platform behind a ~964k-LOC financial SaaS app serving 50,000+ monthly users. I joined it with zero Kotlin in the codebase. I took the UI layer to ~87% Compose. Location accuracy, crash-free sessions, architecture a team can move fast in. Beyond mobile, I lead engineering at Neev Consulting and run a multi-CLI agent harness.",
   // One-pager summary. Same claims, a third of the lines — on a single page
   // every line the summary takes is a line the experience section loses, and
   // the experience section is what gets him called.
@@ -39,7 +39,7 @@ export const profile = {
     "Senior Android Engineer, 5+ years in Kotlin. I owned a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning through release. I inherited it as Java and took the UI layer to Jetpack Compose and Material 3, on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The hardest parts were underneath the UI, in the location pipeline and in performance at scale.",
   // Formal summary shown on the résumé view (ATS-friendly, keyword-dense)
   summary:
-    "Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app.",
+    "Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app. Beyond mobile, I am Founding Engineer and Tech Lead at Neev Consulting, and I built a private agent harness (320 merged PRs in about four months, three AI coding CLIs). The systems feed each other: the harness runs Neev's agent layer.",
 };
 
 export const education = {

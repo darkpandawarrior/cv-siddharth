@@ -1,5 +1,5 @@
 {
-  "generatedAt": "321d3d3a40b0",
+  "generatedAt": "56a2c36fbf16",
   "profile": {
     "name": "Siddharth Pandalai",
     "title": "Senior Android Engineer",
@@ -10,7 +10,7 @@
     "portfolio": "https://siddharth-pandalai.vercel.app",
     "writing": "https://dev.to/darkpandawarrior",
     "availability": "Open to remote (worldwide / India) and hybrid in Pune / Bengaluru",
-    "summary": "Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app."
+    "summary": "Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app. Beyond mobile, I am Founding Engineer and Tech Lead at Neev Consulting, and I built a private agent harness (320 merged PRs in about four months, three AI coding CLIs). The systems feed each other: the harness runs Neev's agent layer."
   },
   "routes": [
     "/",

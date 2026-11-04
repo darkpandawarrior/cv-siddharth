@@ -308,6 +308,15 @@ body {
   padding-right: var(--chat-fab-clearance);
 }
 
+/* The chat launcher does not print, so its clearance column must not either:
+   it cost ~71px of the one-page budget at the 11px print root. */
+@media print {
+  body {
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+}
+
 @media screen and (max-width: 767px) {
   body {
     position: relative;
