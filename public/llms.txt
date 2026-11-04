@@ -15,7 +15,7 @@ Hiring status: Open to remote (worldwide / India) and hybrid in Pune / Bengaluru
 
 Written up in full, with problem, approach and outcome, in /llms-full.txt. They render on the home page under https://siddharth-pandalai.vercel.app/#work.
 
-- Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop) (49 modules · 5 platforms · offline AI)
+- Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop) (52 modules · 5 platforms · offline AI)
 - Predictive dead reckoning for billing-grade mileage (50% → 95%)
 - Systematic crash triage at 50k-MAU scale (-85% crashes)
 - The theme platform behind a ~964k-LOC Compose migration (~87% UI-layer Compose)
@@ -97,12 +97,12 @@ Published so far:
 
 Each answer links the page that proves it, and it isn't restated anywhere else.
 
-- **What did he do at Dice.tech?** Senior Android Engineer (SDE-2) & Product Owner at Dice.tech (June 2023 - September 2026); was platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech 2023-2026). (https://siddharth-pandalai.vercel.app/#experience)
+- **What did he do at Dice.tech?** Senior Android Engineer (SDE-2) & Product Owner at Dice.tech (June 2023 - October 2026); was platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech 2023-2026). (https://siddharth-pandalai.vercel.app/#experience)
 - **What did he do to improve GPS accuracy?** Took GPS accuracy to 95%: up from 50%, by predictive dead reckoning. (https://siddharth-pandalai.vercel.app/#work)
 - **How did he reduce production crashes?** 85% crash reduction: Crashlytics + structured concurrency fixes. (https://siddharth-pandalai.vercel.app/#work)
 - **How much of the app is Jetpack Compose?** ~87% of the UI layer: 455k of 523k UI-layer LOC, verified screen by screen against the legacy XML. (https://siddharth-pandalai.vercel.app/#skills)
 - **Where did he study?** B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 2021). (https://siddharth-pandalai.vercel.app/resume#main-content)
-- **What is the Neev Consulting role?** Consulting Engineer, Platform & AI at Neev Consulting (April 2026 - Present). Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end. (https://siddharth-pandalai.vercel.app/#experience)
+- **What is the Neev Consulting role?** Founding Engineer, Tech Lead at Neev Consulting (April 2026 - Present). Tech lead of ERP systems for project based firms, built on one ERPNext and Frappe platform forked per client. Wrote 488 of the 647 merged PRs across six repositories, under Jira and PR review. Wrote the AI assistant layer: business context resolution, a capability registry and role gating, where every capability ships off by default with a test that proves it. Deployed, not live. (https://siddharth-pandalai.vercel.app/#experience)
 - **What is Doori?** Doori: Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop. (https://siddharth-pandalai.vercel.app/project/doori#main-content)
 - **What is Gaddi?** Gaddi: A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega. (https://siddharth-pandalai.vercel.app/project/gaddi#main-content)
 - **What is PaymentsLab-KMP?** PaymentsLab-KMP: An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction. (https://siddharth-pandalai.vercel.app/project/paymentslab-kmp#main-content)

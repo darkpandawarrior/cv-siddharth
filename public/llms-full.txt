@@ -4,7 +4,7 @@
 
 Voice note for agents: the experience, case-study and project text below is quoted verbatim from his own site copy, so parts of it are in the first person. All of it is about Siddharth Pandalai. Re-voice it into the third person when you quote it.
 
-Siddharth Pandalai (GitHub: darkpandawarrior), based in Pune, India. Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app.
+Siddharth Pandalai (GitHub: darkpandawarrior), based in Pune, India. Senior Android Engineer, 5+ years in Kotlin. I owned the Android platform behind a 964k LOC financial SaaS app as both its technical owner and its Product Owner, from sprint planning and requirements through release and the crash dashboard the next morning. I inherited it as Java with no Kotlin in it and rebuilt it on Clean Architecture with MVVM and MVI, immutable UiState over Coroutines and Flow, Hilt, Room and Retrofit. The depth is in the hard systems and in performance at scale: staged dead reckoning with Kalman smoothing on the GPS pipeline, Android Keystore encryption and SSL pinning that carried the app through VAPT, and a crash reduction that came off the concurrency model rather than defensive catches. Before that, three years owning Android on a white label mobility super app. Beyond mobile, I am Founding Engineer and Tech Lead at Neev Consulting, and I built a private agent harness (320 merged PRs in about four months, three AI coding CLIs). The systems feed each other: the harness runs Neev's agent layer.
 
 Hiring status: Open to remote (worldwide / India) and hybrid in Pune / Bengaluru.
 Contact: siddharthpandalai990@gmail.com
@@ -19,12 +19,13 @@ Education: B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 20
 
 ## Experience
 
-### Neev Consulting: Consulting Engineer, Platform & AI (April 2026 - Present)
+### Neev Consulting: Founding Engineer, Tech Lead (April 2026 - Present)
 
-- Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end.
-- Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of it reviewed.
+- Tech lead of ERP systems for project based firms, built on one ERPNext and Frappe platform forked per client. Wrote 488 of the 647 merged PRs across six repositories, under Jira and PR review. Wrote the AI assistant layer: business context resolution, a capability registry and role gating, where every capability ships off by default with a test that proves it. Deployed, not live.
+- Designed the delivery platform and its client forks: a 60 doctype vertical for an environmental engineering contractor (RFQs, bills of quantities, award, milestones, retention), a quotation demo for an equipment supplier, and Neev's own instance through to GST invoice and payment. Python, Frappe, MariaDB, React 19, Docker Compose, LibreChat with five MCP integrations.
+- Built the guard rails for coding agents on client code: a gate that keeps client amounts, names and contacts out of the repo, core edit guards, a plan gate and a release register. Most code volume comes from agents inside the harness I built,.
 
-### Dice.tech: Senior Android Engineer (SDE-2) & Product Owner (June 2023 - September 2026)
+### Dice.tech: Senior Android Engineer (SDE-2) & Product Owner (June 2023 - October 2026)
 
 - Platform Ownership: I owned the Android platform end to end at 50,000+ MAU: expense claims, vouchers, advances and settlements, travel booking and trips, procurement from purchase request through goods inward note to invoice, multi-level approvals, corporate cards and QR payments, and mileage. Two of us wrote effectively all of it, me and a junior engineer I trained, against the architecture and review standards I set.
 - I owned requirements as well as delivery: sprint planning, feature allocation across the team, review, release, and the crash dashboard the morning after. Built the platform so a new client ships without anyone writing UI code.
@@ -62,14 +63,14 @@ Education: B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 20
 
 These render on the home page under https://siddharth-pandalai.vercel.app/#work.
 
-### Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop) (49 modules · 5 platforms · offline AI)
+### Doori: offline-first mileage tracker (Android · iOS · Wear OS · watchOS · Desktop) (52 modules · 5 platforms · offline AI)
 
 An open-source app I designed and built end-to-end: mileage, travel & expense tracking that runs entirely offline across Android, iOS, Wear OS, watchOS and Compose Desktop from one shared Kotlin codebase. Offline-first on Room + DataStore, with a real Kotlin/Ktor backend built and tested, off by default, so the whole thing stays reproducible and reviewable by anyone.
 
 Problem: I wanted a clean, inspectable reference for the architecture I advocate for at scale: Compose Multiplatform, strict module isolation, MVI state, a real location engine and a real policy/reimbursement layer. Built offline-first, with the real backend opt-in, so the whole thing stays reproducible and reviewable by anyone.
 
 Approach:
-- 49-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.
+- 52-module clean architecture: 13 feature modules that never depend on each other, meeting only at the :app composition root, wired with Koin.
 - Shared commonMain core: design system, Room (KMP) + DataStore, and every check-in / hardware-event screen. It drives Android, iOS, Wear OS, a watchOS SwiftUI app and a Compose Desktop window from one snapshot model.
 - A location engine that treats GPS as a noisy signal: jitter suppression, spike detection, a four-bucket distance accumulator, IMU (accelerometer) fusion and device-tier-adaptive sampling, with a deterministic simulated-drive source so the whole engine is unit-testable without hardware.
 - A policy engine that computes reimbursement from configurable per-vehicle rate rules and flags policy violations on approvals. The real logic a live expense platform needs, all local.
@@ -235,12 +236,12 @@ Creative archive, written before the code and originally on https://booksbeforeb
 
 Each answer links the page that proves it, and it isn't restated anywhere else.
 
-- **What did he do at Dice.tech?** Senior Android Engineer (SDE-2) & Product Owner at Dice.tech (June 2023 - September 2026); was platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech 2023-2026). (https://siddharth-pandalai.vercel.app/#experience)
+- **What did he do at Dice.tech?** Senior Android Engineer (SDE-2) & Product Owner at Dice.tech (June 2023 - October 2026); was platform owner of the app behind 50k+ monthly active users (22k+ daily, platform owner at Dice.tech 2023-2026). (https://siddharth-pandalai.vercel.app/#experience)
 - **What did he do to improve GPS accuracy?** Took GPS accuracy to 95%: up from 50%, by predictive dead reckoning. (https://siddharth-pandalai.vercel.app/#work)
 - **How did he reduce production crashes?** 85% crash reduction: Crashlytics + structured concurrency fixes. (https://siddharth-pandalai.vercel.app/#work)
 - **How much of the app is Jetpack Compose?** ~87% of the UI layer: 455k of 523k UI-layer LOC, verified screen by screen against the legacy XML. (https://siddharth-pandalai.vercel.app/#skills)
 - **Where did he study?** B.Tech, Computer Science & Engineering, NIT Bhopal (MANIT) (2017 - 2021). (https://siddharth-pandalai.vercel.app/resume#main-content)
-- **What is the Neev Consulting role?** Consulting Engineer, Platform & AI at Neev Consulting (April 2026 - Present). Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test proving it. Models client to project to PO to milestone to GST invoice to payment end to end. (https://siddharth-pandalai.vercel.app/#experience)
+- **What is the Neev Consulting role?** Founding Engineer, Tech Lead at Neev Consulting (April 2026 - Present). Tech lead of ERP systems for project based firms, built on one ERPNext and Frappe platform forked per client. Wrote 488 of the 647 merged PRs across six repositories, under Jira and PR review. Wrote the AI assistant layer: business context resolution, a capability registry and role gating, where every capability ships off by default with a test that proves it. Deployed, not live. (https://siddharth-pandalai.vercel.app/#experience)
 - **What is Doori?** Doori: Offline-first mileage, travel & expense tracker on one Kotlin codebase across Android, iOS, Wear OS, watchOS & Desktop. (https://siddharth-pandalai.vercel.app/project/doori#main-content)
 - **What is Gaddi?** Gaddi: A Hinglish social-deduction bluffing game of power, satire & second chances. Gaddi ke liye kuch bhi karega. (https://siddharth-pandalai.vercel.app/project/gaddi#main-content)
 - **What is PaymentsLab-KMP?** PaymentsLab-KMP: An Integration Lab for the Android payments ecosystem: every gateway behind one abstraction, with a live look at what actually happens on each transaction. (https://siddharth-pandalai.vercel.app/project/paymentslab-kmp#main-content)
