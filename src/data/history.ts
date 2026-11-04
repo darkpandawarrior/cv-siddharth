@@ -94,10 +94,10 @@ export const historyMonths: HistoryMonth[] = [
   },
   {
     "ym": "2026-10",
-    "commits": 52,
-    "insertions": 61626,
-    "deletions": 5965,
-    "filesChanged": 1329,
+    "commits": 70,
+    "insertions": 62818,
+    "deletions": 14282,
+    "filesChanged": 1808,
     "subjects": [
       "feat(globe): the living earth, with real imagery, live feeds and places (#133)",
       "fix(globe): production polish for chrome, imagery, feeds and assets (#134)",
@@ -107,13 +107,32 @@ export const historyMonths: HistoryMonth[] = [
       "fix(refresh): repair the daily data refresh and land a full refresh (#138)"
     ],
     "cumulative": {
-      "commits": 1277,
-      "insertions": 316212,
-      "deletions": 56849
+      "commits": 1295,
+      "insertions": 317404,
+      "deletions": 65166
+    }
+  },
+  {
+    "ym": "2026-11",
+    "commits": 10,
+    "insertions": 381,
+    "deletions": 87,
+    "filesChanged": 48,
+    "subjects": [
+      "fix(assets): heavy() URL joins in generators, dedupe globe thumbnails (#222)",
+      "feat(profile): show the true extent of the work, fix stale claims",
+      "fix(resume): refresh globe plate, fit Neev on the one-page cut",
+      "fix(profile): drop stray comma in Neev bullet",
+      "fix(resume): drop chat-launcher body padding in print, restore Jugnoo tier-1 bullets"
+    ],
+    "cumulative": {
+      "commits": 1305,
+      "insertions": 317785,
+      "deletions": 65253
     }
   }
 ] as const;
-export const historyGeneratedAt = "2026-10-20";
+export const historyGeneratedAt = "2026-11-04";
 export const historyFrom = "2026-06";
-export const historyTo = "2026-10";
-export const totalCommits = 1277;
+export const historyTo = "2026-11";
+export const totalCommits = 1305;

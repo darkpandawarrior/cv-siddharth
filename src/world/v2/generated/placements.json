@@ -134,8 +134,8 @@
     0,
     0
   ],
-  "benchmark:work:2023-11:delivered": [
-    2.486333,
+  "benchmark:work:2023-12:delivered": [
+    -2.793326,
     0,
     0
   ],
@@ -149,8 +149,8 @@
     0,
     0
   ],
-  "benchmark:work:2024-06:delivered": [
-    1.24338,
+  "benchmark:work:2024-07:delivered": [
+    -1.757501,
     0,
     0
   ],
@@ -159,8 +159,8 @@
     0,
     0
   ],
-  "benchmark:work:2024-11:delivered": [
-    1.955843,
+  "benchmark:work:2024-12:delivered": [
+    -0.045662,
     0,
     0
   ],
@@ -174,8 +174,8 @@
     0,
     0
   ],
-  "benchmark:work:2025-06:delivered": [
-    -2.059219,
+  "benchmark:work:2025-07:delivered": [
+    0.073679,
     0,
     0
   ],
@@ -184,13 +184,13 @@
     0,
     0
   ],
-  "benchmark:work:2025-11:delivered": [
-    -1.98579,
+  "benchmark:work:2025-12:delivered": [
+    3.472197,
     0,
     0
   ],
-  "benchmark:work:2026-01:delivered": [
-    -2.882969,
+  "benchmark:work:2026-02:delivered": [
+    -3.996389,
     0,
     0
   ],
@@ -209,8 +209,8 @@
     0,
     0
   ],
-  "benchmark:work:2026-06:delivered": [
-    1.991253,
+  "benchmark:work:2026-07:delivered": [
+    3.354248,
     0,
     0
   ],
@@ -221,6 +221,11 @@
   ],
   "benchmark:work:2026-09:delivered": [
     -0.816744,
+    0,
+    0
+  ],
+  "benchmark:work:2026-10:delivered": [
+    0.760789,
     0,
     0
   ],
@@ -3029,6 +3034,11 @@
     0,
     0
   ],
+  "river-width:2026-11": [
+    0.302184,
+    0,
+    0
+  ],
   "site-courses:course-1": [
     2.574229,
     0,
@@ -3116,6 +3126,11 @@
   ],
   "site-courses:course-25": [
     1.204888,
+    0,
+    0
+  ],
+  "site-courses:course-26": [
+    1.451725,
     0,
     0
   ],
