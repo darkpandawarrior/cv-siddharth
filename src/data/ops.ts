@@ -65,7 +65,7 @@ export const perimeter = [
   },
   {
     "file": "repoStats.ts",
-    "generatedAt": "2026-09-23",
+    "generatedAt": "2026-10-28",
     "slaDays": 30,
     "generator": "npm run gen:repo-stats"
   },
