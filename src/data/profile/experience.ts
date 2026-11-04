@@ -211,11 +211,14 @@ export const experience: Experience[] = [
         // unmaintainable within a year" — it argues for the decision rather
         // than reporting it, and the line bought the crash bullet its space.
         text: "I built a per-tenant flavour system (build config, resource overlays, isolated storage and branding) so 150+ clients ship from one codebase rather than a fork per client, with vertical enablement on server driven feature flags. Cut per-client delivery time 80%.",
-        tier: 1,
+        // Demoted to tier 2 2026-11-04 so Neev fits the one-pager; the role keeps its bullets on the two-pager.
+        tier: 2,
       },
       {
                 text: "I owned requirements and delivery for the P2P carpool, trucking, e-bike and super-app verticals, writing the specs I then had to build.",
-        tier: 1,
+        // Demoted to tier 2 2026-11-04: Neev now holds a tier-1 slot and the one-pager ran to
+        // two pages. This repeats the requirements-ownership claim the Dice role already carries.
+        tier: 2,
       },
       {
                 text: "I built the Razorpay and Stripe gateway integrations across checkout flows, handled Stripe 3D Secure through an SDK migration, and built the corporate account verification flow from scratch in MVVM.",
