@@ -50,7 +50,7 @@
     </style>
 </head>
 <body>
-    <div id="loader">Sab mile hue hain&hellip;</div>
+    <div id="loader" role="status">Sab mile hue hain&hellip;</div>
     <!-- type="module" is REQUIRED: the webpack bundle uses import.meta and
          throws a parse-time SyntaxError as a classic script (app never boots). -->
     <script type="module" src="cmp-web.js"></script>
@@ -60,14 +60,19 @@
         // that belongs to the older CanvasBasedWindow API, and a stray full-size
         // canvas sits over Compose's real one and swallows all pointer input (the
         // game renders but never responds). Hide the loader as soon as Compose's
-        // canvas is inserted; 8s hard fallback for a slow link.
+        // canvas is inserted; keep a visible status on a slow link.
         const loader = document.getElementById('loader');
-        const hide = () => loader.classList.add('hidden');
+        const slowLoad = setTimeout(() => {
+            loader.textContent = 'Still loading… Please wait.';
+        }, 8000);
+        const hide = () => {
+            clearTimeout(slowLoad);
+            loader.classList.add('hidden');
+        };
         const obs = new MutationObserver(() => {
             if (document.querySelector('body > canvas')) { hide(); obs.disconnect(); }
         });
         obs.observe(document.body, { childList: true });
-        setTimeout(hide, 8000);
     </script>
 </body>
 </html>
