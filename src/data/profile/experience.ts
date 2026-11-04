@@ -44,7 +44,7 @@ export const experience: Experience[] = [
         text: "Designed the delivery platform and its client forks: a 60 doctype vertical for an environmental engineering contractor (RFQs, bills of quantities, award, milestones, retention), a quotation demo for an equipment supplier, and Neev's own instance through to GST invoice and payment. Python, Frappe, MariaDB, React 19, Docker Compose, LibreChat with five MCP integrations.",
       },
       {
-        text: "Built the guard rails for coding agents on client code: a gate that keeps client amounts, names and contacts out of the repo, core edit guards, a plan gate and a release register. Most code volume comes from agents inside the harness I built,.",
+        text: "Built the guard rails for coding agents on client code: a gate that keeps client amounts, names and contacts out of the repo, core edit guards, a plan gate and a release register. Most code volume comes from agents inside the harness I built.",
       },
     ],
   },
