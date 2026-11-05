@@ -302,9 +302,8 @@ body {
   background-color: var(--color-ink);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
-  /* Desktop keeps a narrow lane for the fixed chat launcher. On phones the
-     launchers live in a document-top utility row instead: reserving a 104px
-     column there squeezed a 390px page down to 286px. */
+  /* Desktop keeps a narrow lane for the fixed chat launcher. On phones,
+     compact launchers share the header row without reserving a column. */
   --chat-fab-clearance: 6.5rem;
   padding-bottom: var(--chat-fab-clearance);
   padding-right: var(--chat-fab-clearance);
@@ -322,17 +321,23 @@ body {
 @media screen and (max-width: 767px) {
   body {
     position: relative;
-    padding-top: 80px;
+    padding-top: 0;
     padding-right: 0;
     padding-bottom: 0;
   }
   .palette-trigger,
   .chat-launcher {
-    position: absolute;
+    position: fixed;
+    top: 6px;
     bottom: auto;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
   }
-  .palette-trigger { top: 18px; min-height: 44px; }
-  .chat-launcher { top: 12px; }
+  .palette-trigger { left: 12px; justify-content: center; padding: 0; }
+  .palette-trigger span { display: none; }
+  .chat-launcher { right: 12px; }
+  [data-spine="route-header"] > nav { padding-inline: 4rem; }
 }
 
 /* F5: the chat-lane clearance is only earned space at 768-1279px, where the
@@ -3933,8 +3938,10 @@ header.z-10.border-b.border-line > .border-b.border-line.bg-void\/40 > div {
 .ops-state { white-space: nowrap; }
 
 .ops-verified {
+  min-width: 0;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: var(--color-muted);
 }
 a.ops-verified { transition: color var(--dur-fast) var(--ease-out-quart); }
@@ -4659,6 +4666,10 @@ a.ops-verified:hover { color: var(--color-accent); }
    property so this class stays state-agnostic. */
 .chip-evidence {
   display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   align-items: center;
   gap: 0.375rem;
   font-family: var(--font-mono);
