@@ -145,28 +145,29 @@ for (const [name, ceiling] of Object.entries(budgets.namedChunks ?? {})) {
 // Total deploy size: everything Vercel ships from dist/client today,
 // public/*-app included — moving those to an asset origin is a different
 // lane's job, and this ceiling ratchets down with it rather than assuming it.
-const totalBytes = dirSize(clientDir);
+const evidencePath = join(clientDir, "evidence-budget.json");
+const generatedAt = new Date().toISOString();
+// Replace any old report, and include the new report in the deployed bytes.
+const baseBytes = dirSize(clientDir) - (existsSync(evidencePath) ? statSync(evidencePath).size : 0);
+const totalCheck = { name: "total dist/client", actual: baseBytes, ceiling: budgets.totalDeploySizeBytes, pass: baseBytes <= budgets.totalDeploySizeBytes };
+checks.push(totalCheck);
+let evidence;
+let totalBytes = baseBytes;
+for (;;) {
+  totalCheck.actual = totalBytes;
+  totalCheck.pass = totalBytes <= totalCheck.ceiling;
+  evidence = JSON.stringify({ generatedAt, checks, failing: failures.length > 0 || !totalCheck.pass }, null, 2);
+  const measured = baseBytes + Buffer.byteLength(evidence);
+  if (measured === totalBytes) break;
+  totalBytes = measured;
+}
 report.push(`total dist/client: ${totalBytes.toLocaleString("en-US")} B (ceiling ${budgets.totalDeploySizeBytes.toLocaleString("en-US")})`);
-checks.push({ name: "total dist/client", actual: totalBytes, ceiling: budgets.totalDeploySizeBytes, pass: totalBytes <= budgets.totalDeploySizeBytes });
-if (totalBytes > budgets.totalDeploySizeBytes) {
+if (!totalCheck.pass) {
   failures.push(`dist/client total ${totalBytes.toLocaleString("en-US")} B > ceiling ${budgets.totalDeploySizeBytes.toLocaleString("en-US")} B`);
 }
 
-// arch-L14: written UNCONDITIONALLY, before the pass/fail decides whether to
-// exit — so a failing budget still ships its own red row. This is the ONLY
-// mechanism that gets a budget result in front of a visitor: ci.yml's own
-// `vite build` is a throwaway (see the comment at the top of this file), so
-// this file has to come from the SAME build Vercel actually deploys. That
-// build runs `npm run build` (vercel.json's buildCommand), and npm invokes
-// this script automatically as `postbuild` (package.json) — the exact
-// mechanism `prebuild`/`predev` already rely on, not a new one. Written into
-// dist/client so it ships as a same-origin static file in this deploy, never
-// a client-writable channel: nothing at request time can change what it says
-// short of a new deploy.
-writeFileSync(
-  join(clientDir, "evidence-budget.json"),
-  JSON.stringify({ generatedAt: new Date().toISOString(), checks, failing: failures.length > 0 }, null, 2),
-);
+// Publish evidence even for a failed budget, from the same build being checked.
+writeFileSync(evidencePath, evidence);
 
 console.log(report.join("\n"));
 
