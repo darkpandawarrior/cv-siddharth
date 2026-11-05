@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-10-28T05:15:00.487Z",
+  "generatedAt": "2026-11-05T15:29:10.883Z",
   "counts": {
     "year-strata": 8,
     "weir": 4,
     "footbridge": 0,
-    "pr-stone": 27,
+    "pr-stone": 31,
     "lesson-kite": 17,
     "archive-kite": 10,
     "chess-paddy": 8,
     "firefly": 208,
     "deepmal-niche": 178,
-    "benchmark": 53,
-    "site-courses": 25,
+    "benchmark": 54,
+    "site-courses": 26,
     "employer-marker": 2
   },
   "peaks": {
@@ -451,39 +451,44 @@
       "peakAt": "2026-09-25"
     },
     "river-width:2026-04": {
-      "current": 23.32439797045346,
-      "peak": 23.32439797045346,
-      "peakAt": "2026-09-25"
+      "current": 23.422260253020873,
+      "peak": 23.422260253020873,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "river-width:2026-05": {
-      "current": 21.855429890965702,
-      "peak": 21.855429890965702,
-      "peakAt": "2026-09-25"
+      "current": 21.95329217353311,
+      "peak": 21.95329217353311,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "river-width:2026-06": {
-      "current": 28.55479353991388,
-      "peak": 28.55479353991388,
-      "peakAt": "2026-10-01T09:42:03.178Z"
+      "current": 28.659750909169702,
+      "peak": 28.659750909169702,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "river-width:2026-07": {
-      "current": 30.137427421954566,
-      "peak": 30.137427421954566,
-      "peakAt": "2026-10-01T09:42:03.178Z"
+      "current": 30.31007938335175,
+      "peak": 30.31007938335175,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "river-width:2026-08": {
-      "current": 28.90717858537363,
-      "peak": 28.90717858537363,
-      "peakAt": "2026-10-20T12:25:56.244Z"
+      "current": 29.106194010828855,
+      "peak": 29.106194010828855,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "river-width:2026-09": {
-      "current": 30.016312106974574,
-      "peak": 30.016312106974574,
-      "peakAt": "2026-10-04T13:12:51.700Z"
+      "current": 30.16898235075397,
+      "peak": 30.16898235075397,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "river-width:2026-10": {
-      "current": 24.230015653040738,
-      "peak": 24.230015653040738,
-      "peakAt": "2026-10-20T12:25:56.244Z"
+      "current": 28.859146688585724,
+      "peak": 28.859146688585724,
+      "peakAt": "2026-11-05T15:29:10.883Z"
+    },
+    "river-width:2026-11": {
+      "current": 23.074119682448217,
+      "peak": 23.074119682448217,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "district-bench:foundation": {
       "current": 46,
@@ -601,9 +606,9 @@
       "peakAt": "2026-09-25"
     },
     "landmark-facet:employer:Neev Consulting:flights": {
-      "current": 2,
-      "peak": 2,
-      "peakAt": "2026-09-25"
+      "current": 3,
+      "peak": 3,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "landmark-facet:employer:Dice.tech:flights": {
       "current": 17,
@@ -621,14 +626,14 @@
       "peakAt": "2026-09-25"
     },
     "reach-installs:reach-installs": {
-      "current": 2937070,
-      "peak": 2937070,
-      "peakAt": "2026-10-01"
+      "current": 3017075,
+      "peak": 3017075,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     },
     "reach-upstream:reach-upstream": {
-      "current": 25,
-      "peak": 25,
-      "peakAt": "2026-10-01T09:42:03.178Z"
+      "current": 29,
+      "peak": 29,
+      "peakAt": "2026-11-05T15:29:10.883Z"
     }
   }
 }
