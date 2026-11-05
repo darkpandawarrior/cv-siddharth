@@ -14,7 +14,7 @@ import {
   Target,
   Crown,
 } from "lucide-react";
-import {profile, metrics, experience, education, caseStudies, skills, projects, cardMedia, siteRooms } from "./data/profile.ts";
+import {profile, metrics, resumeMetrics, experience, education, caseStudies, skills, projects, cardMedia, siteRooms } from "./data/profile.ts";
 import { countWord } from "./data/labs.ts";
 import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
@@ -431,8 +431,15 @@ function Hero() {
             4.24s of which 3,600ms was render delay on this one <p>, with
             nothing actually blocking. Same one-class fix the h1 already had. */}
         <p className="rise-in rise-in-lcp rise-in-2 mt-5 max-w-2xl text-lg leading-relaxed text-zinc-300">
-          {profile.intro}
+          {profile.intro.slice(0, profile.intro.indexOf(". ") + 1)}
         </p>
+        <ul className="hero-studio-stats" aria-label="Platform results">
+          {[...metrics.filter((metric) => metric.label === "monthly active users" || metric.label === "UI-layer Compose"), ...resumeMetrics.slice(-1)].map((metric) => (
+            <li key={metric.label} title={metric.detail}>
+              <strong>{metric.value}</strong> <span>{metric.label}</span>
+            </li>
+          ))}
+        </ul>
         <div className="rise-in rise-in-3 mt-8 flex flex-wrap gap-3">
           <Link to="/project/$slug" params={{ slug: selectedSlug }} className="hero-studio-primary">Explore my work <ArrowUpRight size={17} aria-hidden="true" /></Link>
           <button
@@ -450,6 +457,10 @@ function Hero() {
             View résumé
           </Link>
         </div>
+        <details className="mt-5 max-w-2xl text-sm leading-relaxed text-muted">
+          <summary className="cursor-pointer">Platform background</summary>
+          <p className="mt-2">{profile.intro.slice(profile.intro.indexOf(". ") + 2)}</p>
+        </details>
         <p className="rise-in rise-in-3 mt-6 text-xs text-muted">{profile.availability}</p>
         <nav className="hero-studio-paths" aria-label="Explore the portfolio">
           <Link to="/map"><span>01</span> Connected work <ArrowUpRight size={14} /></Link>
