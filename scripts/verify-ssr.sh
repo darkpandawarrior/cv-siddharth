@@ -5,7 +5,7 @@
 # from CSR routes. Run `npm run build && npm run serve` (port 4173) first,
 # then run this script in another shell.
 #
-# ponytail: `grep` (no -a) treats the response as binary and silently
+# `grep` (no -a) treats the response as binary and silently
 # reports no match — the SSR payload embeds a NUL byte inside the router's
 # serialized state script tag (e.g. `"__root__\x00"`). Every grep below uses
 # `-a` to force text mode; drop it and these checks false-negative even when
@@ -33,7 +33,7 @@ curl -s "$BASE/project/doori" | grep -aqi "doori" && echo PROJECT-SSR || { echo 
 # against dist/client/ after `npm run build` — see task-9-10-report.md), so
 # these checks actually fail if a CSR route starts SSR'ing its body.
 #
-# ponytail: no associative array (macOS ships bash 3.2 — no -A support, and
+# no associative array (macOS ships bash 3.2 — no -A support, and
 # `set -u` makes unquoted `[key]` subscripts blow up as "unbound variable").
 # Eight plain lines, same shape as the SSR checks above.
 csr_check() {

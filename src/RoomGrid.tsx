@@ -406,7 +406,7 @@ export function RoomGrid({ previews = true }: { previews?: boolean } = {}) {
  * room is six — a ranking is two clicks of noise wearing a chart, and the site
  * draws nothing that implies more rigour than its data has. A tie therefore
  * says "tied" instead of picking the first key in registry order.
- * ponytail: revisit a ranked strip only if the top room clears 25 and doubles
+ * revisit a ranked strip only if the top room clears 25 and doubles
  * the median. Below that there is nothing to rank.
  *
  * EVERY ROOM, WHICH IS WHAT MAKES THE SUPERLATIVE SAYABLE. `topEvents` runs

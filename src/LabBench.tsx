@@ -6,7 +6,7 @@ import { Reveal } from "./Reveal.tsx";
 import { StaggerReveal } from "./StaggerReveal.tsx";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { chess } from "./data/chess.ts";
-// ponytail: SignalLab pulls in leaflet, which touches `window` at module-load
+// SignalLab pulls in leaflet, which touches `window` at module-load
 // time — harmless client-side, fatal during SSR. `<ClientOnly>` below defers
 // that eval to the client, same pattern as BlueprintRoom/ComposePlayground in
 // App.tsx. The reason recorded here used to be "the home route imports

@@ -12,7 +12,7 @@ import type { Answer } from "../data/source/answers.ts";
  * shared between the visitor's question and an answer's `question` + its
  * `keywords`, scored as a fraction of the QUERY's own words — the same shape
  * gen-system-prompt.mjs's `covered()` already uses for prompt-trimming, so
- * this repo has one matching idiom, not two. ponytail: no stemming, no
+ * this repo has one matching idiom, not two. no stemming, no
  * synonym table beyond each answer's own `keywords` — a query has to share
  * real words with a real answer. Good enough for a floor; the model handles
  * everything paraphrased past that.

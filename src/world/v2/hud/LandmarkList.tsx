@@ -1,5 +1,5 @@
 /**
- * The accessible landmark list (this lane's own task list): every landmark
+ * The accessible landmark list (this change's own task list): every landmark
  * in the world model, as a visually hidden list of native `<button>`s that
  * call the SAME handler a click/dwell on the in-world landmark would
  * (`onEnter`) — `react-three-a11y` stays out (rejected dependency,

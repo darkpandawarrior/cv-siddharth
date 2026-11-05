@@ -50,7 +50,7 @@ export default function SkyConstellations({ now, tier }: SkyConstellationsProps)
     };
   }, []);
 
-  // Test seam only (this lane's brief: "constellation lines exist via a seam
+  // Test seam only (this change's brief: "constellation lines exist via a seam
   // in your own files"), same raw-DOM-node technique SkyLayer.tsx and
   // skyMoon.tsx already use for their own probes rather than a portal (a
   // component mounted inside <Canvas> is reconciled by R3F's own renderer,

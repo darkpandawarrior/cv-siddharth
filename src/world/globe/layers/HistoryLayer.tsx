@@ -1,4 +1,4 @@
-/** WAVE 6 LANE X3 (time machine: USGS history replay while scrubbing) owns
+/** X3 (time machine: USGS history replay while scrubbing) owns
  *  this file. Mounted by GlobeScene.tsx alongside HazardLayer, gated the
  *  same way (`layers.hazards`) but hidden at `timeOffsetMin === 0` — the
  *  live HazardLayer already owns "now"; this only replays quakes the
@@ -28,7 +28,7 @@ const UP = new THREE.Vector3(0, 0, 1);
 // index range — reused every frame, never (re)allocated in useFrame.
 const rangeOut = new Uint32Array(2);
 
-// ponytail: the same shallow-warm/deep-cool ramp as quake.ts's
+// the same shallow-warm/deep-cool ramp as quake.ts's
 // depthToColor, duplicated as raw RGB rather than imported — that helper
 // composes a hex STRING (an allocation) every call, and this loop runs
 // every frame; importing it would mean allocating a throwaway string per
@@ -111,7 +111,7 @@ export default function HistoryLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3
       // on the "zero per-frame allocation" brief for why that matters here
       // specifically (quakeGlyphs/hazardHalos tolerate the same allocation
       // because their per-frame overlays are gated to far fewer instances
-      // and this lane's brief asked for stricter).
+      // and this change's brief asked for stricter).
       const latR = (history.lat[i] * Math.PI) / 180;
       const lonR = (history.lon[i] * Math.PI) / 180;
       const cosLat = Math.cos(latR);

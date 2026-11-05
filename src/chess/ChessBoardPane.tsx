@@ -153,7 +153,7 @@ export default function ChessBoardPane({ reduced }: { reduced: boolean }) {
     const game = gameRef.current;
     if (!game || locked) return false;
     if (!game.moves({ square: from as Square, verbose: true }).some((m) => m.to === to)) return false;
-    // ponytail: promotions always take a queen. A promotion picker is a
+    // promotions always take a queen. A promotion picker is a
     // dialog, a focus trap and four more pieces of UI for a case that shows
     // up in a fraction of games against a bot that rarely reaches an endgame.
     game.move({ from, to, promotion: "q" });

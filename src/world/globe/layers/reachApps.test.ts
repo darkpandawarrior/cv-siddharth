@@ -49,7 +49,7 @@ describe("buildAppRing", () => {
   // column per app, not a second, independently-sourced number. If a future
   // gen-store.mjs run ever changes how fleetStats.installFloor is computed
   // (say, to include storeApps too) this is the guard that catches the
-  // drift -- see this lane's report for the relationship this asserts and
+  // drift -- see this change's report for the relationship this asserts and
   // why storeApps (his own 3 named apps, not the white-label fleet) is
   // deliberately excluded from the ring.
   it("the real fleet's per-app floors sum to exactly fleetStats.installFloor", () => {

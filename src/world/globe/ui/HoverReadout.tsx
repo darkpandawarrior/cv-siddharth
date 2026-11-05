@@ -22,7 +22,7 @@ import { modelObservationTime, utc, type PinnedValue } from "./pinnedReadout.ts"
 import { allowHoverFetch, type HoverFetchHost, nearestQuakeWithin, windLabel } from "./hoverReadout.ts";
 
 /**
- * WAVE 7 LANE V4 (hover readout, Windy-picker pattern): on desktop pointer
+ * V4 (hover readout, Windy-picker pattern): on desktop pointer
  * hover, a small glass chip follows the cursor showing what's already in
  * memory -- country (the worker's 5deg index, same as CountryLayer.tsx),
  * local time (solar approximation -- there is no reverse-geocoded time zone

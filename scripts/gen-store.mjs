@@ -243,7 +243,7 @@ async function probe(id) {
   // gl pins the storefront. Without it Play answers for the caller's country, so a CI runner in
   // the US read every client app not offered in the US (an Angolan taxi app, say) as a 404 and
   // stopped the daily refresh. IN is the storefront the full mine has always seen, from India.
-  // ponytail: one storefront; an app offered nowhere near IN would read as delisted. Upgrade path:
+  // one storefront; an app offered nowhere near IN would read as delisted. Upgrade path:
   // confirm a 404 against the client's own country before treating it as evidence.
   const url = `https://play.google.com/store/apps/details?id=${id}&hl=en&gl=IN`;
   for (let attempt = 0; attempt < 3; attempt++) {

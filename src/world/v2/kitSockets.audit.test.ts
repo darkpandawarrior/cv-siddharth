@@ -4,10 +4,10 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * P2-07e's own gate (this lane's acceptance list): the four audited kits
+ * P2-07e's own gate (this change's acceptance list): the four audited kits
  * (keystone bridge, Doori ghat, Gaddi ghat, ghat-kit) plus the new Tara Kund
  * observatory each parse as valid GLB, and their JSON chunk's node (and
- * material) names carry the sockets this lane's task list names — never a
+ * material) names carry the sockets this change's task list names — never a
  * baked data count (world-v2-spec.md §0.3 rule 2: "no GLB bakes a data
  * count"). A GLB not yet produced by its Blender script is skipped, not
  * failed, matching this repo's "not written yet -> skip" convention
@@ -55,13 +55,13 @@ function readGlb(path: string): GlbDoc {
 const DATA_COUNT_SUFFIX = /\.\d{2,}(\.|$)/;
 
 /** socket.inflow.NN (sangam-keystone-bridge, P1-13) and socket.mooring.NN
- * (gaddi-ghat, P1-13) predate this lane and are not in its task list — both
+ * (gaddi-ghat, P1-13) predate this change and are not in its task list — both
  * are a fixed, small physical mount-point allocation (5 tributary berths
  * under the arch, 3 ships edges), zero-padded to 2 digits by the landed
- * script's own `{i:02d}` formatting, not a live count this lane bakes. This
+ * script's own `{i:02d}` formatting, not a live count this change bakes. This
  * lane's own additions (socket.niche.*, socket.schema_*, socket.tier_pitch,
  * socket.starfield) carry no digit suffix at all, so the exemption never
- * shadows a real violation this lane could introduce. */
+ * shadows a real violation this change could introduce. */
 const PRE_EXISTING_FIXED_SUFFIX = /^socket\.(inflow|mooring)\.\d{2}$/;
 
 const KITS: Array<{ id: string; expectedNodes: string[] }> = [

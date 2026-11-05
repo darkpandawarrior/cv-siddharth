@@ -91,12 +91,12 @@ export const NARRATE_MAX_CHARS = 280;
  *  your files"). execute.ts falls back to a registered handler for any
  *  `type` outside the 10 kinds above (see execute.ts's default branch).
  *
- * ponytail: no other lane exists yet to register anything, and validate.ts
+ * no other lane exists yet to register anything, and validate.ts
  * only allow-lists these 10 built-in kinds — a future lane adding a new
  * action type also has to widen validate.ts's allowlist; this registry only
  * gets its own action THROUGH once that happens. Building a generic,
  * schema-less pass-through validator for a shape nobody has defined yet
- * would be exactly the speculative abstraction ponytail forbids. Widen
+ * would be exactly a speculative abstraction. Widen
  * validate.ts's KNOWN_ACTION_TYPES check when the first real consumer shows
  * up, not before. */
 export type ActionHandler = (action: { type: string; [key: string]: unknown }) => void;

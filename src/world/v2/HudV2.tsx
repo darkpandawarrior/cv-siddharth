@@ -49,7 +49,7 @@ export function HudV2({ sections, sinceSentence, features, rows, highlightedRule
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 sm:p-4">
       {/* Every landmark this world model knows about, reachable by Tab even
-          though the Canvas above is aria-hidden — this lane's own
+          though the Canvas above is aria-hidden — this change's own
           accessible-landmark-list task. */}
       <LandmarkList landmarks={landmarks} onEnter={setSelectedLandmark} />
 

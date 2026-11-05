@@ -74,7 +74,7 @@ function fromApiTrack(t: SpotifyApiTrack) {
  * scope, keyed on nothing but time, so a warm isolate spends one exchange per
  * token lifetime rather than one per request.
  *
- * ponytail: module-scope only, resets on a cold start — same tradeoff
+ * module-scope only, resets on a cold start — same tradeoff
  * ops-handler.ts's cache makes, and for the same reason (no KV/Upstash
  * dependency for a portfolio site). A cold start costs one extra exchange,
  * not a correctness bug.

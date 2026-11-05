@@ -57,14 +57,14 @@ export function SkyMoon({ now }: { now: Date }) {
   const markerClick = useMarkerClick(true);
   const probeRef = useRef<HTMLSpanElement | null>(null);
 
-  // Test seam only (this lane's brief): a plain DOM node, created and
+  // Test seam only (this change's brief): a plain DOM node, created and
   // appended imperatively - NOT React's `createPortal`. A component
   // mounted inside <Canvas> is reconciled by @react-three/fiber's own
   // renderer, which processes a `createPortal`'s target purely through
   // ITS OWN host config (it has no built-in bridge back to react-dom); the
   // result is R3F trying to instantiate a "span" as a THREE class and
   // throwing "Span is not part of the THREE namespace" (reproduced, not
-  // guessed - see this lane's report). drei's own <Html> sidesteps this
+  // guessed - see this change's report). drei's own <Html> sidesteps this
   // the same way: `ReactDOM.createRoot(el)` on a manually-made element
   // (node_modules/@react-three/drei/web/Html.js), never createPortal.
   // This probe needs no React tree of its own, just a DOM node to write a

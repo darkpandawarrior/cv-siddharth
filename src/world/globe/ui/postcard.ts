@@ -7,7 +7,7 @@
 import { LAYER_IDS, sceneHandles, useGlobe, type LayerId, type StatusKey } from "../globeStore.ts";
 
 /** Mirrors LayerPanel.tsx's own (unexported) LABEL record -- restated per
- *  this lane's own file-ownership boundary (LayerPanel.tsx isn't ours to
+ *  this change's own file-ownership boundary (LayerPanel.tsx isn't ours to
  *  edit or re-export from). Only layers that draw something a screenshot
  *  could actually show; "guide" (My Maps places, curated) and "together"
  *  (a live headcount, not a drawn feature) are still listed since both do

@@ -17,7 +17,7 @@
 import { readdirSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { HEAVY_ASSET_BASE } from "../src/lib/assetBase.ts";
+import { heavy } from "../src/lib/assetBase.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Compare sets moved off Vercel onto GitHub Pages (heavy/) — see assetBase.ts. They are
@@ -69,7 +69,7 @@ if (existsSync(projectsDir)) {
         const isDark = /\s*dark$/.test(raw);
         const key = isDark ? raw.replace(/\s*dark$/, "").trim() : raw;
         const entry = byLabel.get(key) ?? { label: key, light: null, dark: null };
-        const url = `${HEAVY_ASSET_BASE}/projects/${slug}/compare/${setName}/${f}`;
+        const url = heavy(`/projects/${slug}/compare/${setName}/${f}`);
         if (isDark) entry.dark = url;
         else entry.light = url;
         byLabel.set(key, entry);

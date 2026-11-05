@@ -11,7 +11,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 test("visiting doori then gaddi lights exactly those two nodes on /map, with a solid edge between them", async ({ page }) => {
   // Reduced motion keeps StoryMap.tsx on its 2D canvas fallback
   // (`wants3D = !reduced && ...`). The 3D scene's drei <Html> labels
-  // (StoryMapScene.tsx, not owned by this lane) intercept clicks on the
+  // (StoryMapScene.tsx, not owned by this change) intercept clicks on the
   // chip-row links underneath them even outside the canvas box, a
   // pre-existing bug this test works around rather than masks; the flow
   // below is testing sessionRipple plus the overlay, not that renderer.

@@ -62,7 +62,7 @@ function Planet({ id, now, showLabel }: { id: PlanetId; now: Date; showLabel: bo
   const labelRef = useRef<HTMLSpanElement | null>(null);
   const probeRef = useRef<HTMLSpanElement | null>(null);
 
-  // Test seam only (this lane's brief: "planet click selects"): a plain DOM
+  // Test seam only (this change's brief: "planet click selects"): a plain DOM
   // node written with this planet's own current screen projection every
   // frame, the exact same raw-DOM-node + `data-*-x/y` convention
   // skyMoon.tsx's own probe uses so e2e/globe-W4.spec.ts can click the
@@ -131,7 +131,7 @@ function Planet({ id, now, showLabel }: { id: PlanetId; now: Date; showLabel: bo
         { label: "Above horizon (Pune)", value: altAz.altitudeDeg > 0 ? "yes" : "no" },
         { label: "Magnitude", value: mag.toFixed(1) },
       ],
-      // Verbatim per this lane's own brief: a computed (not fetched) reading,
+      // Verbatim per this change's own brief: a computed (not fetched) reading,
       // "live: false" for the same reason skyMoon.tsx's own selection is —
       // never stale on a feed outage, but also not a live poll.
       source: "computed, Standish elements",

@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
  * under `vite preview` there is no real /api proxy for these, and even if
  * there were, a required gate never hits a live network). The Black Marble
  * mask stays real per e2e/globe.spec.ts's own precedent — irrelevant here,
- * this lane draws nothing earth-shaped.
+ * this change draws nothing earth-shaped.
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures/hazards");
 const quakesFixture = JSON.parse(readFileSync(join(FIXTURES, "quakes.json"), "utf8"));
@@ -79,7 +79,7 @@ test("quakes and EONET fires render from the live feeds, health reports live cou
 
   await expect.poll(async () => (await readDebug(page))?.quakes ?? 0, { timeout: 15_000 }).toBeGreaterThan(0);
   const debug = await readDebug(page);
-  expect(debug?.quakes).toBe(5); // this lane's own committed fixture (quake.test.ts asserts the same count)
+  expect(debug?.quakes).toBe(5); // this change's own committed fixture (quake.test.ts asserts the same count)
   expect(debug?.fires).toBeGreaterThan(0);
   expect(debug?.status.state).toBe("live");
   expect(debug?.status.detail).toContain("quakes");

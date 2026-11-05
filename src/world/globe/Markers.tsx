@@ -26,7 +26,7 @@ const RING_LIFT = 0.005;
  *
  * LANE U1 retired the floating `<Html>` card this ring used to carry (it
  * collided with the time scrubber, the tour and the layer panel at every
- * measured breakpoint - the bug this lane exists to fix). The three claim
+ * measured breakpoint - the bug this change exists to fix). The three claim
  * sentences it held now live in the Inspector (buildPuneSelection above);
  * this ring is a plain clickable 3D marker that opens them there, same as
  * any other selectable entity on the globe.

@@ -7,7 +7,7 @@ import { GDACS_POLL_MS } from "../world/globe/layers/hazardAlerts.ts";
 import { AURORA_POLL_MS, KP_POLL_MS } from "../world/globe/layers/aurora.ts";
 import { XRAY_URL, PROTON_URL, SOLAR_WIND_MAG_URL, SOLAR_WIND_SPEED_URL, SPACE_WEATHER_POLL_MS } from "../world/globe/layers/solarFlare.ts";
 
-// ponytail: @testing-library/react isn't a devDependency, so this tests the
+// @testing-library/react isn't a devDependency, so this tests the
 // extracted fetchLiveSignal(url, fetchImpl) helper directly instead of
 // renderHook — same coverage of the fetch/parse/error contract, no new dep.
 describe("fetchLiveSignal", () => {

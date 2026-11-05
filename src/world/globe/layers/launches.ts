@@ -1,6 +1,6 @@
 // LANE L7 (live earth events). Pure Launch Library 2 parsing, the countdown
 // formatter, and a tiny sessionStorage cache — LL2 is 15 req/hour
-// unauthenticated (this lane's brief), so HazardLayer fetches it once per
+// unauthenticated (this change's brief), so HazardLayer fetches it once per
 // page load and this cache is what makes a second mount, or a fast-refresh,
 // not count as a second request. No three, no React.
 //
@@ -37,8 +37,8 @@ const WITHIN_24H_MS = 24 * 60 * 60_000;
 
 /** `null` on a feed that doesn't look real. Only forward-looking launches
  *  with a real pad position survive — LL2's own "upcoming" list still
- *  includes the just-flown (this lane's committed fixture has one), and a
- *  pad this lane can't place on the globe can't draw a marker either. */
+ *  includes the just-flown (this change's committed fixture has one), and a
+ *  pad this change can't place on the globe can't draw a marker either. */
 export function parseLaunches(json: unknown, nowMs: number): Launch[] | null {
   const feed = json as Partial<RawFeed> | null;
   if (!feed || typeof feed !== "object" || !Array.isArray(feed.results)) return null;

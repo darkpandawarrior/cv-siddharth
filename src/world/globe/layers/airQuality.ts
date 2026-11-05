@@ -1,4 +1,4 @@
-// WAVE 9 LANE S3 (Open-Meteo air-quality layer for the hover readout). Same
+// S3 (Open-Meteo air-quality layer for the hover readout). Same
 // split as marine.ts/flood.ts -- see marine.ts's header for the shared
 // provider-family/CORS/licence evidence.
 //

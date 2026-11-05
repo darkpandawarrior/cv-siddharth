@@ -6,7 +6,7 @@ import { writing, writingGeneratedAt } from "../src/data/writing.ts";
  * published so far, and say when writing.ts was last regenerated.
  *
  * Derived from the live registry rather than a hand-typed slug list: a lesson
- * going live on dev.to and NOT appearing here is exactly the bug this lane
+ * going live on dev.to and NOT appearing here is exactly the bug this change
  * fixed upstream in gen-loopdown.mjs (engagementOf reading the registry's
  * dead `links` field instead of its real url_devto/etc. fields). A hardcoded
  * count would keep passing after that bug came back.

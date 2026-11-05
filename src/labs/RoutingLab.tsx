@@ -39,13 +39,13 @@ export const MECHANICAL_TASK_MS = 150;
 export const WORKER_SLOTS = 3;
 export const MECHANICAL_SLOTS = 2;
 
-/** ponytail: a demo pacing threshold, not one of the lesson's own numbers.
+/** a demo pacing threshold, not one of the lesson's own numbers.
  *  Picked so "the captain routes" stays flat indefinitely and "the captain
  *  rows" visibly backs up within a few seconds, matching the real shape
  *  ("two runs died on rate limits in the same week") without waiting for it. */
 export const RATE_LIMIT_QUEUE = 18;
 
-// ponytail: arrival rates are simulation-only pacing, tuned only so the two
+// arrival rates are simulation-only pacing, tuned only so the two
 // toggle states read as flat vs backed-up on screen. The published facts are
 // the labelled captions below, never these four numbers.
 const JUDGMENT_RATE_PER_MS = 1 / 4000;
@@ -187,7 +187,7 @@ export function RoutingLab() {
           ctx.globalAlpha = 1;
         }
 
-        // Queue bar: how much is waiting for this lane right now.
+        // Queue bar: how much is waiting for this change right now.
         const barX = 90 + 4 * 26 + 14;
         const barW = width - barX - 16;
         const filled = Math.min(1, queueFor[kind] / capFor[kind]);

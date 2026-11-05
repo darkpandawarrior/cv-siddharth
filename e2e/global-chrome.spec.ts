@@ -82,5 +82,5 @@ test("desktop launchers remain fixed and the mobile chat opens", async ({ page }
   }
   await page.setViewportSize(MOBILE);
   await chat.click();
-  await expect(page.getByRole("dialog", { name: "Panda, Siddharth’s AI assistant" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Panda, ask about Siddharth’s work" })).toBeVisible();
 });

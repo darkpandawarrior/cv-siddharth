@@ -21,14 +21,14 @@ uniform sampler2D uIce;
 uniform float uCloudReady;
 uniform sampler2D uRelief;
 uniform float uReliefReady;
-// WAVE 7 LANE V2 (city-light bloom): the multiplier that pushes ONLY the
+// V2 (city-light bloom): the multiplier that pushes ONLY the
 // night-lights term above 1.0 so a plain (non-selective) Bloom pass with
 // luminanceThreshold >= 1.0 picks out city clusters without touching the day
 // side, which this shader otherwise keeps <= 1.0. A named uniform (not a
 // literal) so GlobePost.tsx's threshold and this gain can be tuned together
 // without a shader recompile.
 uniform float uNightGain;
-// WAVE 6 LANE X3 (time machine): daily time-lapse (uTL*) and swipe compare
+// X3 (time machine): daily time-lapse (uTL*) and swipe compare
 // (uCompare*/uSplit) both only ever change what "the day photo" IS before
 // the rest of the pipeline (gap fill, clouds, relief, terminator, night
 // lights) runs on it unchanged — neither feature re-simulates lighting for
@@ -68,7 +68,7 @@ void main(){
   // Swath gaps and polar night in the daily VIIRS mosaic read as near-black;
   // patch them from the static Blue Marble base rather than draw a hole
   // (living-earth spec item 2).
-  // WAVE 6 LANE X3 FIX: this mask must read whichever frame is actually
+  // X3 FIX: this mask must read whichever frame is actually
   // drawn as dayColor above — the live uDay, a scrubbed time-lapse
   // crossfade, or a compare pick — never a hardcoded uDay sample. A past
   // day's real mosaic can have a swath/no-data gap that today's live uDay

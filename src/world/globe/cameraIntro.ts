@@ -1,10 +1,10 @@
-// WAVE 6 LANE X5 (cinematic, skippable first visit): pure timeline/path
+// X5 (cinematic, skippable first visit): pure timeline/path
 // math for the intro, plus the tiny cross-component signal CameraDirector.tsx
 // (inside the Canvas, drives the fly-in) and ui/Intro.tsx (a plain DOM
 // overlay, mounted as a sibling OUTSIDE the Canvas in Globe.tsx, owns the
 // copy/skip button) coordinate through. Neither can see the other's props --
 // Intro.tsx alone has `tier`, CameraDirector.tsx alone has the camera -- and
-// globeStore.ts (this app's actual shared state) is out of this lane's file
+// globeStore.ts (this app's actual shared state) is out of this change's file
 // ownership. A module-level singleton is the same shape globeStore.ts uses
 // for its own `entityPositions`/`sceneHandles` maps: state two independent
 // mounts both need that isn't worth a whole store slice for.

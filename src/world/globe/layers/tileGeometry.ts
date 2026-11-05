@@ -1,4 +1,4 @@
-// WAVE 2 LANE W1 (deep zoom): builds one tile's curved lat/lon patch mesh —
+// W1 (deep zoom): builds one tile's curved lat/lon patch mesh —
 // a grid of `segments`x`segments` quads following the real sphere, not a
 // flat rectangle, so a tile's own corners sit on the same sphere the whole-
 // globe imagery does (no seams at the join, no z-fighting from a flat patch

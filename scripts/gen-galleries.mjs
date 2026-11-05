@@ -12,7 +12,7 @@ import { readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { HEAVY_ASSET_BASE } from "../src/lib/assetBase.ts";
+import { heavy } from "../src/lib/assetBase.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Screenshots moved off Vercel onto GitHub Pages (heavy/) — see assetBase.ts.
@@ -46,7 +46,7 @@ if (existsSync(projectsDir)) {
       out[slug] = readdirSync(shots)
         .filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f) && !isDerivative(shots, f))
         .sort()
-        .map((f) => `${HEAVY_ASSET_BASE}/projects/${slug}/screenshots/${f}`);
+        .map((f) => heavy(`/projects/${slug}/screenshots/${f}`));
     }
   }
 }

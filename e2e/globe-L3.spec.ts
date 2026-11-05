@@ -5,7 +5,7 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 
 /**
  * LANE L3 (real orbits) — /globe's satellite layer, end to end. Only
- * `/api/tle` is mocked (this lane's own feed); every other `/api/*` this
+ * `/api/tle` is mocked (this change's own feed); every other `/api/*` this
  * page touches 404s under `vite preview` the same way it does in
  * production-without-a-function, and every other layer already degrades to
  * "failed, draw nothing" on that — the shared contract every lane in

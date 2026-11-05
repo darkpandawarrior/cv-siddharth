@@ -11,7 +11,7 @@
 //
 // Idempotent: a bundle that already carries parts and no index.pck is left
 // alone. Reversible: `cat index.pck.part-* > index.pck` and re-export the
-// shell. ponytail: parts are read fully into memory in the browser (as the
+// shell. parts are read fully into memory in the browser (as the
 // engine does with a single pack anyway); if a pack ever grows past what a
 // tab will hold, switch the shell to a streamed Response instead.
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync, openSync, readSync, closeSync } from "node:fs";

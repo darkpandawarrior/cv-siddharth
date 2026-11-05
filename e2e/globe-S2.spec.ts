@@ -6,7 +6,7 @@ import type { Page } from "@playwright/test";
 
 /**
  * LANE S2 (wave 9, space weather), end to end. Fixed clock, every external
- * feed this lane touches routed to a committed fixture (G10, same
+ * feed this change touches routed to a committed fixture (G10, same
  * discipline as e2e/globe-L7.spec.ts). Intro seeded seen so the cinematic
  * first-visit camera doesn't fight these assertions (e2e/globe-X5.spec.ts's
  * own pattern).

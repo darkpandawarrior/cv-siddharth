@@ -4,9 +4,9 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /**
- * P2-07b's own gate (this lane's acceptance list): each of the six
+ * P2-07b's own gate (this change's acceptance list): each of the six
  * kits-architecture-2 GLBs parses as valid GLB, and its JSON chunk's node
- * (and material) names carry the sockets/variants this lane's task list
+ * (and material) names carry the sockets/variants this change's task list
  * names -- never a baked data count (world-v2-spec.md §0.3 rule 2: "no GLB
  * bakes a data count"). A GLB not yet produced by its Blender script is
  * skipped, not failed, matching this repo's "not written yet -> skip"
@@ -48,9 +48,9 @@ function readGlb(path: string): GlbDoc {
 }
 
 /** world-v2-spec.md §0.3 rule 2, restated by P2-07a's acceptance list and
- * reused by this lane: "no node name contains a digit count of a data
+ * reused by this change: "no node name contains a digit count of a data
  * record (e.g. no 'bell.67')". Two-or-more-digit numeric suffixes are the
- * shape a live count takes; this lane's own fixed-cardinality indices (4
+ * shape a live count takes; this change's own fixed-cardinality indices (4
  * kite masts) stay single-digit on purpose, so the boundary this regex
  * draws is exact for both sides. */
 const DATA_COUNT_SUFFIX = /\.\d{2,}(\.|$)/;

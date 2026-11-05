@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * WAVE 5 LANE W15 (together: anonymous live viewports of other explorers).
+ * W15 (together: anonymous live viewports of other explorers).
  * Fixed clock, every /api/* route mocked (G10, same discipline as
  * e2e/globe.spec.ts) -- this spec never depends on a live network, and
  * never depends on playhtml's real `globe-view-v1` room either:
@@ -201,7 +201,7 @@ test("clicking a reticle flies the camera to look where that explorer looks", as
   await expect(canvas).toHaveAttribute("data-camera-view", "orbit");
 });
 
-// A manual orbit-drag, not auto-rotate: this lane's own machine runs ten
+// A manual orbit-drag, not auto-rotate: this change's own machine runs ten
 // lanes at once, and auto-rotate's ~0.35deg/s (GlobeScene.tsx's own
 // autoRotateSpeed) needs several real seconds AND a load-dependent frame
 // rate to cross even one 3-degree quantum -- flaky by construction on a

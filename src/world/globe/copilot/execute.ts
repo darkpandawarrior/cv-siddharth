@@ -110,10 +110,10 @@ export async function runGlobeAsk(text: string): Promise<string> {
 // the live render tree whose effect could register a window hook the way
 // Inspector.tsx's __GLOBE_TEST_SELECT__ or LayerPanel.tsx's
 // __GLOBE_TEST_SET_ENTITY__ do. This module is instead dynamic-imported
-// from HazardLayer.tsx (the one file in this lane's ownership that IS
+// from HazardLayer.tsx (the one file in this change's ownership that IS
 // mounted) behind the same `?globeTest=1` query flag, so the fetch — and
 // this side effect — never happens for a real visitor. See HazardLayer.tsx's
-// own comment and this lane's report ("Needs from integration") for the
+// own comment and this change's report ("Needs from integration") for the
 // real fix: mount AskBox.tsx (or just import this module once) from
 // whatever component the UI lane adds.
 declare global {

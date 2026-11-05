@@ -265,13 +265,13 @@ const siteSurfaces = [
       eyebrow: "// senior android engineer",
       name: profile.name,
       tagline: profile.tagline,
-      stats: ["50k+ MAU", "95% GPS accuracy", "-80% crashes", "~87% Compose"],
+      stats: ["50k+ MAU", "95% GPS accuracy", "-85% crashes", "~87% Compose"],
       chips: ["Kotlin", "Jetpack Compose", "KMP", "Coroutines", "Security"],
     },
   },
   {
     slug: "resume",
-    deep: true, // ponytail: was the /#resume hash-redirect target pre-SSR; now just a truthy flag for the filter below
+    deep: true, // was the /#resume hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
       accent: "#3ddc84",
       ink: "#05070a",
@@ -286,7 +286,7 @@ const siteSurfaces = [
   },
   {
     slug: "writing",
-    deep: true, // ponytail: was the /#loopdown hash-redirect target pre-SSR; now just a truthy flag for the filter below
+    deep: true, // was the /#loopdown hash-redirect target pre-SSR; now just a truthy flag for the filter below
     card: {
       accent: "#8f74ff",
       ink: "#0b0a14",

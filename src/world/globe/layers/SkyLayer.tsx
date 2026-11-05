@@ -25,7 +25,7 @@ export default function SkyLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 }) 
   // the sky status detail when a visible pass is within 24h." Reads the same
   // public /api/tle feed SatelliteLayer.tsx already polls (a second
   // subscriber to a GET endpoint costs nothing extra — useLiveSignal caches
-  // per URL) rather than threading data through a file this lane may only
+  // per URL) rather than threading data through a file this change may only
   // touch for its own pass rows. `/api/tle` 404s under vite dev/preview the
   // same way it does for every other consumer — issLine just stays null,
   // "never fake data" holds without any special-casing here.
@@ -68,7 +68,7 @@ export default function SkyLayer({ now, tier }: { now: Date; tier: 1 | 2 | 3 }) 
     };
   }, [tleFeed, now]);
 
-  // Test seam only (this lane's brief): a plain DOM node, created and
+  // Test seam only (this change's brief): a plain DOM node, created and
   // appended imperatively rather than mounted through JSX - a component
   // rendered inside <Canvas> is reconciled by @react-three/fiber's own
   // renderer, which cannot hand a "span" off to react-dom the way

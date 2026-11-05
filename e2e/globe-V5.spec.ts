@@ -5,8 +5,8 @@ import { test, expect, waitForHydration } from "./lib/test.ts";
 import type { Page } from "@playwright/test";
 
 /**
- * WAVE 7 LANE V5 (hurricane forecast cones, step A) -- e2e. Fixed clock,
- * every external feed this lane touches routed to a committed fixture
+ * V5 (hurricane forecast cones, step A) -- e2e. Fixed clock,
+ * every external feed this change touches routed to a committed fixture
  * (G10: under `vite preview` there is no real /api proxy for these, and even
  * if there were, a required gate never hits a live network). The globe's
  * cinematic first-visit intro is seeded past (globe-lanes.md's own rule) so

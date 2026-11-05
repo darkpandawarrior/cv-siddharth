@@ -41,7 +41,7 @@ describe("globe shader materials bind their uniforms by construction", () => {
 });
 
 /**
- * WAVE 7 LANE V2 (city-light bloom): `uNightGain` has to be a real uniform,
+ * V2 (city-light bloom): `uNightGain` has to be a real uniform,
  * not a literal multiplier baked into the shader string — GlobePost.tsx's
  * plain Bloom pass needs a floor (luminanceThreshold) it can share with
  * whatever pushes the night term over it, and a hardcoded `* 1.6` can't be

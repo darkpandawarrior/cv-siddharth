@@ -55,7 +55,7 @@ export function describeActions(actions: GlobeAction[]): string {
  *  no-op (see execute.ts), and undo has to match that, not double-flip it.
  *  Every other action kind (fly/select/follow/style/view/filter) has no
  *  entry here on purpose: a speculative inverse for those is exactly the
- *  abstraction ponytail rule 1 says to skip until the brief asks for it. */
+ *  abstraction to skip until the brief asks for it. */
 export function buildUndo(actions: GlobeAction[], before: { layers: Record<LayerId, boolean>; timeOffsetMin: number }): GlobeAction[] {
   const byKey = new Map<string, GlobeAction>();
   for (const action of actions) {

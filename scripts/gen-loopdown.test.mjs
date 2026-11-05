@@ -42,7 +42,7 @@ it("collapses identical source records but rejects conflicting or missing identi
 });
 
 /**
- * The exact bug this lane's brief named: the registry ships an EMPTY `links`
+ * The exact bug this change's brief named: the registry ships an EMPTY `links`
  * object on every lesson (a leftover shape from before per-platform URLs
  * existed) alongside real per-platform URLs under `url_devto`/`url_hashnode`/
  * `url_medium`/`url_linkedin`. Reading `l.links` — what this generator did —

@@ -21,7 +21,7 @@ export interface Stream {
   form: string | string[];
   source: string;
   licence: string;
-  /** Never empty — this lane's acceptance checks it on every entry. */
+  /** Never empty — this change's acceptance checks it on every entry. */
   attribution: string;
   endpoint?: `/api/${string}`;
   pollMs?: number;

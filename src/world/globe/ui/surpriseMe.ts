@@ -92,7 +92,7 @@ export function launchCandidate(nowMs: number, storage: Pick<Storage, "getItem" 
 // ---------------------------------------------------------------------------
 // Candidate 3: the largest earthquake in the past day, from USGS's own
 // all-day summary feed (parseQuakes is the exact pure parser
-// layers/quake.ts already ships and tests; this lane only adds the fetch).
+// layers/quake.ts already ships and tests; this change only adds the fetch).
 // ---------------------------------------------------------------------------
 export function biggestQuakeCandidate(quakes: Quake[] | null): SurpriseResult | null {
   const valid = quakes?.filter((quake) => Number.isFinite(quake.timeMs) && Number.isFinite(quake.depthKm) && Number.isFinite(quake.mag) && Number.isFinite(quake.lat) && Math.abs(quake.lat) <= 90 && Number.isFinite(quake.lon) && Math.abs(quake.lon) <= 180);

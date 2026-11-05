@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "../../../SceneActivity.tsx";
 import { getIntroPhase, INTRO_DURATION_MS, INTRO_LINE, shouldPlayIntro, skipIntro, startIntro, subscribeIntro, type IntroPhase } from "../cameraIntro.ts";
 
-/** WAVE 6 LANE X5 (cinematic, skippable first visit) owns this file.
+/** X5 (cinematic, skippable first visit) owns this file.
  *
  * A plain DOM overlay, sibling to the Canvas (Globe.tsx mounts it inside the
  * same `capable`-gated block as StreetView/ExploreBar — never under SSR or

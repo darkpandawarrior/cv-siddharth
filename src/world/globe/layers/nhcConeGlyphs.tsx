@@ -15,7 +15,7 @@ import { unwrapConeRing, type ConePolygon } from "./nhcCones.ts";
 // globe so the fill never z-fights with the earth shader underneath.
 const FILL_RADIUS = GLOBE_RADIUS + 0.02;
 
-// ponytail: only the outer ring is filled, holes (if NHC's cone geometry
+// only the outer ring is filled, holes (if NHC's cone geometry
 // ever ships one) are ignored -- every cone sampled while building this
 // (2026-09-29, 5 active storms) was a single simple ring. Add
 // ShapeUtils.triangulateShape's hole-indices argument if a real cone with a

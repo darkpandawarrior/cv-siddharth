@@ -8,7 +8,7 @@ const FIXTURE = join(dirname(fileURLToPath(import.meta.url)), "../../../../e2e/f
 const fixture = JSON.parse(readFileSync(FIXTURE, "utf8"));
 
 describe("parseEonetEvents", () => {
-  it("parses the committed fixture into the three categories this lane draws", () => {
+  it("parses the committed fixture into the three categories this change draws", () => {
     const events = parseEonetEvents(fixture);
     expect(events).not.toBeNull();
     const cats = new Set(events!.map((e) => e.category));
@@ -32,7 +32,7 @@ describe("parseEonetEvents", () => {
     expect(parseEonetEvents({ events: "nope" })).toBeNull();
   });
 
-  it("ignores a category this lane doesn't draw", () => {
+  it("ignores a category this change doesn't draw", () => {
     const dustStorm = { events: [{ id: "x", title: "t", categories: [{ id: "dustHaze", title: "Dust and Haze" }], geometry: [{ type: "Point", date: "2026-01-01T00:00:00Z", coordinates: [1, 2] }] }] };
     expect(parseEonetEvents(dustStorm)).toEqual([]);
   });

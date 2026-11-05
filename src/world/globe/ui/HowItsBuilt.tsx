@@ -45,10 +45,10 @@ function tokenizeGlsl(code: string): { text: string; cls: string }[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(code))) {
     const [text, comment, directive, num, word] = m;
-    if (comment || directive) tokens.push({ text, cls: "text-zinc-500" });
+    if (comment || directive) tokens.push({ text, cls: "text-muted" });
     else if (num) tokens.push({ text, cls: "text-zinc-400" });
     else if (word) tokens.push({ text, cls: GLSL_KEYWORDS.has(word) ? "text-zinc-100 font-semibold" : GLSL_TYPES.has(word) ? "text-zinc-200" : "text-zinc-300" });
-    else tokens.push({ text, cls: "text-zinc-500" });
+    else tokens.push({ text, cls: "text-muted" });
   }
   return tokens;
 }
@@ -58,7 +58,7 @@ function ShaderBlock({ name, code }: { name: string; code: string }) {
   return (
     <div className="mb-2">
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="truncate text-zinc-500">{name}</span>
+        <span className="truncate text-muted">{name}</span>
         <CopyButton text={code} />
       </div>
       <pre

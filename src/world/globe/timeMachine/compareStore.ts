@@ -1,4 +1,4 @@
-/** WAVE 6 LANE X3 (time machine UI): the reactive seam between the Compare
+/** X3 (time machine UI): the reactive seam between the Compare
  *  toggle (TimeScrubber.tsx), the draggable divider (ui/CompareDivider.tsx)
  *  and the imagery shader (EarthImagery.tsx) — all three need the same
  *  live split/date state and none of them may edit globeStore.ts

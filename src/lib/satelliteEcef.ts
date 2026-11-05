@@ -14,7 +14,7 @@
 // `npx vite build` against this checkout (vite.config.ts's rollupOptions.
 // external already keeps satellite.js's WASM/pthreads subtree, the thing
 // that broke Vite's IIFE worker output, out of the client bundle; no new
-// alias or shim needed for this lane).
+// alias or shim needed for this change).
 import { eciToEcf, eciToGeodetic, gstime, propagate } from "satellite.js";
 import { isFresh, isSunlitAt, toSatRec, tleEpoch, type TleObject } from "./satellites.ts";
 

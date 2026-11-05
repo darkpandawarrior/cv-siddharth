@@ -155,7 +155,7 @@ test("break-it: a subdaily layer stuck 404ing steps back up to 3 times, then rep
   // lane's report links), but this suite runs alongside five other lanes'
   // own build/test/playwright processes on one shared machine — a 20s poll
   // genuinely timed out here under that real, measured contention (host load
-  // average 27 to 117 during this lane's own gate run) despite the retry
+  // average 27 to 117 during this change's own gate run) despite the retry
   // logic itself being correct, not because the logic is slow.
   await expect
     .poll(
@@ -182,7 +182,7 @@ test("the EOX deep-zoom base requests the real tiles.maps.eox.at WGS84 matrix, a
   // exceed the 30s default; measured under real host contention (see the
   // 404-backoff test above for the same story) even 90s wasn't always
   // enough alongside five other lanes' own concurrent build/test load
-  // (host load average 27 to 117, this lane's own report), so this one
+  // (host load average 27 to 117, this change's own report), so this one
   // takes a wider margin than its 60s peer.
   test.setTimeout(120_000);
   const requests: ReturnType<typeof parseEoxWmtsUrl>[] = [];

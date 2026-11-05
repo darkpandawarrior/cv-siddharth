@@ -439,8 +439,8 @@ describe("speakableText", () => {
 
   it("strips markdown emphasis, headings, quotes, rules and list markers", () => {
     expect(speakableText("**92%** of a _738k_ LOC app")).toBe("92% of a 738k LOC app");
-    expect(speakableText("## Results\n\n- 80% crash reduction\n- 95% GPS accuracy")).toBe(
-      "Results 80% crash reduction 95% GPS accuracy",
+    expect(speakableText("## Results\n\n- 85% crash reduction\n- 95% GPS accuracy")).toBe(
+      "Results 85% crash reduction 95% GPS accuracy",
     );
     expect(speakableText("> He shipped it.\n\n---\n\n1. First\n2. Second")).toBe("He shipped it. First Second");
     expect(speakableText("~~old~~ new")).toBe("old new");
@@ -460,7 +460,7 @@ describe("speakableText", () => {
   });
 
   it("leaves ordinary prose (and its punctuation) alone", () => {
-    const prose = "I cut crashes 80% at Dice.tech — 50k+ MAU, 22k DAU. Want the numbers?";
+    const prose = "I cut crashes 85% at Dice.tech — 50k+ MAU, 22k DAU. Want the numbers?";
     expect(speakableText(prose)).toBe(prose);
   });
 

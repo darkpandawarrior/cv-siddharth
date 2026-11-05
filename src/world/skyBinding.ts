@@ -104,7 +104,7 @@ export function worldLighting(s: SkyState, tier: DeviceTier): WorldLighting {
  *
  * Takes `sky` as a prop rather than calling `useSky()` itself.
  *
- * ponytail: reality-spec §4.1 asks for `useSky()` called INSIDE this leaf
+ * reality-spec §4.1 asks for `useSky()` called INSIDE this leaf
  * so World.tsx's own render "never re-renders for the sky." World.tsx
  * calls it once instead and hands `sky` down (to this binder, to Ghosts'
  * `ghostFactor`, and to Hud's ledger, which needs the identical reading

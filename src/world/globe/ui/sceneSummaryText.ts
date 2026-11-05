@@ -1,4 +1,4 @@
-// WAVE 7 LANE V6 (non-visual scene summary). Pure sentence builders behind
+// V6 (non-visual scene summary). Pure sentence builders behind
 // SceneSummary.tsx — no React, no three, so every case below is a plain
 // function call in sceneSummaryText.test.ts. Ports the "rebuild only on
 // meaning change" technique from OskarasM/scene-narrator
@@ -14,7 +14,7 @@ import { LAYER_IDS, type LayerHealth, type LayerId, type Selection, type EarthSt
 import { WMO_LABEL, subsolarPoint, type SkyState } from "../../../lib/sky.ts";
 
 // Restated from ui/LayerPanel.tsx's own `LABEL` map rather than imported:
-// that file belongs to lane U1 and this lane may not edit or import
+// that file belongs to lane U1 and this change may not edit or import
 // component internals from it (the shared-lanes ownership rule). Kept a
 // `Record<LayerId, ...>` for the same reason LayerPanel's own copy is — a
 // future LayerId with no label here fails the build, not silently.

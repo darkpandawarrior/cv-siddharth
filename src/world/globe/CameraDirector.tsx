@@ -52,7 +52,7 @@ const FOLLOW_DAMP_HALFLIFE = 0.25;
 
 type Flight = { from: Vec3; fromDist: number; to: Vec3; toDist: number; elapsed: number; duration: number; kind?: "intro" } | null;
 
-// WAVE 6 LANE X5: intro cinematic camera path. END matches GlobeScene.tsx's
+// X5: intro cinematic camera path. END matches GlobeScene.tsx's
 // own hardcoded `START`/`START_DISTANCE` (duplicated here -- same
 // chunk-isolation reason cameraMath.ts's own header gives for not importing
 // geoMath.ts: GlobeScene.tsx is the eager "Globe" shell, this file is a lazy
@@ -134,9 +134,9 @@ export default function CameraDirector({
   const prevEntityPosRef = useRef<Vec3 | null>(null);
   const settledRef = useRef(true); // false while a fly-in animation owns the camera
   const dragRef = useRef<{ x: number; y: number } | null>(null);
-  // WAVE 6 LANE X5: ms the camera has sat pinned at minDistance while
+  // X5: ms the camera has sat pinned at minDistance while
   // orbiting (seamless zoom -> street), whether the intro's own flight
-  // currently owns the camera, and whether this lane hid the markers layer
+  // currently owns the camera, and whether this change hid the markers layer
   // for the intro's "markers last" beat (so it can restore it unconditionally).
   const zoomHoldRef = useRef(0);
   // Most recent discrete zoom-in input: wheel, growing pinch or pill/keyboard click.
@@ -292,7 +292,7 @@ export default function CameraDirector({
     return () => { observer.disconnect(); focusOffsetY.current = null; };
   }, [focus, view, get]);
 
-  // WAVE 6 LANE X5: the cinematic first-visit intro. ui/Intro.tsx (a DOM
+  // X5: the cinematic first-visit intro. ui/Intro.tsx (a DOM
   // overlay mounted OUTSIDE the Canvas -- see cameraIntro.ts's own header
   // for why) is the only place that knows tier/reducedMotion/the seen-flag,
   // and decides WHETHER to play; this effect just answers "playing" by
@@ -337,7 +337,7 @@ export default function CameraDirector({
         flightRef.current = { from: fromDir, fromDist: INTRO_START_DISTANCE, to: endDir, toDist: INTRO_END_DISTANCE, elapsed: 0, duration: INTRO_DURATION_SEC, kind: "intro" };
         settledRef.current = false;
         // "layers blooming in ... markers last" (the brief's own words):
-        // the one layer this lane can move without reaching into
+        // the one layer this change can move without reaching into
         // GlobeScene.tsx's per-layer JSX (out of file ownership) or risking
         // a real user preference left off if something goes wrong. Hidden
         // for the flight's own duration only, restored the instant it ends
@@ -378,7 +378,7 @@ export default function CameraDirector({
   // Esc: back to orbit from anywhere. Guarded against typing targets even
   // though the globe canvas itself never holds text focus, restated per the
   // house rule (GlobeScene.tsx's own isTypingTarget) rather than imported,
-  // since importing a non-exported helper from a file this lane may not
+  // since importing a non-exported helper from a file this change may not
   // edit would create a silent coupling to its internals.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -524,7 +524,7 @@ export default function CameraDirector({
       if (t >= 1) {
         flightRef.current = null;
         settledRef.current = true;
-        // WAVE 6 LANE X5: the intro's own flight reaching t=1 IS "finished
+        // X5: the intro's own flight reaching t=1 IS "finished
         // playing" -- tell the bus so ui/Intro.tsx's overlay unmounts and
         // the seen-flag gets set. The phase-bus subscription above then
         // handles the (already-done) camera/controls/markers cleanup;
@@ -549,7 +549,7 @@ export default function CameraDirector({
     if (view === "orbit") {
       el.dataset.cameraView = "orbit";
       if (!introRef.current) {
-        // WAVE 6 LANE X5: seamless zoom -> street. `flight` (above) already
+        // X5: seamless zoom -> street. `flight` (above) already
         // covers "mid-animation"; this only ever runs once OrbitControls
         // itself has the camera settled, so a pinned distance genuinely
         // means the visitor is holding at the closest orbit lets them get,
@@ -574,7 +574,7 @@ export default function CameraDirector({
           // OrbitControls' target is fixed at the origin (GlobeScene.tsx
           // never overrides it), so the camera always looks straight at the
           // globe's own centre -- its forward direction is always this same
-          // unit vector, negated. WAVE 6 LANE X5 (verifier-flagged blocking
+          // unit vector, negated. X5 (verifier-flagged blocking
           // gap): matching bearing/pitch, not just zoom, is what "seamless"
           // requires -- see cameraOrientation.ts's own header.
           const forward = { x: -unit.x, y: -unit.y, z: -unit.z };

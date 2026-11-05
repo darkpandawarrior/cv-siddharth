@@ -1,4 +1,4 @@
-// ponytail: no .test.tsx here — same reasoning as EvidenceChip.test.ts:
+// no .test.tsx here — same reasoning as EvidenceChip.test.ts:
 // vitest.config.ts scopes `include` to `*.test.ts` with no jsdom, so React
 // logic is tested as plain functions and `renderToString`, never
 // @testing-library/react. `createElement` stands in for JSX.

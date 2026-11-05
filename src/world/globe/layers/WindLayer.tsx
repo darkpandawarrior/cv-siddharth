@@ -243,7 +243,7 @@ function WindParticles({ field, count, reducedMotion }: { field: WindField; coun
       <lineSegments ref={lineRef} frustumCulled={false}>
         <lineBasicMaterial vertexColors toneMapped={false} transparent opacity={0.85} depthWrite={false} />
       </lineSegments>
-      {/* Test-only observation seam (this lane owns this file) — the plan
+      {/* Test-only observation seam (this change owns this file) — the plan
           asks e2e to confirm particles exist through a seam here rather
           than pixel-peek the canvas. `count` is a plain prop, rendered
           declaratively rather than written imperatively into a ref: drei's
@@ -346,7 +346,7 @@ function selectPuneWeather(weather: NonNullable<ReturnType<typeof useWeather>["w
 
 /** Cloud + falling-streak cluster over Pune, visible only zoomed in while
  *  it's actually raining there — off under reduced motion (falling streaks
- *  are motion) and at tier 2 (the one visual this lane sheds at the phone
+ *  are motion) and at tier 2 (the one visual this change sheds at the phone
  *  tier, the same way LocalTraffic sheds ambient aircraft at T3). */
 function PuneWeather({ tier, reducedMotion }: { tier: 1 | 2 | 3; reducedMotion: boolean }) {
   const { weather, air } = useWeather();
@@ -362,7 +362,7 @@ function PuneWeather({ tier, reducedMotion }: { tier: 1 | 2 | 3; reducedMotion: 
     const visible = eligible && camera.position.length() < ZOOM_DISTANCE;
     if (domRef.current) {
       domRef.current.dataset.windPuneVisible = String(visible);
-      // Test-only observation seam (this lane owns this file), same pattern
+      // Test-only observation seam (this change owns this file), same pattern
       // as GlobeScene.tsx's own subsolar probe: the ACTUAL screen position
       // of a real rendered instance (instances[0], a cloud puff), not the
       // cluster's own abstract centre — PUNE_BASE itself sits at (east 0,
@@ -437,7 +437,7 @@ function PuneWeather({ tier, reducedMotion }: { tier: 1 | 2 | 3; reducedMotion: 
 
 // ---------------------------------------------------------------------------
 
-/** WAVE 3 LANE W5 (global wind particles, Pune weather effects) owns this
+/** W5 (global wind particles, Pune weather effects) owns this
  *  file. `now` is accepted (GlobeScene passes it to every layer stub) but
  *  unused: wind advection and the rain fall animation both run off
  *  `useFrame`'s own clock/delta, the same "continuous motion, not a

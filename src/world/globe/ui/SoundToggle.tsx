@@ -1,4 +1,4 @@
-// WAVE 6 LANE X6 (opt-in sound and haptics) owns this file, plus its two
+// X6 (opt-in sound and haptics) owns this file, plus its two
 // siblings (soundTriggers.ts, soundSynth.ts). Off by default, persisted per
 // browser (excelsiorProgress.ts's own localStorage shape: try/catch every
 // access, `typeof localStorage` guard first — private mode, a full quota or

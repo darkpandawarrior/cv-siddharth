@@ -1,13 +1,17 @@
 name: Relay the weekly volcano report
 
 # Smithsonian's Cloudflare answers Vercel's datacenter IPs with 403 and serves most GitHub runners
-# (probed 2026-10-01; one runner got 403 on 2026-10-02). This copies the weekly RSS verbatim to the
+# (probed 2026-10-01; one runner got 403 on 2026-10-02; by 2026-10-29 the recent runs and a plain curl from the owner
+# Mac all got 403, and 62 of 95 runs failed). This copies the weekly RSS verbatim to the
 # relay-volcanoes branch, which api/_lib/volcano-handler.ts reads through raw.githubusercontent.com.
 # The branch carries its own vercel.json so Vercel never builds it, and it only gets a commit when
 # the report changes, about once a week.
+# The report is weekly, so the job runs weekly (Thursday, after the usual mid-week publish). A blocked
+# fetch degrades to a warning and a step summary instead of a red run: the handler keeps serving the
+# last good copy, and a red run every week for a block we cannot fix only trained everyone to ignore it.
 on:
   schedule:
-    - cron: '37 */6 * * *'
+    - cron: '37 6 * * 4'
   workflow_dispatch:
 
 permissions:
@@ -34,12 +38,12 @@ jobs:
             fi
             sleep 30
           done
-          # A blocked runner leaves the last good report on the branch, and the next run (6 h) usually
-          # gets a different runner. Fail only once that copy has missed a weekly report.
+          # Blocked (403): keep the last good copy on the branch and say so, without failing the run.
           last=$(gh api "repos/${{ github.repository }}/commits/relay-volcanoes" --jq .commit.committer.date)
           age_days=$(( ($(date +%s) - $(date -d "$last" +%s)) / 86400 ))
           echo "::warning::Smithsonian fetch failed on this runner; relay copy is ${age_days} days old"
-          [ "$age_days" -lt 10 ]
+          echo "Smithsonian fetch blocked (403). The relay branch still holds the report from ${last}, ${age_days} days old." >> "$GITHUB_STEP_SUMMARY"
+          exit 0
 
       - name: Commit to the relay branch when the report changed
         if: ${{ steps.fetch.outputs.fetched == '1' }}

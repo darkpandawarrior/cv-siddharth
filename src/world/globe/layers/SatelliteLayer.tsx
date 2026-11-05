@@ -7,9 +7,9 @@ import { GLOBE_RADIUS } from "../EarthDots.tsx";
 import { entityPositions, simTime, useGlobe, type Selection } from "../globeStore.ts";
 import { propagateState, ecefToScene, type SatelliteState, type TleObject } from "../../../lib/satelliteEcef.ts";
 import { trailPoints, groundTrackPoints, type ScenePoint } from "./satTrails.ts";
-import { publish } from "../feed.ts"; // WAVE 6 LANE X1 (live world feed)
+import { publish } from "../feed.ts"; // X1 (live world feed)
 // LANE W4 (wave 3): ISS visible-pass rows only — this file's ownership for
-// this lane is scoped to selectSatellite/selectionRows below, nothing else.
+// this change is scoped to selectSatellite/selectionRows below, nothing else.
 // Type-only import (erased at build time) plus a runtime dynamic import()
 // inside selectSatellite below, not a static one: satPasses.ts also has a
 // second, dynamic-import consumer (SkyLayer.tsx's own "ISS tonight" line),
@@ -43,7 +43,7 @@ const STATION_NORADS = new Set([ISS_NORAD, CSS_NORAD]);
 // stations, which repropagate every frame — cheap (two SGP4 calls), and
 // smooth position is what a follow-view/marker actually needs.
 const AMBIENT_CADENCE_MS = 250;
-// ponytail: TLEs carry no magnitude/brightness field, so "40 brightest" is
+// TLEs carry no magnitude/brightness field, so "40 brightest" is
 // approximated as the first 40 objects in /api/tle's own "visual" group
 // order (CelesTrak's own curation, not re-sorted here). Upgrade path: join
 // against a real magnitude catalogue (e.g. Mike McCants' qs.mag file) if a
@@ -58,7 +58,7 @@ const AMBIENT_ECLIPSED = AMBIENT_COLOR.clone().multiplyScalar(0.32);
 // former same-importer-set neighbour) out of the eager "Globe" shell chunk
 // Rollup currently inlines them into — which sits AT budgets.json's ceiling
 // already, so the split alone failed check-budget.mjs by ~1.7 KB with no
-// code of this lane's own actually growing. The value is the exact
+// code of this change's own actually growing. The value is the exact
 // `--color-probe` token (house rules doc); it just isn't read live off the
 // CSS custom property the way Markers.tsx's ring is.
 const PROBE_COLOR = new THREE.Color("#5ee6ff");
@@ -129,7 +129,7 @@ function selectSatellite(object: TleObject, now: Date): void {
       const current = useGlobe.getState().selected;
       if (current?.id !== id) return;
       useGlobe.getState().select({ ...current, rows: [...baseRows, ...rows] });
-      // WAVE 6 LANE X1 (live world feed): published only when a real
+      // X1 (live world feed): published only when a real
       // qualifying pass row exists (never invented) and it starts inside
       // 30 min -- this is the one publisher gated behind a visitor's own
       // click (a pass is only ever computed here), not a poll.
@@ -232,7 +232,7 @@ function StationMarker({ object, tier, drawGroundTrack }: { object: TleObject; t
         </mesh>
         {/* No distanceFactor: that scales the label WITH camera distance, so
             zooming in on the ISS blew its own name up to unreadable
-            multi-hundred-px text (caught in this lane's own visual QA). A
+            multi-hundred-px text (caught in this change's own visual QA). A
             fixed CSS px size, like Markers.tsx's Pune card, reads the same
             small badge at every zoom level. */}
         <Html center zIndexRange={[0, 0]} style={{ pointerEvents: "none" }}>

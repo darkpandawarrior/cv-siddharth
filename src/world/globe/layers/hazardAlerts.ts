@@ -1,5 +1,5 @@
 // LANE L7 (live earth events). Pure GDACS alert parsing plus the fuzzy match
-// against this lane's own quake/EONET lists (task 3: "orange/red alerts get
+// against this change's own quake/EONET lists (task 3: "orange/red alerts get
 // an alert halo around the corresponding event ... or their own marker if no
 // EONET match"). No three, no React.
 //
@@ -33,7 +33,7 @@ export interface GdacsAlert {
   url: string;
 }
 
-/** Only orange/red ever draws (task 3) — green is not this lane's concern,
+/** Only orange/red ever draws (task 3) — green is not this change's concern,
  *  it never earns a halo or a standalone marker. */
 export function parseGdacsAlerts(json: unknown): GdacsAlert[] | null {
   const feed = json as Partial<RawFeed> | null;
@@ -67,13 +67,13 @@ export interface MatchedAlert extends GdacsAlert {
   matchKind: "quake" | "eonet" | null;
 }
 
-// ponytail: flat lat/lon degree distance, not a great-circle haversine — the
+// flat lat/lon degree distance, not a great-circle haversine — the
 // threshold (2 deg, ~220km) is small enough that the difference never
 // changes which candidate is nearest, and this is a "same disaster, two
 // feeds" heuristic, not a navigation calculation.
 const MATCH_THRESHOLD_DEG = 2;
 
-// GDACS's event-type code -> the EONET category this lane draws for it.
+// GDACS's event-type code -> the EONET category this change draws for it.
 // FL (flood) and DR (drought) have no corresponding glyph here, so they
 // always stand alone.
 const EVENTTYPE_TO_EONET: Partial<Record<string, "wildfires" | "severeStorms" | "volcanoes">> = {
@@ -95,7 +95,7 @@ function nearest<T extends { lat: number; lon: number; id: string }>(pool: T[], 
   return best;
 }
 
-/** EQ alerts match against this lane's own quake list (USGS and GDACS both
+/** EQ alerts match against this change's own quake list (USGS and GDACS both
  *  report earthquakes — matching against the quake layer, not EONET, which
  *  doesn't carry earthquakes at all). WF/TC/VO match the matching EONET
  *  category. Everything else, and anything with no candidate inside the

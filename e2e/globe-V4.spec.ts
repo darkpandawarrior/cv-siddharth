@@ -9,7 +9,7 @@ import { windLabel } from "../src/world/globe/ui/hoverReadout.ts";
 import type { Page } from "@playwright/test";
 
 /**
- * WAVE 7 LANE V4 (hover readout) -- e2e. Fixed clock, every feed routed to a
+ * V4 (hover readout) -- e2e. Fixed clock, every feed routed to a
  * committed fixture (G10). Content assertions go through the `__V4_HOVER__`
  * seam (the W11 pattern -- CountryLayer.tsx's own `__W11_COUNTRY__`): it
  * feeds a lat/lon straight to the same code path a real hover runs, so the

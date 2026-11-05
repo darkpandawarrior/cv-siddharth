@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
  * an argument-less `new Date()`, and a hashNoise/stringSeed call seeded
  * from a map/forEach callback's own index rather than a stable key.
  *
- * The fixed module list below is the glob this lane's task calls for:
+ * The fixed module list below is the glob this change's task calls for:
  * later lanes (P2-03c and beyond) add grammar.ts, worldModel.ts,
  * futureSlots.ts, visitDiff.ts, valley.ts, skyFrame.ts, spawn.ts and
  * src/world/v2/live/*.ts without ever touching this file — a listed

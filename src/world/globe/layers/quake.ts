@@ -6,7 +6,7 @@
 // Feed: https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson
 // (also 2.5_week.geojson for more history — not used here: tiers T2/T3 are a
 // client-side magnitude filter over the SAME all-day feed, not a second
-// fetch, per this lane's brief). Refresh cadence: 5 min (USGS's own).
+// fetch, per this change's brief). Refresh cadence: 5 min (USGS's own).
 export const QUAKE_POLL_MS = 5 * 60_000;
 
 /** The one USGS geojson shape this parser reads (feed docs: "summary" format). */
@@ -61,7 +61,7 @@ export function parseQuakes(json: unknown): Quake[] | null {
 }
 
 export const TIER_MIN_MAG: Record<1 | 2 | 3, number> = { 1: -Infinity, 2: 2.5, 3: 4.5 };
-/** T3 is a static read (this lane's task 1: "T3 M4.5+ static") — no
+/** T3 is a static read (this change's task 1: "T3 M4.5+ static") — no
  *  arrival pulse, no M>=5 ripple, just the resting ring. */
 export const TIER_STATIC: Record<1 | 2 | 3, boolean> = { 1: false, 2: false, 3: true };
 
@@ -73,7 +73,7 @@ export function filterQuakesForTier(quakes: Quake[], tier: 1 | 2 | 3): Quake[] {
 /** Magnitude >= this gets the slow repeating ripple (task 1). */
 export const RIPPLE_MIN_MAG = 5;
 
-// ponytail: a 2-point radius curve, not a fitted physical model — log2
+// a 2-point radius curve, not a fitted physical model — log2
 // because magnitude already IS a log scale (each +1 is ~32x energy), so a
 // second log keeps the drawn size from swamping the globe at M9 while still
 // separating M0 from M9 by about 3x. Upgrade to a fitted curve if a real
@@ -89,7 +89,7 @@ export function magnitudeToRadius(mag: number): number {
   return QUAKE_MIN_RADIUS + QUAKE_RADIUS_SCALE * Math.log2(m + 2);
 }
 
-// Perceptual-in-spirit, not a Lab/OKLab ramp (ponytail: a 2-stop RGB lerp is
+// Perceptual-in-spirit, not a Lab/OKLab ramp (a 2-stop RGB lerp is
 // the whole ask here — ~all quakes are 0-300km, deeper ones just clamp to
 // the coolest stop). Warm amber (shallow, the destructive, felt kind) to
 // cool indigo (deep, the ones nobody feels) — deliberately NOT this app's

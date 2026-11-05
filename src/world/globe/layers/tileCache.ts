@@ -1,4 +1,4 @@
-// WAVE 2 LANE W1 (deep zoom): a tiny generic LRU, so a texture (or an
+// W1 (deep zoom): a tiny generic LRU, so a texture (or an
 // AbortController, or anything else keyed by tile id) can be capped and
 // evicted with a caller-supplied dispose — no dependency on three here, so
 // this is unit-testable with plain values and a spy, and TileLayer.tsx is

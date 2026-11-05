@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 
-// ponytail: bounded setTimeout poll (~3s), not requestAnimationFrame and not
+// bounded setTimeout poll (~3s), not requestAnimationFrame and not
 // a MutationObserver — rAF gets throttled or fully paused on backgrounded/
 // non-painting tabs (verified: it can silently stop firing altogether after
 // the first call), and the section ids are static markup in App.tsx, so
@@ -36,7 +36,7 @@ export function resolveSectionAction(pathname: string): SectionAction {
   return pathname === "/" ? "scroll" : "navigate";
 }
 
-function prefersReducedMotion() {
+export function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 

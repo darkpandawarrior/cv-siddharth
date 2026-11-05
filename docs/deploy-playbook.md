@@ -59,7 +59,7 @@ so it can land the moment the owner has run the steps above and has a URL to giv
    state that needs one; check before assuming they don't).
 
 This step is not done. The Dockerfile and fly.toml are prerequisites this playbook cannot skip
-past, and building them is a PaymentsLab-KMP-repo change, out of this lane's scope (cv-siddharth only).
+past, and building them is a PaymentsLab-KMP-repo change, out of this change's scope (cv-siddharth only).
 
 ## Frontend WASM embeds: a separate, already-working path
 
@@ -92,6 +92,6 @@ on this same path once its build is green. As of this writing it is not:
 `kotlinWasmStoreYarnLock` with "Lock file was changed. Run the `kotlinWasmUpgradeYarnLock` task to
 actualize lock file" — a yarn-lock drift in that repo, fixed by running
 `./gradlew kotlinWasmUpgradeYarnLock` there and committing the updated lock file. That is a change
-to `Android/HireSignal`, not to this repo, so it is out of this lane's scope; once it lands, the
+to `Android/HireSignal`, not to this repo, so it is out of this change's scope; once it lands, the
 `heavy/candidai-app/` copy and the `liveUrl` field are a five-minute follow-up here, copying the
 Doori/Gaddi/PaymentsLab-KMP pattern exactly.

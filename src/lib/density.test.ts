@@ -1,4 +1,4 @@
-// ponytail: @testing-library/react isn't a devDependency (same note as
+// @testing-library/react isn't a devDependency (same note as
 // sessionRipple.test.ts) — exercises density/markEvidenceOpened directly
 // rather than renderHook; useDensity is a thin wrapper over exactly this.
 import { describe, it, expect, afterEach } from "vitest";

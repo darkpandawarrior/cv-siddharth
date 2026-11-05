@@ -22,7 +22,7 @@
  * and leaves the committed files untouched rather than crashing the chain.
  *
  * NOT YET WIRED into scripts/generators.mjs / package.json's `gen:*` chain —
- * both are owned by other lanes (this lane's `owns` list is scoped to this
+ * both are owned by other lanes (this change's `owns` list is scoped to this
  * script and its own output files). Run directly:
  *   node scripts/gen-world-grammar.mjs
  */

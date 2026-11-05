@@ -55,7 +55,7 @@ export function Artifacts({ collected }: Props): JSX.Element {
       dummy.scale.setScalar(held ? 0.34 : 0.5);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
-      // ponytail: InstancedMesh's per-instance `instanceColor` only scales
+      // InstancedMesh's per-instance `instanceColor` only scales
       // the material's diffuse channel, not its separate emissive one, so a
       // held artifact's glow doesn't fully mute the way the old per-mesh
       // emissiveIntensity did — scale + this dim is close enough for 16

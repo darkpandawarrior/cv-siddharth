@@ -17,7 +17,7 @@
  * makes "never leaves the polygon" true by construction instead of by
  * tuning: nothing here can produce a state that skips the clamp.
  *
- * `autopilot` is this lane's own idle-drift state machine (world-v2-spec §4
+ * `autopilot` is this change's own idle-drift state machine (world-v2-spec §4
  * "Drift: after 6 s idle... drifts downstream at 1.2 m/s... off under
  * reduced motion"), independent of v1's `autopilot.ts` (a destination-tour
  * driver for the desk world) and v1's `input.ts` auto-drive flag (its own
@@ -104,7 +104,7 @@ function tangentHeadingAt(z: number): number {
  * recorded month and would otherwise clip a boat that has legitimately
  * entered the open basin.
  *
- * ponytail: clamps the lateral axis only (never adjusts `z` to find a
+ * clamps the lateral axis only (never adjusts `z` to find a
  * nearer point on the true 2D boundary) — adequate because the river band
  * is never so tightly curved that a straight lateral clamp misses the
  * actual nearest legal point by more than the margin already reserves.

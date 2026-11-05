@@ -23,9 +23,9 @@ export async function getJson(url, extraHeaders = {}) {
 /**
  * The lichess game export: one streamed line per game. Kept for the rare
  * caller that genuinely wants the whole account export in one shot (none
- * left in this repo after this lane — fetchLichessMonthly below is what
+ * left in this repo after this change — fetchLichessMonthly below is what
  * gen-chess-stats.mjs actually calls); a single rejection here used to fail
- * the ENTIRE corpus at once, which is the resilience problem this lane fixes.
+ * the ENTIRE corpus at once, which is the resilience problem this change fixes.
  */
 export async function getNdjson(url) {
   const res = await fetchWithTimeout(

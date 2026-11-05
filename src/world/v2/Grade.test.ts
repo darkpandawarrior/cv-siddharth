@@ -5,7 +5,7 @@ import { GradeEffect } from "./Grade.ts";
  * open-data-spec.md §5 "The Survey lens": `setLook` is "a uniform preset
  * swap, with no new pass and no engine swap: exposure ×0.55, saturation
  * 0.25, a teal lift in the shadows, vignette 0.55, grain ×1.5 (bloom
- * unchanged)". This lane's acceptance item pins the four numeric ones.
+ * unchanged)". This change's acceptance item pins the four numeric ones.
  */
 describe("GradeEffect.setLook", () => {
   it("constructs in the golden look", () => {

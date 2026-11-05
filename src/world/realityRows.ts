@@ -101,8 +101,8 @@ export function buildRealityRows(input: RealityRowsInput): LedgerRow[] {
   // ledgerText.ts's own weatherRow (P1-00) has no rain clause — the Rain
   // instanced mesh's own "measurable as" contract (reality-spec §4.2)
   // wants "Rain 2.4 mm/h" in the ledger and there is no separate Rain row
-  // in the eight this lane owns, so it appends to Weather rather than
-  // asking a sibling lane's formatter to grow a field only this lane uses.
+  // in the eight this change owns, so it appends to Weather rather than
+  // asking a sibling lane's formatter to grow a field only this change uses.
   const w = sky?.weather ?? null;
   const weather = w && w.precipMmH > 0 ? `${weatherRow(w)} · Rain ${w.precipMmH.toFixed(1)} mm/h` : weatherRow(w);
   const you =

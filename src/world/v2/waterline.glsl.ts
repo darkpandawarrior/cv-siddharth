@@ -33,7 +33,7 @@ import {
 } from "./waterShader.glsl.ts";
 
 /** The foam band's half-width around the water surface, metres. Neither
- *  spec gives a literal (only the formula) — this lane's own art-direction
+ *  spec gives a literal (only the formula) — this change's own art-direction
  *  pick, a crisp contact line rather than a wide wash, stated as a named
  *  constant rather than hidden inside the chunk string (atmosphere.ts's own
  *  FOG_FALLOFF doctrine). */

@@ -11,8 +11,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * WAVE 2 LANE W1 (deep zoom + stitched NASA layers), end to end.
- * `e2e/globe.spec.ts` and `e2e/globe-L1.spec.ts` stay untouched (this lane's
+ * W1 (deep zoom + stitched NASA layers), end to end.
+ * `e2e/globe.spec.ts` and `e2e/globe-L1.spec.ts` stay untouched (this change's
  * own ownership rule) — this file is the tile engine's own acceptance: real
  * GIBS WMTS tile requests (mocked to tiny committed fixtures), a deeper
  * level requested once the camera zooms in, and an overlay's own tiles
@@ -52,9 +52,9 @@ async function withApiFixtures(page: Page) {
   await page.route("**/api/whereami", (route) => route.fulfill({ json: whereamiFixture }));
 }
 
-/** The whole-globe imagery this lane draws on top of (EarthImagery.tsx, a
+/** The whole-globe imagery this change draws on top of (EarthImagery.tsx, a
  *  different lane's own file) needs its own GIBS WMS fixtures or it falls
- *  back to the dot earth and this lane's tiles never mount (GlobeScene.tsx
+ *  back to the dot earth and this change's tiles never mount (GlobeScene.tsx
  *  only renders TileLayer when `style === "imagery"`). */
 async function withWholeGlobeFixtures(page: Page) {
   await page.route("https://gibs.earthdata.nasa.gov/wms/**", (route) => {

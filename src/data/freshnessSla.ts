@@ -170,7 +170,7 @@ export const STAMP_RE = /(?:"generatedAt":|[A-Za-z]*[Gg]eneratedAt\s*=)\s*"(\d{4
 /**
  * The rare files whose package.json alias does not follow the kebab-case
  * convention generatorFor derives below — package.json is not owned by this
- * file, so the exception lives here rather than as a rename this lane has no
+ * file, so the exception lives here rather than as a rename this change has no
  * business making. Checked mechanically by ops.test.ts's "names a generator
  * that is a real npm script" against the CURRENT package.json, so a script
  * rename shows up here as a failing test, not a silently dead link.

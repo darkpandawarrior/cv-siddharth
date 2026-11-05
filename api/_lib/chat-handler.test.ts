@@ -29,6 +29,7 @@ import {
   validateRoute,
 } from "./chat-handler";
 import { SYSTEM_PROMPT, ROUTE_PHRASES } from "./system-prompt";
+import { projectModuleCounts } from "../../src/lib/projectStatLine";
 import { COMPOSE_SYSTEM_PROMPT } from "./compose-prompt";
 import { JD_SYSTEM_PROMPT } from "./jd-prompt";
 import { guard } from "./prompt-guard";
@@ -415,12 +416,13 @@ describe("validateRequest (mode)", () => {
  * src/data/profile.ts, which is CHAT-00's evidence that the mechanism is
  * already the fix: a number wrong here means profile.ts (or the generator)
  * drifted, not that chat-handler.ts hard-codes prose. The "44-module" figure
- * named in this lane's spec was stale in src/data/profile/openSource.ts's
+ * named in this change's spec was stale in src/data/profile/openSource.ts's
  * changelog line, a file the chat prompt never reads from — this only pins
  * what Panda actually says. */
 describe("SYSTEM_PROMPT facts (regression: the stale PaymentsLab-KMP count)", () => {
   it("states the registry's current module count for PaymentsLab-KMP, not the stale 44", () => {
-    expect(SYSTEM_PROMPT).toContain("46-module registry");
+    // Derived: the count moves with every registry refresh; only the stale 44 is a regression.
+    expect(SYSTEM_PROMPT).toContain(`${projectModuleCounts["paymentslab-kmp"]}-module registry`);
     expect(SYSTEM_PROMPT).not.toMatch(/44-module/);
   });
 });

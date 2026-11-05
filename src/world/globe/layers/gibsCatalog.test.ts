@@ -116,7 +116,7 @@ describe("tileUrl", () => {
 });
 
 // LANE S1 (wave 9): the six new overlays appended to GIBS_OVERLAYS — each
-// live-curled today (2026-09-29 UTC) per this lane's report, not trusted
+// live-curled today (2026-09-29 UTC) per this change's report, not trusted
 // from the earlier audit sweep alone.
 describe("S1 overlay pack", () => {
   const S1_IDS = [

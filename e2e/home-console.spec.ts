@@ -4,7 +4,7 @@ import { test, expect } from "./lib/test.ts";
 // The Evidence Atlas, home-scenes-and-chrome lane: the homepage used to log
 // two React hydration-mismatch console errors on every load (FitCheck's
 // #fit-jd textarea, ResourceDirectory's #resource-search input — see
-// design-inputs-ux-3d.json's audit). Repro attempts against this lane's HEAD
+// design-inputs-ux-3d.json's audit). Repro attempts against this change's HEAD
 // (production preview and true dev SSR, at both viewports below, with and
 // without a typed-then-reloaded field) found neither error reproducible —
 // most likely already fixed by ancestor commits 80cb7be ("replace

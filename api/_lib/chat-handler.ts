@@ -925,7 +925,7 @@ export function exhaustedResponse(
  * block. Returns the LAST such boundary, exclusive, or -1 when `text`
  * contains none yet.
  *
- * ponytail: a regex heuristic, not a real sentence tokenizer — "e.g. " or a
+ * a regex heuristic, not a real sentence tokenizer — "e.g. " or a
  * markdown list's "1. " can false-positive as a boundary. Acceptable because
  * it only ever widens what may be flushed early during a length-stopped
  * reply, never what a normally-finished reply shows (that path ignores this

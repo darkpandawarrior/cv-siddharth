@@ -9,7 +9,7 @@ const DEG2RAD = Math.PI / 180;
  *  that reads as flow within a few seconds, the same "stylised, stated"
  *  exaggeration ALT_EXAGGERATION uses in LocalTraffic.tsx, just for a rate
  *  rather than a length. Tunable, not a physical constant.
- *  ponytail: a single global scale, not per-latitude or per-projection
+ *  a single global scale, not per-latitude or per-projection
  *  correct; upgrade path is a proper equirectangular-to-globe Jacobian if a
  *  future pass needs true-speed-relative motion. */
 export const VISUAL_SPEED_SCALE = 0.06;

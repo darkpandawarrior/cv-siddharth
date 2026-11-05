@@ -16,7 +16,7 @@ import { GatewayCompare } from "../GatewayCompare.tsx";
    "other" (UPI's raw intent, which the catalog's own doc says doesn't fit
    the lettered taxonomy) are one-or-two-provider archetypes too thin to
    read as their own falling-ball column, same call GatewayLab already made
-   about the internal rail before this lane. */
+   about the internal rail before this change. */
 
 const VISIBLE_ARCHETYPES: { id: string; label: string; color: string }[] = [
   { id: "native-sdk", label: "native SDK", color: "#C4B5FD" },

@@ -1,4 +1,4 @@
-// WAVE 6 LANE X6 (density: instanced hex-bin columns of quakes + fires).
+// X6 (density: instanced hex-bin columns of quakes + fires).
 // Reads HazardLayer.tsx's own read-only snapshot (its own file's minimal
 // additive edit) rather than re-fetching USGS/EONET a second time. Pure
 // aggregation lives in hexbin.ts; this file is only the instancing + hover

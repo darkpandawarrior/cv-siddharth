@@ -43,7 +43,7 @@ export const Route = createRootRoute({
       // The title leads, then the numbers as prose. The figures stay written
       // out on purpose: this line is a ~155-character sentence under an SEO
       // budget, not a list of metrics joined with commas.
-      { name: "description", content: `${profile.title}. Owned the platform at 50k MAU scale. GPS accuracy 50%→95%, ${metrics[2].value} crash reduction, ~87% of UI-layer code in Compose. Ask my AI assistant anything.` },
+      { name: "description", content: `${profile.title}. Owned the platform at 50k MAU scale. GPS accuracy 50%→95%, ${metrics[2].value} crash reduction, ~87% of UI-layer code in Compose. Open-source Kotlin Multiplatform: Doori and Gaddi.` },
       { name: "author", content: profile.name },
       { name: "theme-color", content: "#0b0f0d" },
       { name: "color-scheme", content: "dark" },
@@ -51,13 +51,13 @@ export const Route = createRootRoute({
       { property: "og:url", content: "https://siddharth-pandalai.vercel.app/" },
       { property: "og:site_name", content: "sid.android" },
       { property: "og:title", content: PAGE_TITLE },
-      { property: "og:description", content: `Interactive CV with an AI assistant. GPS accuracy 50%→95%, ${metrics[2].value} crash reduction, ~87% of UI-layer code in Compose at ~964k LOC.` },
+      { property: "og:description", content: `Technical owner of a 50k+ MAU Android app. GPS accuracy 50%→95%, ${metrics[2].value} crash reduction, ~87% of UI-layer code in Compose. Open-source Kotlin Multiplatform: Doori and Gaddi.` },
       { property: "og:image", content: "https://siddharth-pandalai.vercel.app/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: PAGE_TITLE },
-      { name: "twitter:description", content: "Interactive CV with an AI assistant, 3D storyboard and an infinite blueprint canvas. Android · Kotlin · KMP." },
+      { name: "twitter:description", content: "A 50k+ MAU Android app, a location engine that treats GPS as a noisy signal, and two open-source Kotlin Multiplatform apps. Case studies inside." },
       { name: "twitter:image", content: "https://siddharth-pandalai.vercel.app/og-image.png" },
     ],
     links: [

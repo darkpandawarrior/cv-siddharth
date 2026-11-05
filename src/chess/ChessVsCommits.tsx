@@ -21,7 +21,7 @@ import { useNow } from "../lib/useSky.ts";
  *     hour-of-day claim resting on unchecked offsets is exactly the quietly
  *     wrong number that gets caught later.
  *
- * ponytail: SVG, no animation. 24 points and two paths do not need a render
+ * SVG, no animation. 24 points and two paths do not need a render
  * loop, and a static chart has nothing for prefers-reduced-motion to honour.
  */
 

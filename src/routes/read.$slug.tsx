@@ -796,7 +796,7 @@ function Docket({ docket, line }: { docket: EntryTheme["docket"]; line: string }
 // /anthology keeps its layer in useState today, so a typed <Link search={...}>
 // has nothing to validate against and would not compile. The URL is the same
 // string either way, and it is the URL the register is actually promising.
-// ponytail: swap both call sites for <Link to="/anthology" search hash> the day
+// swap both call sites for <Link to="/anthology" search hash> the day
 // that route grows validateSearch, and delete this.
 function anthologyHref(to: { search: AnthologySearch; hash?: string }): string {
   const q = new URLSearchParams();

@@ -50,7 +50,7 @@ async function withWholeGlobeFixtures(page: Page) {
  *  that resolve AFTER it is called and misses ones already in flight or
  *  already settled by the time a test gets around to awaiting it -- the
  *  same request-array pattern e2e/globe-W1.spec.ts's own withWmtsFixtures
- *  uses, restated here per this lane's file-ownership rule). */
+ *  uses, restated here per this change's file-ownership rule). */
 function withWmtsFixtures(page: Page): { count: number } {
   const counter = { count: 0 };
   void page.route("https://gibs.earthdata.nasa.gov/wmts/**", (route) => {
@@ -62,7 +62,7 @@ function withWmtsFixtures(page: Page): { count: number } {
 
 /** Seeds "already seen" so the cinematic intro doesn't fight this suite for
  *  OrbitControls / the topbar's own click targets (globe-X5.spec.ts's own
- *  pattern, restated here per this lane's file-ownership rule). */
+ *  pattern, restated here per this change's file-ownership rule). */
 async function seedIntroSeen(page: Page) {
   await page.addInitScript(() => {
     try {
@@ -176,7 +176,7 @@ test("the keyboard shortcut (x) toggles X-ray the same as the topbar button", as
   await expect(panel).toBeHidden();
 
   // Move focus onto the canvas (not a typing target) first -- ExploreBar's
-  // own search combobox is reachable by tab and this lane's own keydown
+  // own search combobox is reachable by tab and this change's own keydown
   // guard correctly refuses to fire while a real typing target has focus,
   // same as it should. Click the canvas centre, not a corner: another
   // lane's always-mounted anomaly-rail nav overlays the canvas's top-left.

@@ -4,7 +4,7 @@
  * Diyas, fireflies and lanterns each carried two conflicting meanings across
  * v1's specs (M1, M16) — the bug this file exists to stop from recurring.
  * `FORMS` is the single place a form id's meaning is declared; a grammar
- * rule (P2-03c) or a stream (this lane's streams.ts) binds one of these ids
+ * rule (P2-03c) or a stream (this change's streams.ts) binds one of these ids
  * and never invents a second meaning for it. `forms.test.ts` (P2-03c, once
  * GRAMMAR exists) checks no two GRAMMAR rules or STREAMS entries bind the
  * same form id at runtime.
@@ -18,7 +18,7 @@
 
 // Kept as a plain string rather than a closed union: a later lane's
 // grammar/stream form id is still a valid FormId without editing this file
-// (this lane doesn't own forms.test.ts or grammar.ts).
+// (this change doesn't own forms.test.ts or grammar.ts).
 export type FormId = string;
 
 export interface FormMeaning {

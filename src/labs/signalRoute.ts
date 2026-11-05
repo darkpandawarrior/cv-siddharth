@@ -174,7 +174,7 @@ export interface Zone {
   spikeChance: number;
 }
 
-// ponytail: five arbitrary hexes, not the site's two-channel amber/cyan
+// five arbitrary hexes, not the site's two-channel amber/cyan
 // system — a deliberate local exception, same footing as index.css's
 // --lab-gold. Five zones model five physically distinct, simultaneously-
 // visible GPS failure modes on one legend; collapsing them onto two hues via

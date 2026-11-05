@@ -23,7 +23,7 @@ export const seriesArt = (id: string): LoopdownArt | undefined =>
  * the-ferryman AND the-vault-keeper); the registry publishes no per-lesson
  * join finer than that, so every lesson in a series gets that series' first
  * billed member.
- * ponytail: per-lesson cast join, if the-loopdown registry ever publishes one.
+ * per-lesson cast join, if the-loopdown registry ever publishes one.
  */
 export const leadCastIdOf = (seriesId?: string): string | undefined => seriesArt(seriesId ?? "")?.castIds[0];
 

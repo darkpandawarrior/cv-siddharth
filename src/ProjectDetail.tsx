@@ -16,7 +16,7 @@ import { openLab, type LabKey } from "./data/labs.ts";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Picture } from "./Picture.tsx";
 import { CompareSection } from "./Compare.tsx";
-import { useSectionNav, classifyHash } from "./lib/navigation.ts";
+import { useSectionNav, classifyHash, prefersReducedMotion } from "./lib/navigation.ts";
 import { pickOutcomeMetric, excludeOutcomeScreenshot } from "./lib/caseSpine.ts";
 import { PipelineShowcase } from "./PipelineShowcase.tsx";
 import { heavy } from "./lib/assetBase.ts";
@@ -381,7 +381,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
   const lightboxCloseRef = useRef<HTMLButtonElement>(null);
   const lightboxTriggerRef = useRef<HTMLElement | null>(null);
   const scrollRail = (dir: number) =>
-    railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: "smooth" });
+    railRef.current?.scrollBy({ left: dir * railRef.current.clientWidth * 0.85, behavior: prefersReducedMotion() ? "instant" : "smooth" });
 
   // idea-atlas.md#PATH-1/reality-spec.md §6: every project page you land on
   // registers in the session's own touched-path list — the earned-density
@@ -592,7 +592,7 @@ export function ProjectDetail({ slug }: { slug: string }) {
                   : "inline-flex items-center gap-1.5 rounded-full border border-accent2/40 px-4 py-2 text-sm font-semibold text-accent2 transition hover:border-accent2 hover:bg-accent2/10"
               }
             >
-              ✦ Ask my AI about {project.name}
+              ✦ Ask about {project.name}
             </button>
             <ShareProject slug={slug} name={project.name} />
             <span className="text-sm text-muted">{project.status}</span>

@@ -44,7 +44,7 @@ export interface Selection {
   source: string;
   live: boolean;
   focus?: Focus;
-  /** WAVE 6 LANE X6 (craft: inspector sparklines), additive: a real time
+  /** X6 (craft: inspector sparklines), additive: a real time
    *  series to draw as a tiny inline chart below `rows`, oldest to newest.
    *  Optional because most selections have none — Inspector.tsx never
    *  invents one; `sparkLabel` names the exact source (e.g. "M4.5+, 7d,

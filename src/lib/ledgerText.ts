@@ -68,7 +68,7 @@ export function riverRow(r: River | null): string {
 }
 
 /** `normalMm` (the 2015-2025 mean for these dates, from the build-time
- *  normals R6 generates) is optional: this lane ships before that file
+ *  normals R6 generates) is optional: this change ships before that file
  *  exists, so a caller without it yet gets the raw total instead of a ratio
  *  it cannot honestly compute. */
 export function seasonRow(s: Season | null, normalMm?: number): string {

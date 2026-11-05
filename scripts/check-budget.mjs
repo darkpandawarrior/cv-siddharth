@@ -21,7 +21,7 @@
 // own manifest key — exactly the set Vite emits as <link rel="modulepreload">
 // for that route, which already transitively includes the shared entry.
 //
-// ponytail: only "/" is budgeted today (the one route the council's findings
+// only "/" is budgeted today (the one route the council's findings
 // and metrics named). Add a route to budgets.json's `routes` array when its
 // own cold-load weight is worth gating — the mechanism below is already
 // per-route, so that's a one-line addition, not a rewrite.

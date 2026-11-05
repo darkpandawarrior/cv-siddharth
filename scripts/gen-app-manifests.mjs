@@ -60,7 +60,7 @@ function dirBytes(dir) {
 }
 
 /** The repo slug, read from the sibling's OWN remote rather than hand-typed —
- *  the exact class of drift this lane exists to end. Gaddi/Doori/PaymentsLab-KMP
+ *  the exact class of drift this change exists to end. Gaddi/Doori/PaymentsLab-KMP
  *  are all renames of what the local Android/ directory names still say. */
 function repoSlug(dir) {
   try {

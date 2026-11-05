@@ -5,7 +5,7 @@ mechanical (idea-atlas.md WORLD-5). Five buckets is the wheel's own fixed
 architecture (it is not a live count anywhere — see living-ledger-spec.md
 §3.3 G14: only `w:<landmark>:<field>` rows read live data, and rahat has none
 here), so unlike the bell toran's data-driven count this file bakes exactly
-five bucket sockets, per this lane's own task list.
+five bucket sockets, per this change's own task list.
 
 Kit: ONE Wheel (rim + spokes, the single node the runtime rotates), ONE
 Bucket prototype, and 5 `socket.bucket.N` empties parented to Wheel so the

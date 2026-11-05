@@ -45,13 +45,13 @@ test("FloatingChat is not requested until the launcher is clicked, then the pane
   await expect(launcher).toBeVisible();
   await launcher.click();
 
-  const dialog = page.getByRole("dialog", { name: "Panda, Siddharth’s AI assistant" });
+  const dialog = page.getByRole("dialog", { name: "Panda, ask about Siddharth’s work" });
   await expect(dialog).toBeVisible();
   expect(chatChunkUrls.length, "clicking the launcher never requested the FloatingChat chunk").toBeGreaterThan(0);
 });
 
 // Break-it (G15): a route that still hand-mounted FloatingChat would fail the
-// grep half of this lane's acceptance (`grep -rln '<FloatingChat' src`), not
+// grep half of this change's acceptance (`grep -rln '<FloatingChat' src`), not
 // this spec — this file's own break-it is the inverse of the assertion
 // above: if the chunk request happened at load instead of on click, the
 // "before any click" check would catch it (verified by temporarily

@@ -42,7 +42,7 @@ export function ParticleHero() {
   const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // ponytail: same inline saveData check as AmbientBackground/Phone3D/etc —
+    // same inline saveData check as AmbientBackground/Phone3D/etc —
     // no DOM lib type for navigator.connection, so no shared hook for one flag.
     const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
     if (!supportsWebGL() || saveData || location.search.includes("noambient")) return;

@@ -1,5 +1,5 @@
 // Linear RGB thresholds: sRGB imagery is decoded by three before sampling.
-// ponytail: colour cannot distinguish all snow from cloud; subtract static
+// colour cannot distinguish all snow from cloud; subtract static
 // Blue Marble whiteness until a daily scientific cloud product is available.
 export const CLOUD_LOW = 0.22;
 export const CLOUD_HIGH = 0.68;

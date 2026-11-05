@@ -39,7 +39,7 @@ it("glyphs and keys use the same imported constants, including aurora and daylig
     expect(renderer).toMatch(/import \{[^}]+\} from "\.\/layerKeys.ts"/);
     for (const name of names) expect(renderer).toContain(name);
   }
-  // The weekly renderer is outside this lane. Guard its existing colour
+  // The weekly renderer is outside this change. Guard its existing colour
   // against the shared EONET/legend colour until it can import the key too.
   expect(source("VolcanoGlyphs.tsx")).toContain(`color="${VOLCANO}"`);
   expect(source("daylight.ts")).toContain('export { DAYLIGHT_FRAG } from "./layerKeys.ts"');

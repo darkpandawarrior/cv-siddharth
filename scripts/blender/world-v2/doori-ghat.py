@@ -219,7 +219,7 @@ if GHAT_KIT_GLB.exists():
     STEP_RUN, STEP_RISE, N_STEPS_PREVIEW = 0.32, 0.16, 12
 
     def _dup_proto(proto, name):
-        """A packed GLB (this lane's task 3) quantizes a named node's mesh
+        """A packed GLB (this change's task 3) quantizes a named node's mesh
         onto an unnamed child (KHR_mesh_quantization) rather than keeping it
         on the node itself - proto.data is then None and the geometry lives
         on proto.children. Duplicate proto AND its children so a preview

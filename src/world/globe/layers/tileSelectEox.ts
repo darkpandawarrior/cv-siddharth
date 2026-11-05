@@ -7,15 +7,15 @@
 // not a generalisation of it: tileSelect.ts calls tileMatrix.ts's
 // levelDef/latStepDeg/lonStepDeg/tileBounds with no `levels` argument, so it
 // always reads GIBS_LEVELS (tileMatrix.ts's own default) — and tileSelect.ts
-// is a file this lane doesn't own and can't edit to thread a table through
+// is a file this change doesn't own and can't edit to thread a table through
 // without breaking that "never touch another lane's file" rule. Duplicating
 // the walk is the honest cost of that wall; `needsFromIntegration` in this
 // lane's report flags the real fix (generalise tileSelect.ts to take a level
 // table, once a lane owns it, and delete this file).
 //
 // Pure — no three, no React — reusing tileLOD.ts's generic vector/culling
-// primitives (read-only reuse, not an edit to a file this lane doesn't own,
-// same convention tileSelect.ts's own header comment states) and this lane's
+// primitives (read-only reuse, not an edit to a file this change doesn't own,
+// same convention tileSelect.ts's own header comment states) and this change's
 // own EOX_LEVELS-aware tileMatrix.ts overloads. Also reads tileSelect.ts's
 // own `SelectedTile`/`CameraSample` types and `MAX_SELECTED_TILES` constant
 // (read-only reuse of its exports, not an edit to its body).

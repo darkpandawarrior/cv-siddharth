@@ -1,5 +1,5 @@
-// WAVE 2 LANE W1 (deep zoom): the exact NASA GIBS WMTS EPSG:4326 "best" tile
-// matrix definitions this lane draws against. Pure data + math, no three, no
+// W1 (deep zoom): the exact NASA GIBS WMTS EPSG:4326 "best" tile
+// matrix definitions this change draws against. Pure data + math, no three, no
 // React — verified against the endpoint's own GetCapabilities document
 // (https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/wmts.cgi?SERVICE=WMTS&
 // REQUEST=GetCapabilities, fetched 2026-09-27, 5.2 MB) rather than guessed:
@@ -92,9 +92,9 @@ export const TILE_MATRIX_SETS = {
 export type TileMatrixSetId = keyof typeof TILE_MATRIX_SETS;
 
 /** `levels` defaults to GIBS_LEVELS so every existing GIBS caller (tileSelect.ts
- *  included, which this lane doesn't own and can't edit to thread a table
+ *  included, which this change doesn't own and can't edit to thread a table
  *  through) is byte-for-byte unaffected — EOX_LEVELS is passed explicitly
- *  only by this lane's own EOX-scoped selection code (tileSelectEox.ts). */
+ *  only by this change's own EOX-scoped selection code (tileSelectEox.ts). */
 export function levelDef(level: number, levels: readonly TileLevel[] = GIBS_LEVELS): TileLevel {
   const l = levels[level];
   if (!l) throw new RangeError(`tileMatrix: no such level ${level} (0..${levels.length - 1})`);

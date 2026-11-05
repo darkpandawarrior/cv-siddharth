@@ -1,5 +1,5 @@
 // LANE W6: the "reach" layer's one composite health line -- mirrors
-// hazardStatus.ts's shape (this lane's own copy, not imported: that file
+// hazardStatus.ts's shape (this change's own copy, not imported: that file
 // belongs to another lane) but reach has no "loading" branch worth its own
 // state, since the app ring is always drawable static data (store.ts, never
 // fetched) even before the first live poll lands.

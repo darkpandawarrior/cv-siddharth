@@ -127,7 +127,7 @@ export function distanceTo(from: { x: number; z: number }, to: { x: number; z: n
  *   - it bleeds off inside SLOW_RADIUS, so arriving reads as pulling up
  *     outside a room rather than as slamming into it and bouncing.
  *
- * ponytail: no path planning and no obstacle avoidance. The boulevard is
+ * no path planning and no obstacle avoidance. The boulevard is
  * 56m of open slab with the rooms flanking it, so a straight line to the next
  * stop is a legal route from anywhere on the map; if the world ever grows
  * something you can't drive through, this is where an A* would go.

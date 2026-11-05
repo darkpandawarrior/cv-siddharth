@@ -1,5 +1,5 @@
 // Committed festival and meteor-shower table (live-data-spec.md#1.3, #4 R6:
-// this spec asserts no dates, this lane fills them in from the cited
+// this spec asserts no dates, this change fills them in from the cited
 // sources). Every row cites where its date came from; validUntil marks when
 // the whole table needs its annual refresh. Pure data plus small pure
 // lookups - src/lib/skyText.ts formats these into ledger rows.

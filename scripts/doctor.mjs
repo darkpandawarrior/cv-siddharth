@@ -325,12 +325,25 @@ function closeIssueIfOpen(title, prUrl) {
   }
 }
 
+// `gh pr create` exits 1 when an open PR already exists for the head branch, which crashed the
+// whole doctor run every day while the twin's bot/generated-sync PR sat open (2026-10-20 to 28).
+// The force-push above already refreshed that PR, so reuse it.
+function createOrReusePr(repo, branch, title, body, extraArgs = [], env = process.env) {
+  const existing = execFileSync(
+    "gh",
+    ["pr", "list", "--repo", repo, "--head", branch, "--state", "open", "--json", "url", "--jq", ".[0].url // empty"],
+    { encoding: "utf8", env },
+  ).trim();
+  if (existing) return existing;
+  return execFileSync("gh", ["pr", "create", "--repo", repo, "--head", branch, "--title", title, "--body", body, ...extraArgs], { encoding: "utf8", env }).trim();
+}
+
 function openDoctorPr(branch, paths, title, body) {
   execFileSync("git", ["-C", root, "checkout", "-B", branch], { env: gitEnv() });
   execFileSync("git", ["-C", root, "add", ...paths], { env: gitEnv() });
   execFileSync("git", ["-C", root, "-c", "user.name=github-actions[bot]", "-c", "user.email=41898282+github-actions[bot]@users.noreply.github.com", "commit", "-m", title], { env: gitEnv() });
   execFileSync("git", ["-C", root, "push", "-f", "origin", branch], { env: gitEnv() });
-  const prUrl = execFileSync("gh", ["pr", "create", "--repo", "darkpandawarrior/cv-siddharth", "--head", branch, "--title", title, "--body", body, "--label", "data-refresh"], { encoding: "utf8" }).trim();
+  const prUrl = createOrReusePr("darkpandawarrior/cv-siddharth", branch, title, body, ["--label", "data-refresh"]);
   execFileSync("gh", ["pr", "merge", "--repo", "darkpandawarrior/cv-siddharth", "--squash", "--delete-branch", branch]);
   execFileSync("git", ["-C", root, "checkout", "main"], { env: gitEnv() });
   return prUrl;
@@ -344,7 +357,7 @@ function openTwinPr(branch, title, body) {
   // No Co-Authored-By: kmp-family repos block the trailer (feedback_kmp_family_no_ai_attribution).
   execFileSync("git", ["-C", KMP, "-c", "user.name=github-actions[bot]", "-c", "user.email=41898282+github-actions[bot]@users.noreply.github.com", "commit", "-m", title], { env: gitEnv() });
   execFileSync("git", ["-C", KMP, "push", "-f", `https://x-access-token:${token}@github.com/darkpandawarrior/cv-siddharth-kmp.git`, branch], { env: gitEnv() });
-  const prUrl = execFileSync("gh", ["pr", "create", "--repo", "darkpandawarrior/cv-siddharth-kmp", "--head", branch, "--title", title, "--body", body], { encoding: "utf8", env: { ...process.env, GH_TOKEN: token } }).trim();
+  const prUrl = createOrReusePr("darkpandawarrior/cv-siddharth-kmp", branch, title, body, [], { ...process.env, GH_TOKEN: token });
   execFileSync("gh", ["pr", "merge", "--repo", "darkpandawarrior/cv-siddharth-kmp", "--auto", "--squash", prUrl], { env: { ...process.env, GH_TOKEN: token } });
   return { opened: true, prUrl };
 }

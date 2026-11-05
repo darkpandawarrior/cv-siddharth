@@ -1,5 +1,5 @@
 /**
- * The generic landmark detail panel (this lane's own task list): opens over
+ * The generic landmark detail panel (this change's own task list): opens over
  * the running scene for a landmark selected via `LandmarkList.tsx` (or a
  * future in-world dwell prompt), lists that landmark's own facets, and ends
  * with its ledger row — living-ledger-spec §7.2's own citation shape ("Why

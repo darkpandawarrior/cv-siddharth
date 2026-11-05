@@ -1,4 +1,4 @@
-// WAVE 6 LANE X5 (seamless zoom + cinematic intro): pure logic for the
+// X5 (seamless zoom + cinematic intro): pure logic for the
 // "keep zooming in at the minimum orbit distance opens street level" gesture
 // -- the hold-timer state machine and the altitude->MapLibre-zoom mapping
 // used to match street view's opening camera to the globe camera it hands
@@ -84,7 +84,7 @@ export function streetZoomToAltitude(zoom: number, minAltitude: number, maxAltit
 }
 
 /**
- * The one thing StreetView.tsx (a different lane's file -- this lane only
+ * The one thing StreetView.tsx (a different lane's file -- this change only
  * has hand-off hooks in it) needs from a seamless-zoom hand-off that `focus`
  * (globeStore's own field, already carries the lat/lon) can't: the MapLibre
  * zoom to open at, matching the globe camera's altitude. A plain

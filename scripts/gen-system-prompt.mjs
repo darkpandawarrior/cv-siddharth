@@ -48,7 +48,7 @@ const llmsFullOutFile = join(root, "public", "llms-full.txt");
  * tokens. So these renderers deliberately drop restatement — never facts.
  *
  * `label` is the first casualty: it is a category name for the sentence that
- * immediately follows it ("Crash Reduction: Cut production crashes 80%…"), so
+ * immediately follows it ("Crash Reduction: Cut production crashes 85%…"), so
  * it costs ~375 characters to say each bullet's topic twice.
  */
 /* Tiered points only (tier 1 and 2), not the full record. Same split as the skills

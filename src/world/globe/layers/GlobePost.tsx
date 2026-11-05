@@ -1,7 +1,7 @@
 import { Html } from "@react-three/drei";
 import { Bloom, EffectComposer, SMAA } from "@react-three/postprocessing";
 
-// WAVE 7 LANE V2: the globe's first composer. Plain Bloom, not
+// V2: the globe's first composer. Plain Bloom, not
 // SelectiveBloom — a mesh-level Selection can't isolate city lights because
 // they're mixed into the SAME earth shader as the day side
 // (earthImageryShader.ts), so the isolation has to happen in the shader's

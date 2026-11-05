@@ -20,7 +20,7 @@ export function dotVisible(daypart: Daypart): boolean {
   return daypart !== "night";
 }
 
-/** ponytail: dawn/dusk share golden's amber rather than getting a third hue
+/** dawn/dusk share golden's amber rather than getting a third hue
  *  — the spec calls out only golden (amber) and day (signal green); split
  *  them out if a future lane wants dawn/dusk visually distinct. */
 export function dotColor(daypart: Daypart): string {
@@ -61,7 +61,7 @@ export function srSentence(sky: SkyState): string {
  * is the exact fallback `SkyLine.test.ts` already exercised and `/hire`'s
  * `PuneClocks` already ships for the same "I need the clock, not the live
  * weather bus" reason — not a new pattern.
- * ponytail: the hairline loses weather-tinted `k.horizon` (still varies by
+ * the hairline loses weather-tinted `k.horizon` (still varies by
  * daypart/sun altitude, just not rain/cloud); revisit once useLiveSignal's
  * getServerSnapshot stops sharing one mutable object across subscribers.
  */

@@ -152,7 +152,7 @@ test("'Ask Panda a follow-up' opens the chat panel carrying the question text", 
   const question = (await first.locator("summary").textContent())!.trim();
   await first.locator("summary").click();
   await first.getByRole("button", { name: "Ask Panda a follow-up" }).click();
-  const dialog = page.getByRole("dialog", { name: "Panda, Siddharth’s AI assistant" });
+  const dialog = page.getByRole("dialog", { name: "Panda, ask about Siddharth’s work" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toContainText(question);
 });

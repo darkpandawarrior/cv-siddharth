@@ -87,7 +87,7 @@ function worldPosAt(x: number, y: number, extraZ = 0): [number, number, number] 
 // which has no `calculatePosition` hook to clamp post-projection. Framing
 // wider so every seeded label starts on-screen is the fix that mode leaves
 // available; a real per-label clamp needs a transform-mode-aware rewrite
-// this lane doesn't own.
+// this change doesn't own.
 const OVERVIEW = { pos: new THREE.Vector3(3.5, 4.6, 31), look: new THREE.Vector3(0, 0, 0) };
 
 function cloneOverview() {

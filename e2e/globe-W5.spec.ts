@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 /**
  * LANE W5 (global wind + Pune weather), wave 3 — e2e. Fixed clock, every
  * /api/* the route touches routed to a committed fixture (G10), same pattern
- * as e2e/globe.spec.ts. Observes through this lane's own seams
+ * as e2e/globe.spec.ts. Observes through this change's own seams
  * (`data-wind-layer`'s `data-wind-particle-count`, `data-wind-pune-visible`,
  * `data-wind-pune-selected` — WindLayer.tsx) rather than the shared
  * Inspector UI another lane owns.
@@ -112,14 +112,14 @@ test.describe("globe-W5: wind particles", () => {
     await expect(seam).toHaveCount(0);
 
     // The layer panel's own health row (ui/LayerPanel.tsx, shared, read-only
-    // here) reads the "failed" detail this lane's setStatus("wind", ...) call
+    // here) reads the "failed" detail this change's setStatus("wind", ...) call
     // wrote — the same DOM the plan's shared health-dot pattern already
     // exposes, no new seam needed for this half of the assertion.
     const windRow = page.locator("[data-globe-layer-panel] li", { hasText: "Wind" });
     await expect(windRow.locator("p")).toHaveText(/unreachable/);
   });
 
-  test("reduced motion paints a static field once (the guard this lane adds) instead of animating", async ({ page }) => {
+  test("reduced motion paints a static field once (the guard this change adds) instead of animating", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await withApiFixtures(page);
     await openGlobe(page);

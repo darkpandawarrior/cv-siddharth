@@ -72,7 +72,7 @@ async function copyLink(): Promise<boolean> {
  *  is an ordinary focus/view change to it, not a special restore path. Only
  *  the Pune selection is reconstructible from an id alone (every other
  *  selection's full content — rows, source, spark — is built by a layer
- *  this lane doesn't own); an unrecognised `selectionId` is stored back into
+ *  this change doesn't own); an unrecognised `selectionId` is stored back into
  *  the URL faithfully (round-trip tested) but left un-restored here, same
  *  as any other lane's "known ids only" scope limit. */
 function applyRestoredState(parsed: Partial<ShareState>): void {

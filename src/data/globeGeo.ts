@@ -22,7 +22,7 @@ export const GEOCODE: Record<string, GeoPoint> = {
 };
 
 /** experience.ts location strings with no entry in GEOCODE, in first-seen
- *  order, deduped: "Contract, India" (real, not
+ *  order, deduped: "India" (real, not
  *  a single city). Listed, never guessed (living-ledger-spec.md#6.3). */
 export const employersUnresolved: string[] = [...new Set(experience.map((e) => e.location))].filter(
   (loc) => !(loc in GEOCODE),

@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 /**
- * WAVE 6 LANE X3 (time machine UI), end to end: the non-linear scrubber
+ * X3 (time machine UI), end to end: the non-linear scrubber
  * actually moves the store's offset, HistoryLayer replays real USGS quakes
  * while scrubbed away from now, EarthImagery's daily time-lapse names the
  * past day it is showing, and swipe compare's divider drags, nudges and
@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
  * (G10, same discipline as e2e/globe.spec.ts) — this spec never depends on
  * a live network, including the feeds other lanes' layers own (HazardLayer's
  * live "now" quakes, EONET, GDACS, aurora, Kp, launches), which are aborted
- * rather than given real fixtures: this lane doesn't touch what they draw,
+ * rather than given real fixtures: this change doesn't touch what they draw,
  * only that they fail quietly instead of reaching out.
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
@@ -39,7 +39,7 @@ const BASE_JPG = readFileSync(join(GIBS_DIR, "gibs-base.jpg"));
 const NIGHT_JPG = readFileSync(join(GIBS_DIR, "gibs-night.jpg"));
 const SEA_ICE_PNG = readFileSync(join(GIBS_DIR, "gibs-seaice.png"));
 const RELIEF_JPG = readFileSync(join(GIBS_DIR, "gibs-relief.jpg"));
-// WAVE 6 LANE X3 defect fix: a past-day mosaic with a full-width no-data
+// X3 defect fix: a past-day mosaic with a full-width no-data
 // swath band (rows v in [0.15, 0.65], pure black; see the generating note in
 // this file's own gap-mask test sibling) — the composited pixel a visitor
 // actually sees while scrubbed into the past, distinct from the bright live
@@ -50,7 +50,7 @@ const MONTH_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5
 const WEEK_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson";
 // HazardLayer's own live "now" feed (a different USGS endpoint from this
 // lane's two above) — routed by its own exact URL, not a domain wildcard,
-// so registration order can never make it shadow this lane's two fetches.
+// so registration order can never make it shadow this change's two fetches.
 const ALL_DAY_URL = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
 
 async function withApiFixtures(page: Page) {
@@ -76,7 +76,7 @@ async function withGibsFixtures(page: Page) {
   });
 }
 
-/** This lane's own two USGS feeds (registered after the blanket abort below
+/** This change's own two USGS feeds (registered after the blanket abort below
  *  so they take precedence — Playwright resolves multiple matching routes
  *  last-registered-first). */
 async function withHistoryFixtures(page: Page) {
@@ -88,7 +88,7 @@ async function withHistoryFixtures(page: Page) {
  *  lane's concern: aborted so HazardLayer/aurora/launches settle into their
  *  own honest "failed" state instead of reaching a real network (G10). Each
  *  is its own exact or narrowly-scoped URL, never a bare domain wildcard, so
- *  none of them can shadow this lane's two USGS history fetches regardless
+ *  none of them can shadow this change's two USGS history fetches regardless
  *  of registration order. */
 async function abortUnrelatedFeeds(page: Page) {
   await page.route(ALL_DAY_URL, (route) => route.abort());
@@ -136,7 +136,7 @@ async function openGlobe(page: Page, isoNow: string) {
 }
 
 test("scrubbing away from now replays USGS history as pulses, and fetches only once", async ({ page }) => {
-  test.setTimeout(150_000); // this sandbox's software-rendered WebGL makes every actionability check (visible/stable) slow, not just this lane's own work — see the sibling tests' own note.
+  test.setTimeout(150_000); // this sandbox's software-rendered WebGL makes every actionability check (visible/stable) slow, not just this change's own work — see the sibling tests' own note.
   await openGlobe(page, "2026-09-28T10:00:00Z"); // inside both fixtures' time range
   const slider = page.getByLabel(/Simulated time offset, non-linear/);
 
@@ -266,7 +266,7 @@ test("a past day's swath gap gets patched, not drawn as a black hole", async ({ 
   // (reading uDay unconditionally) reported "no gap" while the actually
   // drawn frame — this swath-gap fixture — was black.
   //
-  // TileLayer.tsx (another lane's file, WAVE 2 LANE W1) draws real GIBS
+  // TileLayer.tsx (another lane's file, W1) draws real GIBS
   // WMTS tiles a hair above EarthImagery's own whole-globe sphere and
   // covers almost the entire visible disk with its own always-"live"-dated
   // fetch, unrelated to the time machine's scrub position — so its tiles

@@ -1,10 +1,10 @@
-// WAVE 6 LANE X6 (craft: inspector sparklines). Pure parsing for the two
+// X6 (craft: inspector sparklines). Pure parsing for the two
 // real series Inspector.tsx is allowed to draw — never invented, always
 // named by their real source (globeStore.ts's own `sparkLabel` contract:
 // "a number always sits beside its source", the same G8 rule every other
 // live value on this page follows). No three, no DOM; the two small hooks
 // at the bottom are the only React in this file, same split as every other
-// *.ts/*.tsx pair in this lane (hexbin.ts / HexbinLayer.tsx).
+// *.ts/*.tsx pair in this change (hexbin.ts / HexbinLayer.tsx).
 import { useEffect, useMemo, useState } from "react";
 import { useLiveSignal } from "../../../lib/useLiveSignal.ts";
 import { latLonToXyz } from "../geoMath.ts";

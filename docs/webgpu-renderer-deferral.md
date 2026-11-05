@@ -1,11 +1,11 @@
 # WebGPU renderer deferral
 
-New doc — the first thing in it is the one deferral this lane's brief required to be written down
+New doc — the first thing in it is the one deferral this change's brief required to be written down
 rather than silently skipped.
 
 ## Deferred: the WebGPU renderer path (lane V3, `b7-webgpu-renderer` / `tanstack-webgpu-renderer`)
 
-**Not built in this lane.** `docs/superpowers/specs/2026-07-24-tanstack-start-migration-design.md`
+**Not built in this change.** `docs/superpowers/specs/2026-07-24-tanstack-start-migration-design.md`
 (lines 92-97) and the 2026-07-25 spec (L43) both call for moving the site's R3F scenes to Three's
 `WebGPURenderer` with automatic WebGL2 fallback. The spec's own documented contingency — "fall back
 to the `gl` prop factory pattern on R3F v9 if v10 isn't fully stable when this is built" — is what

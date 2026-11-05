@@ -34,7 +34,7 @@ function repoLeaf(repoOrUrl: string): string {
 
 /** The hub anchor — the same centroid FoundationHub.tsx's own `hubPosition`
  *  computes (the includeBuild roads' meeting point), restated rather than
- *  imported: FoundationHub.tsx is explicitly untouched by this lane (M2 —
+ *  imported: FoundationHub.tsx is explicitly untouched by this change (M2 —
  *  "The KMP keystone is not touched"), and its `hubPosition` is a private,
  *  unexported helper. Four lines, off the same public registry, is cheaper
  *  than asking an out-of-scope file to export one. */

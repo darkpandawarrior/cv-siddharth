@@ -17,7 +17,7 @@ import type { LayerHealth } from "../globeStore.ts";
 // this lazy chunk pulled its whole transitive chunk into the shared
 // "Globe" chunk's own dynamic-import preload list, past its budget ceiling
 // (measured via `node scripts/check-budget.mjs`, see skyMoon.tsx's probe
-// comment for the same story with drei's <Html>). This lane's own
+// comment for the same story with drei's <Html>). This change's own
 // "Needs from integration" note asks for that hook to move somewhere both
 // sides can reach without paying this cost.
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";

@@ -1,7 +1,7 @@
 // LANE L5 (navigation): pure camera math for CameraDirector.tsx. No three,
 // no R3F, no React, no DOM -- same discipline as geoMath.ts, so every branch
 // here is directly unit-testable (the "slerp path never dips below the
-// surface radius" / "ground-view orientation" / "easing" tests this lane's
+// surface radius" / "ground-view orientation" / "easing" tests this change's
 // brief asks for).
 //
 // Deliberately does NOT import geoMath.ts, even though latLonToXyz below is

@@ -263,7 +263,7 @@ export function ReposShowcase() {
               <h4 className="kicker-accent font-semibold">openMF</h4>
               {/* Theme scale, not an arbitrary bracket value like its
                   neighbours — this file is already at its design-system-
-                  ratchet baseline (ds-baseline.json, not owned by this lane),
+                  ratchet baseline (ds-baseline.json, not owned by this change),
                   so a new span reaches for the nearest real scale step
                   instead of growing the count. */}
               <span className="font-mono text-xs text-muted">

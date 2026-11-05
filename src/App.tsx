@@ -20,6 +20,8 @@ import { projectStats, projectStatsGeneratedAt } from "./data/projectStats.ts";
 import { EvidenceChip } from "./EvidenceChip.tsx";
 import { ReposShowcase } from "./ReposShowcase.tsx";
 import { openChat } from "./lib/chatBus.ts";
+import { useInertBackdrop } from "./lib/inertBackdrop.ts";
+import { wrapFocusTarget } from "./lib/focusTrap.ts";
 import { FitCheck } from "./FitCheck.tsx";
 import { ShippedShelf } from "./ShippedShelf.tsx";
 import { AmbientBackground } from "./AmbientBackground.tsx";
@@ -175,15 +177,35 @@ function MobileMenu() {
     if (c.kind === "section") { goToSection(c.id); return; }
     navigate(c.kind === "project" ? { to: "/project/$slug", params: { slug: c.slug } } : { to: c.to });
   };
-  // Esc closes the drawer and hands focus back to the toggle — same
-  // escapable-and-don't-strand-focus contract as the lightbox/command palette.
-  const closeMenu = () => {
-    setOpen(false);
-    toggleRef.current?.focus();
-  };
+  const sheetRef = useRef<HTMLElement>(null);
+  const wasOpen = useRef(false);
+  // Esc closes the drawer. Focus goes back to the toggle in the effect below,
+  // because while the sheet is open the toggle is inert and cannot take focus.
+  const closeMenu = () => setOpen(false);
+  useInertBackdrop(open, sheetRef);
+  useEffect(() => {
+    if (open) {
+      wasOpen.current = true;
+      // Move focus into the dialog, lock page scroll behind it.
+      sheetRef.current?.querySelector<HTMLElement>("button")?.focus();
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+    if (wasOpen.current) {
+      wasOpen.current = false;
+      toggleRef.current?.focus();
+    }
+  }, [open]);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeMenu(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { closeMenu(); return; }
+      if (e.key !== "Tab") return;
+      const items = Array.from(sheetRef.current?.querySelectorAll<HTMLElement>("button:not([disabled])") ?? []);
+      const target = wrapFocusTarget(items, document.activeElement as HTMLElement | null, e.shiftKey);
+      if (target) { e.preventDefault(); target.focus(); }
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
@@ -194,6 +216,8 @@ function MobileMenu() {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-controls={open ? "mobile-menu" : undefined}
         className="ctrl-icon flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-full border border-line"
       >
         <span className="h-px w-4 bg-zinc-300" />
@@ -202,13 +226,17 @@ function MobileMenu() {
       {open && (
         <div className="fixed inset-0 z-[70] bg-ink/85 backdrop-blur-md" onClick={closeMenu} role="presentation">
           <nav
+            ref={sheetRef}
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-menu-title"
             className="sheet glass-panel absolute inset-x-4 top-4 rounded-2xl p-5"
             style={{ backgroundColor: "rgba(8, 11, 10, 0.97)" }}
-            aria-label="Site menu"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <span className="font-display text-sm font-bold">
+              <span id="mobile-menu-title" className="font-display text-sm font-bold">
                 sid<span className="text-accent">.</span><span className="text-zinc-400">android</span>
               </span>
               <button onClick={closeMenu} aria-label="Close menu" className="ctrl rounded-full border border-line px-2.5 py-1 text-xs text-zinc-400">
@@ -235,7 +263,7 @@ function MobileMenu() {
                 onClick={() => { setOpen(false); openChat(); }}
                 className="ctrl col-span-2 rounded-xl bg-accent px-4 py-3 text-sm font-bold text-ink"
               >
-                Ask my AI
+                Ask about my work
               </button>
             </div>
           </nav>
@@ -458,7 +486,7 @@ function Hero() {
 }
 
 // Three lines, each saying something the metrics band 250px below does not.
-// The fourth was "GPS 50% → 95% · crashes -80%", which is metrics[1] and
+// The fourth was "GPS 50% → 95% · crashes -85%", which is metrics[1] and
 // metrics[2] typed out again, hardcoded, one screen above the band itself.
 const IDENTITY_LINES = [
   "platform owner · 50k+ MAU fintech",
@@ -998,7 +1026,7 @@ const PROVEN_IN: Record<string, { label: string; href: string }[]> = {
     { label: `Doori · ${projectStats.doori.modules} modules`, href: "#project/doori" },
   ],
   "Concurrency & Data": [
-    { label: "-80% crashes", href: "#work" },
+    { label: "-85% crashes", href: "#work" },
     { label: "The Coroutine Court", href: "#loopdown" },
   ],
   "Platform & Systems": [
@@ -1108,7 +1136,7 @@ function Contact() {
         </span>
         <h2 className="font-display mt-6 text-h2 font-bold tracking-tight">Hiring for a senior Android role?</h2>
         <p className="mx-auto mt-4 max-w-xl text-zinc-400">
-          Ask my AI assistant anything about my work, or reach out directly. I reply fast.
+          Ask Panda anything about my work, or reach out directly. I reply fast.
         </p>
         {/* The ask, sized like it matters, and the one control the sentence
             above it names. A five-chip row used to sit here (copy email,
@@ -1124,7 +1152,7 @@ function Contact() {
             onClick={() => openChat()}
             className="flex items-center gap-2 rounded-full border border-line px-6 py-2.5 font-semibold text-zinc-200 transition hover:border-accent hover:text-accent"
           >
-            <MessageCircle size={16} /> Ask my AI
+            <MessageCircle size={16} /> Ask about my work
           </button>
         </div>
       </Reveal>

@@ -3,7 +3,7 @@ import { pickOutcomeMetric, excludeOutcomeScreenshot } from "./caseSpine";
 
 describe("pickOutcomeMetric", () => {
   it("returns the metrics[] entry at outcomeMetricIndex", () => {
-    const metrics = [{ value: "50%→95%", label: "GPS accuracy" }, { value: "80%", label: "crash reduction" }];
+    const metrics = [{ value: "50%→95%", label: "GPS accuracy" }, { value: "85%", label: "crash reduction" }];
     expect(pickOutcomeMetric({ outcomeMetricIndex: 1, metrics })).toEqual(metrics[1]);
   });
 

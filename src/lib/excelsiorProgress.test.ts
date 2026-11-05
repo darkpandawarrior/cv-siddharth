@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { readProgress, writeProgress } from "./excelsiorProgress.ts";
 
-// ponytail: stub localStorage rather than pull in jsdom — same pattern as
+// stub localStorage rather than pull in jsdom — same pattern as
 // themeColor.test.ts. vitest's own environment is plain node, where
 // `localStorage` is undefined unless the process is started with
 // --experimental-webstorage, so the module under test has to see a fake one.

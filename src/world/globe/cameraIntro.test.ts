@@ -14,7 +14,7 @@ import {
   subscribeIntro,
 } from "./cameraIntro.ts";
 
-// ponytail: stub localStorage rather than pull in jsdom -- same pattern as
+// stub localStorage rather than pull in jsdom -- same pattern as
 // src/lib/excelsiorProgress.test.ts. vitest's own environment is plain node,
 // where `localStorage` is undefined unless stubbed.
 const store = new Map<string, string>();

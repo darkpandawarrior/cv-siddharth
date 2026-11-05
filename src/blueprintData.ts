@@ -19,7 +19,7 @@ import { heavy } from "./lib/assetBase.ts";
  *     the map at all, having been added to the registry long after this file.
  *   - The four headline numbers were typed out a second time here, free to
  *     disagree with the ones the homepage renders.
- *   - Three nodes ("GPS 50% → 95%", "-80% crashes", "~87% Compose") sat
+ *   - Three nodes ("GPS 50% → 95%", "-85% crashes", "~87% Compose") sat
  *     directly beside three METRIC tiles carrying the same three numbers, so
  *     the busiest corner of the canvas said everything twice.
  *
@@ -137,7 +137,7 @@ const SERIES_NODES: NodeSpec[] = writing.series
 export const NODES: NodeSpec[] = [
   { key: "sid", x: 1150, y: 640, w: 300, h: 140, geo: "hexagon", color: "green", fill: "semi", label: "SID\nprototype → platform" },
   { key: "work", x: 300, y: 180, w: 260, h: 110, geo: "rectangle", color: "green", fill: "semi", label: "Case studies\nthe numbers" },
-  // The three plain "GPS 50% → 95%" / "-80% crashes" / "~87% Compose" tiles
+  // The three plain "GPS 50% → 95%" / "-85% crashes" / "~87% Compose" tiles
   // that used to sit here are GONE. They were parked directly beside the
   // animated METRIC tiles carrying those same three numbers, so the corner of
   // the canvas a visitor lands in first said everything twice. The metric
@@ -146,7 +146,7 @@ export const NODES: NodeSpec[] = [
   ...PROJECT_NODES,
   ...SERIES_NODES,
   { key: "books", x: 2500, y: 950, w: 260, h: 110, geo: "cloud", color: "orange", fill: "semi", label: "Books Before Bros\nthe origin blog (2018–2020)" },
-  { key: "chat", x: 1180, y: 120, w: 240, h: 100, geo: "ellipse", color: "light-blue", fill: "semi", label: "Ask my AI\nhas read all of this" },
+  { key: "chat", x: 1180, y: 120, w: 240, h: 100, geo: "ellipse", color: "light-blue", fill: "semi", label: "Ask about my work\nhas read all of this" },
 ];
 
 /**

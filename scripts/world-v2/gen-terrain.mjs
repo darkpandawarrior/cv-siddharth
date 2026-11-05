@@ -7,7 +7,7 @@
 // `src/world/v2/ledger.ts` (the single real-data source for everything
 // valley.ts does not itself expose: the chess ridge's peaks, the west
 // terraces' work-lane level, the east meadow's writing-lane year totals),
-// plus this lane's own `real-relief.mjs` for the real micro-relief beyond
+// plus this change's own `real-relief.mjs` for the real micro-relief beyond
 // 60m of any water. Writes:
 //   heavy/world/terrain/valley-h-513.png(+.json)   — 1.5 m/texel, first view + mobile
 //   heavy/world/terrain/valley-h-1025.png(+.json)  — 0.75 m/texel, desktop upgrade
@@ -16,7 +16,7 @@
 // plus a QA preview (gitignored, never a build artefact) at
 //   .showcase-work/world-v2/terrain-preview.png
 //
-// This lane deletes the old per-generator pure-math module (M5/M68): every
+// This change deletes the old per-generator pure-math module (M5/M68): every
 // number this generator places on the ground now traces through valley.ts
 // or ledger.ts, never a second, drifting copy of the same math.
 //
@@ -27,7 +27,7 @@
 // real height is `min + (pixel/255)*(max-min)`.
 //
 // Splat (aSplat/aAux) is NOT baked here — world-v2-spec §3 bakes it per
-// vertex, at load, in a web worker (`splat.worker.ts`, this lane) from the
+// vertex, at load, in a web worker (`splat.worker.ts`, this change) from the
 // heightmap's own neighbourhood plus REC-6's real filesChanged lookup. This
 // generator's job ends at real geometry and real flow; the worker's job is
 // real surface.
@@ -45,9 +45,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const OUT_DIR = join(root, "heavy", "world", "terrain");
 const PREVIEW_PNG = join(root, ".showcase-work", "world-v2", "terrain-preview.png");
 
-// Files superseded by this lane's rewrite (the old, single-resolution
+// Files superseded by this change's rewrite (the old, single-resolution
 // baked-splat scheme) — cleaned up so heavy/world/terrain/** holds only
-// what the current generator actually produces (this lane owns the whole
+// what the current generator actually produces (this change owns the whole
 // directory; a stale asset nothing writes any more is dead weight, not an
 // API).
 const OBSOLETE_FILES = [
@@ -152,7 +152,7 @@ async function main() {
   const generatedAt = new Date(Math.max(...INPUT_FILES.map((f) => statSync(f).mtimeMs))).toISOString();
 
   const basin = V.sangamBasin();
-  const trib = V.tributaries(); // real includeBuild sources — also this lane's district anchors (x,z)
+  const trib = V.tributaries(); // real includeBuild sources — also this change's district anchors (x,z)
   const districts = V.districtAnchors(
     trib.map((t) => t.id),
     basin,

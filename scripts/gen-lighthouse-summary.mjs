@@ -1,7 +1,7 @@
 /**
  * Writes src/data/generated/lighthouse.ts — the third live edge's LHCI half:
  * "/ops renders ... the LHCI summary ... each row carrying source + timestamp
- * + SLA" (target architecture, arch-L14). This lane (arch-L13) only produces
+ * + SLA" (target architecture, arch-L14). This change (arch-L13) only produces
  * the file; wiring it into the /ops page is arch-L14's job.
  *
  * Reads whatever `.lighthouseci/lhr-*.json` the just-completed `npx @lhci/cli
@@ -31,7 +31,7 @@ const lhciDir = join(root, ".lighthouseci");
 const outFile = join(root, "src", "data", "generated", "lighthouse.ts");
 mkdirSync(dirname(outFile), { recursive: true });
 
-// The four metrics this lane's calibration is about, plus the three already
+// The four metrics this change's calibration is about, plus the three already
 // at "error" (total-byte-weight, script size, CLS) — the same seven
 // lighthouserc.json asserts on, read from the SAME raw report rather than a
 // second parse of its own numbers.

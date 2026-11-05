@@ -41,10 +41,10 @@ export type LabTab = {
 
 export const LAB_TABS: LabTab[] = [
   { key: "signal", label: "Signal Lab", metric: "50% → 95%", group: "production", featured: true },
-  { key: "crashes", label: "Crash Triage", metric: "-80%", group: "production" },
+  { key: "crashes", label: "Crash Triage", metric: "-85%", group: "production" },
   { key: "recompose", label: "Recomposition", metric: "~87% Compose", group: "production" },
   { key: "theme", label: "White-label", metric: "80% faster", group: "production" },
-  { key: "modules", label: "Module Graph", metric: "49 modules", group: "personal" },
+  { key: "modules", label: "Module Graph", metric: "52 modules", group: "personal" },
   { key: "gateways", label: "Gateway Lab", metric: "66 gateways", group: "personal" },
   // Merged 2026-09: Gaddi's simulated ISMCTS and the real alpha-beta chess
   // search used to be two separate tabs ("search" / "chess-search") over

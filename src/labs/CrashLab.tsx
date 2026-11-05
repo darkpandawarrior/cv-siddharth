@@ -30,13 +30,13 @@ export function CrashLab() {
     let statsAcc = 0;
 
     // Skewed cause distribution — real feeds are: two bugs cause most of it.
-    // Top 2 (main-thread I/O + coroutine race) sum to exactly 80% — that's
-    // how -80% actually happened once those two clusters got fixed.
+    // Top 2 (main-thread I/O + coroutine race) sum to exactly 85% — that's
+    // how -85% actually happened once those two clusters got fixed.
     const pickCause = () => {
       const r = Math.random();
       if (r < 0.5) return 0;
-      if (r < 0.8) return 1;
-      if (r < 0.92) return 2;
+      if (r < 0.85) return 1;
+      if (r < 0.93) return 2;
       if (r < 0.98) return 3;
       return 4;
     };
@@ -130,7 +130,7 @@ export function CrashLab() {
       <p className="mb-5 max-w-2xl text-sm leading-relaxed text-zinc-400">
         A production crash feed doesn't arrive labeled — it arrives as noise. Flip triage on and the
         same feed clusters by root cause. The skew is the whole point: fix the top two clusters and
-        most of the noise disappears. That's how -80% actually happened.
+        most of the noise disappears. That's how -85% actually happened.
       </p>
       <div className="card-elevated overflow-hidden rounded-2xl border border-line bg-void/70">
         <div className="relative h-[340px] sm:h-[400px]">

@@ -2,12 +2,12 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { formatCaptureDate, type StreetPhoto } from "../streetPhotos.ts";
 
-/** WAVE 2 LANE W3 (street level) owns this file. */
+/** W3 (street level) owns this file. */
 
 // Drag-to-look, wheel-to-zoom bounds for the 360 sphere viewer's FOV — same
 // shape as CameraDirector.tsx's own ground-view drag/wheel handling, restated
 // here rather than imported since this viewer runs entirely outside the R3F
-// Canvas (a plain DOM `<div>` this lane owns, not a scene component).
+// Canvas (a plain DOM `<div>` this change owns, not a scene component).
 const FOV_MIN = 30;
 const FOV_MAX = 100;
 const DRAG_YAW_SPEED = 0.15; // degrees per pixel dragged

@@ -10,7 +10,7 @@ Kit, not a baked assembly (spec §0.3 rule 2 - no GLB bakes a data count):
                 than shipping 4 fixed tiers as one baked mesh.
   - Dome:       the one-off starmap housing, lathed like the bridge/deepmal
                 finials. Its own named node - "a named dome for the
-                fictional starmap" (this lane's task 1) - is the mount the
+                fictional starmap" (this change's task 1) - is the mount the
                 runtime seeds `anthology.starmap` points from, via
                 socket.starfield.
   - BasePlinth: one-off foot, same footing as the bridge's SpandrelWall.

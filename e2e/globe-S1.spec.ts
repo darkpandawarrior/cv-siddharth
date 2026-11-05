@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 /**
  * LANE S1 (wave 9, "GIBS overlay pack"), end to end. Mirrors globe-V1.spec.ts's
  * own shape (real WMTS tile-request URL shapes, mocked to a committed
- * fixture, via the same `__GLOBE_TEST_SET_IMAGERY__` store hook) — this lane
+ * fixture, via the same `__GLOBE_TEST_SET_IMAGERY__` store hook) — this change
  * only appends data to gibsCatalog.ts, so the render path itself
  * (TileLayer.tsx) is proven elsewhere; this suite proves the six new catalog
  * entries actually drive TileLayer.tsx to request the right host/date/matrix
@@ -21,11 +21,11 @@ test.beforeEach(async ({ page }) => {
  * with themselves.
  *
  * LayerCatalog.tsx (the panel that would show each new entry's legend) is
- * still not mounted into the real Layers panel as of this lane's own read of
+ * still not mounted into the real Layers panel as of this change's own read of
  * the tree (confirmed by grep: no import of LayerCatalog outside
  * LayerCatalog.tsx itself, globeStore.ts's ImageryStack type, TileLayer.tsx
  * and V1's own suite) — a pre-existing gap from an earlier wave, not a file
- * this lane owns. The visible-render proof below is the canvas itself
+ * this change owns. The visible-render proof below is the canvas itself
  * (a real, non-blank tile drawn from a mocked-but-URL-verified response),
  * not a panel click.
  */
@@ -95,7 +95,7 @@ async function gotoLiveGlobe(page: Page, fixedTime: string) {
 
 const SIM_TIME = "2026-09-29T01:07:00Z";
 
-// One representative id per DateRule kind this lane's six new entries use:
+// One representative id per DateRule kind this change's six new entries use:
 // daily (chlorophyll), static (GPW), subdaily (GOES-East dust) — the other
 // three (LST, NDVI, SMAP soil moisture) share the exact same `daily` code
 // path chlorophyll already proves here and are pinned instead in

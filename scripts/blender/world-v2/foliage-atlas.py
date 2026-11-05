@@ -20,7 +20,7 @@ single pass -- no per-cell render-and-composite step. The color pass lights
 the leaves with the HDRI through a Principled BSDF; the normal pass swaps in
 an unlit Emission material driven by Geometry.Normal*0.5+0.5 with the world
 light temporarily silenced, so no HDRI shading leaks into the encoded
-normal. ponytail: this is an object-space normal approximation, not a
+normal. this is an object-space normal approximation, not a
 proper tangent-space bake through the compositor -- correct for a flat,
 camera-facing cutout card (object space ~= tangent space here), and cheap;
 upgrade to a real compositor Normal pass only if close-up per-leaf shading

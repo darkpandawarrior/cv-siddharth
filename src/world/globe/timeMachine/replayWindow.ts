@@ -1,4 +1,4 @@
-/** WAVE 6 LANE X3 (time machine UI): the two small pure helpers HistoryLayer
+/** X3 (time machine UI): the two small pure helpers HistoryLayer
  *  needs that don't belong in usgsHistory.ts (owned by W13/Codex) — an
  *  instantaneous playback-speed estimate and the sliding time window that
  *  speed implies for `pulseState`'s envelope. New file, not an edit to an
@@ -20,7 +20,7 @@ export function estimatePlaybackSpeed(prevSpeed: number, simDeltaMs: number, wal
   return prevSpeed + (instant - prevSpeed) * 0.3;
 }
 
-// ponytail: only the forward-playback branch of pulseState's envelope
+// only the forward-playback branch of pulseState's envelope
 // (`speed >= 0`) — TimeScrubber has no reverse-play control, so a negative
 // `speed` never reaches this layer. Add the mirrored window
 // (`[simNowMs, simNowMs + 2000 * scale]`) if a reverse control ever ships.

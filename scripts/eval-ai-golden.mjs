@@ -14,7 +14,7 @@
 // required gate elsewhere can never go red on sampling variance (SYS-3's own
 // "marked, not hidden" doctrine, applied to the site's own AI gate).
 //
-// ponytail: this reuses the SAME condense/guard/parse pipeline pieces
+// this reuses the SAME condense/guard/parse pipeline pieces
 // chat-handler.ts calls (condenseJd, promptFence's guard, chatBlocks'
 // parseJdFit, all leaf modules with zero imports of their own), but calls
 // each provider directly with `stream: false` instead of importing

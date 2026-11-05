@@ -11,7 +11,7 @@ function cameraOver(lat: number, lon: number, distance: number): CameraSample {
 describe("selectVisibleTiles", () => {
   // Regression: a live screenshot at the globe's own real opening view
   // (over Pune+12N, distance ~26, fov 42deg, a REAL canvas height of 630px
-  // — this lane's site has a header above the canvas, not the full 900px
+  // — this change's site has a header above the canvas, not the full 900px
   // viewport) showed only 2 of the 6 available level-1 tiles: the whole
   // southern half of the visible cap was missing. isBeyondHorizon tested
   // only a tile's centre point with no allowance for the tile's own size,

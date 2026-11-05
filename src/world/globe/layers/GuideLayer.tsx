@@ -72,7 +72,7 @@ function scaleFor(reviews: number, photos: number): number {
 
 // career-ops-hq is the only upstream org that self-publishes a location:
 // `curl -s https://api.github.com/orgs/career-ops-hq` -> `location: "Spain"`
-// (re-verified live 2026-09-30, this lane's session — sources-owner.md's own
+// (re-verified live 2026-09-30, this change's session — sources-owner.md's own
 // live check the same day). openMF publishes no `location` field at all
 // (`null`), which is why it gets no marker here — that omission is the
 // honesty guard, not a gap to "fix" by guessing Mifos's HQ from its blog
@@ -110,7 +110,7 @@ interface GuidePlace {
 /** mapsPlaces plus any life place the generator found no Maps data for
  *  (none today — every lifePlaces.ts slug already has reviews or photos —
  *  but a future life place with no Maps activity must still draw a marker,
- *  per this lane's own brief). */
+ *  per this change's own brief). */
 function buildGuidePlaces(): GuidePlace[] {
   const lifeBySlug = new Map(lifePlaces.map((p) => [p.slug, p]));
   const out: GuidePlace[] = mapsPlaces.map((p) => ({ ...p, isLifePlace: lifeBySlug.has(p.slug), lifeLine: lifeBySlug.get(p.slug)?.line }));

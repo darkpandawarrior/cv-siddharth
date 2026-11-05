@@ -14,12 +14,12 @@ test.beforeEach(async ({ page }) => {
  * LANE W12 ("Ask the globe"), e2e.
  *
  * AskBox.tsx isn't mounted anywhere in this wave (a later UI lane gives it
- * its real home — see this lane's report, "Needs from integration"), so
+ * its real home — see this change's report, "Needs from integration"), so
  * every case here drives the copilot through the `window.__GLOBE_ASK__` seam
  * copilot/execute.ts registers, bootstrapped from HazardLayer.tsx (the one
  * W12-owned file that IS mounted) behind `?globeTest=1` — see both files'
  * own comments. Every /api/* this run touches is fixture-routed (G10): the
- * hazards feeds are this lane's own committed fixtures, shared with
+ * hazards feeds are this change's own committed fixtures, shared with
  * globe-L7.spec.ts, and /api/chat is mocked per case below.
  */
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures/hazards");
@@ -37,7 +37,7 @@ const OVATION_URL = "https://services.swpc.noaa.gov/json/ovation_aurora_latest.j
 const KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json";
 const LAUNCHES_URL = "https://ll.thespacedevs.com/2.2.0/launch/upcoming/**";
 
-// This lane's own committed fixture (quakesFixture): magnitudes
+// This change's own committed fixture (quakesFixture): magnitudes
 // [0.7, 2.6, 4.6, 5.2, 5.6] — same file globe-L7.spec.ts's own "debug?.quakes
 // === 5" case asserts against, so "above 5" -> 2 and "above 4.5" -> 3 are
 // exact, not approximate.

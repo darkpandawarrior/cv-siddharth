@@ -13,7 +13,7 @@ import { chess } from "../data/chess.ts";
  * from per-move PGN clock annotations. Nothing is typed in by hand — the
  * sample size on the chart included.
  *
- * ponytail: SVG, not canvas. Ten points and a marker line do not need a
+ * SVG, not canvas. Ten points and a marker line do not need a
  * render loop, and an SVG chart is keyboard- and screen-reader-reachable
  * without a parallel text rendering.
  */

@@ -7,7 +7,7 @@
 // answer instead of none, so the provider's own `finish_reason: "length"`
 // cuts it off mid-sentence rather than emitting nothing.
 //
-// Separate file from chat-handler.test.ts (per this lane's `owns`) so the
+// Separate file from chat-handler.test.ts (per this change's `owns`) so the
 // break-it fixture and its explanation live next to each other rather than
 // buried in an 1,800-line file.
 import { describe, it, expect } from "vitest";

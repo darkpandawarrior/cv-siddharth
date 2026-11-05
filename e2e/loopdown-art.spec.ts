@@ -4,7 +4,7 @@ import { writing, type Lesson } from "../src/data/writing.ts";
 
 /**
  * P1-07a's own acceptance, run against the fixed clock master-plan.md
- * assigns this lane: 2026-09-24T03:15:00+05:30.
+ * assigns this change: 2026-09-24T03:15:00+05:30.
  */
 const NIGHT = "2026-09-24T03:15:00+05:30";
 

@@ -47,7 +47,7 @@ describe("openSource rows agree with the measured upstream totals", () => {
  * page (this vitest run is `environment: node`, so it never renders JSX):
  * ReposShowcase carries the two group headings career-ops and openMF render
  * from, and ResumeView's full-cut paragraph names both merged Mifos PR
- * numbers. Not e2e/smoke.spec.ts (not owned by this lane) — a source-level
+ * numbers. Not e2e/smoke.spec.ts (not owned by this change) — a source-level
  * regex catches the same regression class (a heading renamed, a PR number
  * dropped) without needing a browser.
  */

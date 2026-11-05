@@ -1,5 +1,5 @@
 /**
- * The layer registry (this lane's own task list, master-plan.md#M56): every
+ * The layer registry (this change's own task list, master-plan.md#M56): every
  * canvas layer under `src/world/v2/layers/*.tsx` and every HUD layer under
  * `src/world/v2/hud/*.tsx` self-registers by exporting `default Component`
  * and `export const layer = { id, order }`. `WorldV2.tsx` mounts both lists,
@@ -14,7 +14,7 @@
  * fixture module map directly rather than depending on a real file
  * existing on disk under `layers/` — no phase-3 layer exists yet, so the
  * real glob below returns `{}` today, and that is the correct, honest
- * state for this lane (GrammarInstances.tsx draws every placeholder in
+ * state for this change (GrammarInstances.tsx draws every placeholder in
  * the meantime).
  */
 import type { ComponentType } from "react";
@@ -43,7 +43,7 @@ type GlobResult = Record<string, GlobModule>;
  * Validates and sorts one glob's worth of layer modules. A module missing
  * `default` or `layer` (a stray non-conforming file under the directory)
  * is skipped rather than thrown on — the same "not written correctly yet
- * doesn't crash the hub" posture as this lane's other "not written yet ->
+ * doesn't crash the hub" posture as this change's other "not written yet ->
  * skip" conventions, since a malformed layer file is a build-time typo a
  * PR review catches, not a runtime condition this hub needs to survive by
  * hiding it. Two layers sharing an `id` is a real authoring mistake
@@ -71,7 +71,7 @@ const hudModules = import.meta.glob<GlobModule>("./hud/*.tsx", { eager: true });
 export const CANVAS_LAYERS: readonly Layer[] = resolveLayers(canvasModules, "canvas");
 
 /** Every HUD layer (mounted as a DOM sibling of `<Canvas>`), order-sorted.
- *  `LandmarkPanelV2.tsx` and `LandmarkList.tsx` are this lane's own HUD
+ *  `LandmarkPanelV2.tsx` and `LandmarkList.tsx` are this change's own HUD
  *  pieces and are mounted directly by `HudV2.tsx` rather than through this
  *  glob — the glob is for layers OTHER lanes add without touching the hub
  *  (P2-10b's `AltitudeRailV2.tsx` is the first). */

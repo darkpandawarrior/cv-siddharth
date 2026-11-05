@@ -1,9 +1,9 @@
-// WAVE 2 LANE W1 (deep zoom): turns a camera sample into the actual set of
+// W1 (deep zoom): turns a camera sample into the actual set of
 // (level, row, col) tiles worth requesting — one shared target level (see
 // tileLOD.ts's own comment on why), horizon-culled and view-cone-culled, and
 // bounded to a hard cap so a wide FOV over a fine level can never walk into
 // thousands of fetches. Pure aside from importing GLOBE_RADIUS/latLonToXyz
-// from geoMath.ts (read-only reuse, not an edit to a file this lane doesn't
+// from geoMath.ts (read-only reuse, not an edit to a file this change doesn't
 // own) — no three, no React, so this is unit-testable directly.
 import { latLonToXyz, GLOBE_RADIUS } from "../geoMath.ts";
 import { DEG2RAD, isBeyondHorizon, isInViewCone, selectLevel, subCameraLatLon, visibleCapHalfAngleDeg, type Vec3 } from "./tileLOD.ts";

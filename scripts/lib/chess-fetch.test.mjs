@@ -39,7 +39,7 @@ describe("monthKey / monthsBetween", () => {
 });
 
 describe("fetchLichessMonthly: resilience — one closed month keeps its cache, not the whole corpus", () => {
-  const NOW = new Date(Date.UTC(2026, 8, 24)); // 2026-09-24, matches "today" for this lane
+  const NOW = new Date(Date.UTC(2026, 8, 24)); // 2026-09-24, matches "today" for this change
   const SINCE = Date.UTC(2026, 6, 1); // 2026-07 .. 2026-09, three months
 
   // Same ambient-cache hazard as the chess.com block below: clear the exact

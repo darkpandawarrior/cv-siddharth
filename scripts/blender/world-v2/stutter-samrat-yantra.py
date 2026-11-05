@@ -68,7 +68,7 @@ quadrant = sh.new_mesh_object('Quadrant', quad_bm, plaster)
 quadrant.rotation_euler = (0, 0, -math.pi / 4)
 
 # --- shadowInlay: the one plane the runtime moves along the quadrant by the
-# real sun azimuth; named exactly as this lane's task list quotes it, not
+# real sun azimuth; named exactly as this change's task list quotes it, not
 # prefixed socket.* since the runtime shows/hides and reorients its own mesh
 # rather than instancing a prototype onto it. ---
 inlay_bm = bmesh.new()

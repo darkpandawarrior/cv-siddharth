@@ -266,7 +266,7 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
               onClick={() => openChat()}
               className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-accent-dim sm:px-4"
             >
-              Ask <span className="label-wide">my AI</span>
+              Ask <span className="label-wide">about my work</span>
             </button>
           </div>
         </nav>
@@ -399,8 +399,8 @@ function PlaygroundInner({ world, at }: PlaygroundProps) {
 
           <DeferredVisitorPlaque />
 
-          {/* ponytail: the spec's visit-chip flash, a one-shot highlight when
-              a card's counter ticks, is deliberately not built. It would be
+          {/* the spec's visit-chip flash — a one-shot highlight when
+              a card's counter ticks — is deliberately not built. It would be
               the only motion this redesign ADDS, on a page that already has the
               card entrance keyframe and a reduced-motion branch guarding it,
               and the chip it would animate is below the fold on every card but

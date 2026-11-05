@@ -2,7 +2,7 @@
 // forecast-cone GeoJSON (see feedUrls.ts's NHC_CONE_LAYER_IDS -- 15
 // sub-layers, AT1-5/EP1-5/CP1-5) and matches a cone to its GDACS
 // tropical-cyclone point. Pure: no three, no React (same convention as
-// hazardAlerts.ts, this lane's own model for "one feed, one parse module").
+// hazardAlerts.ts, this change's own model for "one feed, one parse module").
 import type { LatLon } from "../geoMath.ts";
 import type { GdacsAlert } from "./hazardAlerts.ts";
 
@@ -91,7 +91,7 @@ export function parseNhcCones(json: unknown): ConePolygon[] | null {
   return out;
 }
 
-// ponytail: a flat lat/lon degree distance, same heuristic hazardAlerts.ts
+// a flat lat/lon degree distance, same heuristic hazardAlerts.ts
 // uses for its own MATCH_THRESHOLD_DEG -- a cone spans a whole basin (a
 // forecast track can run thousands of km), so this is a generous "same
 // storm, two feeds" heuristic, not a navigation calculation. Widen further,

@@ -12,7 +12,7 @@ import { STREAMS } from "./streams.ts";
  * not be able to dress itself up as one.
  *
  * Renderer modules for a stream live at src/world/v2/live/<streamId>.ts by
- * convention; none exist yet in this lane, so every real check below is
+ * convention; none exist yet in this change, so every real check below is
  * skipped, not failed (same convention as purity.test.ts), until a later
  * lane adds one.
  */

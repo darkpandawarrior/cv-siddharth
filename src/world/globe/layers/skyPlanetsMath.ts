@@ -7,7 +7,7 @@
 // dependency. Table 1's elements are valid 1800 AD - 2050 AD, accurate to a
 // few arcminutes for the inner planets and under an arcminute in longitude
 // for Jupiter/Saturn over that span — comfortably inside the 0.5 degree bar
-// this lane's own tests hold it to (skyPlanetsMath.test.ts, against two+
+// this change's own tests hold it to (skyPlanetsMath.test.ts, against two+
 // JPL Horizons astrometric RA/Dec readings). No three, no React, no DOM.
 const RAD = Math.PI / 180;
 
@@ -187,11 +187,11 @@ export function planetGeometry(planet: PlanetId, d: Date): PlanetGeometry {
  *  Astronomical Almanac phase-angle formulae (r = heliocentric distance,
  *  delta = geocentric distance, both au; alpha = phase angle, deg). Saturn's
  *  own formula properly includes a ring-opening term this module has no
- *  ring geometry to feed, so it is dropped (ponytail: a fixed +0 ring term,
+ *  ring geometry to feed, so it is dropped (a fixed +0 ring term,
  *  actual Saturn brightness swings roughly +-0.5 mag with ring tilt over its
  *  29-year orbit — upgrade path: add the ring inclination term from Meeus
  *  ch. 41 if a precise Saturn magnitude is ever worth the extra code). Never
- *  checked against Horizons: only position carries this lane's 0.5 degree
+ *  checked against Horizons: only position carries this change's 0.5 degree
  *  test bar, magnitude is "true relative brightness" flavour, not a claim. */
 export function apparentMagnitude(planet: PlanetId, r: number, delta: number, alphaDeg: number): number {
   const base = 5 * Math.log10(r * delta);

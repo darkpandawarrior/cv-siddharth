@@ -4,7 +4,7 @@ floating diyas (live)" is C7's resolution of the three-way diya conflict
 (commit lamps vs fleet niches vs floating artifacts). The OTHER two sides of
 that conflict live elsewhere: fleet listings get their own `niche-lamp` form
 (fleet-deepmal.py's NicheUnit/FlameCard), and artifacts become floating
-marigold garlands (misc-kit.py's `garland`, this lane's own task list) --
+marigold garlands (misc-kit.py's `garland`, this change's own task list) --
 never a second diya. So this kit stays commit-diyas-only and exports
 exactly two nodes, no socket: an instanced-per-record prototype has nothing
 to mount.

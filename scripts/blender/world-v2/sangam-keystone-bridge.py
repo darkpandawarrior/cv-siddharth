@@ -456,7 +456,7 @@ def pack_glb(path):
     pattern, M68: the exact pin, never added to package.json; mirrors
     fleet-deepmal.py's pack_glb, since _shared.py is frozen per M42). This
     lane's task 3: pack every GLB, this file's own included (it predates the
-    packing pass this lane runs on all five)."""
+    packing pass this change runs on all five)."""
     path = Path(path)
     tmp = path.with_suffix('.tmp.glb')
     subprocess.run(
