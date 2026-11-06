@@ -11,13 +11,121 @@ export type Writing = { lessons: Lesson[]; series: Series[]; archive: Archive[];
 export const writing: Writing = {
   "lessons": [
     {
+      "title": "A payments client has no room for probably",
+      "slug": "a-payments-client-has-no-room-for-probably",
+      "pillar": "kmp",
+      "series": "one-brain-two-bodies",
+      "status": "draft",
+      "created": "2026-11-14",
+      "live": "",
+      "tags": [
+        "payments",
+        "idempotency",
+        "kotlin",
+        "kmp",
+        "viewmodel"
+      ],
+      "project": "PaymentsLab-KMP",
+      "links": {}
+    },
+    {
+      "title": "Gateway number 71 is one line, and nothing checks it",
+      "slug": "gateway-number-71-is-one-line-and-nothing-checks-it",
+      "pillar": "build-in-public",
+      "series": "notes-from-the-loop",
+      "status": "draft",
+      "created": "2026-11-12",
+      "live": "",
+      "tags": [
+        "kotlin",
+        "koin",
+        "architecture",
+        "kmp",
+        "dependency-injection"
+      ],
+      "project": "PaymentsLab-KMP",
+      "links": {}
+    },
+    {
+      "title": "Your LazyColumn is keyed by position until you say otherwise",
+      "slug": "your-lazycolumn-is-keyed-by-position-until-you-say-otherwise",
+      "pillar": "compose-performance",
+      "series": "ghosts-in-the-recomposition",
+      "status": "draft",
+      "created": "2026-11-10",
+      "live": "",
+      "tags": [
+        "compose",
+        "lazycolumn",
+        "state",
+        "android",
+        "kotlin"
+      ],
+      "project": "Doori",
+      "links": {}
+    },
+    {
+      "title": "My README said 66 gateways. The code said 70.",
+      "slug": "my-readme-said-66-gateways-the-code-said-70",
+      "pillar": "data-integrity",
+      "series": "chain-of-custody",
+      "status": "draft",
+      "created": "2026-11-07",
+      "live": "",
+      "tags": [
+        "documentation",
+        "testing",
+        "kotlin",
+        "readme",
+        "build-in-public"
+      ],
+      "project": "PaymentsLab-KMP",
+      "links": {}
+    },
+    {
+      "title": "SupervisorJob does not catch anything",
+      "slug": "supervisorjob-does-not-catch-anything",
+      "pillar": "concurrency",
+      "series": "the-coroutine-court",
+      "status": "draft",
+      "created": "2026-11-05",
+      "live": "",
+      "tags": [
+        "kotlin",
+        "coroutines",
+        "android",
+        "error-handling",
+        "supervisorjob"
+      ],
+      "project": "Doori",
+      "links": {}
+    },
+    {
+      "title": "The wake lock with an expiry date",
+      "slug": "the-wake-lock-with-an-expiry-date",
+      "pillar": "background-execution",
+      "series": "the-night-shift",
+      "status": "draft",
+      "created": "2026-11-03",
+      "live": "",
+      "tags": [
+        "android",
+        "wakelock",
+        "foreground-service",
+        "doze",
+        "battery"
+      ],
+      "project": "Doori",
+      "links": {}
+    },
+    {
       "title": "The captain routes. The captain never rows.",
       "slug": "the-captain-never-rows",
       "pillar": "engineering-practice",
       "series": "notes-from-the-loop",
-      "status": "ready",
+      "status": "published",
       "created": "2026-09-02",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/the-captain-routes-the-captain-never-rows-4o2p",
       "tags": [
         "ai-assisted-development",
         "orchestration",
@@ -25,16 +133,24 @@ export const writing: Writing = {
         "tooling"
       ],
       "project": "AgentHarness",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/the-captain-routes-the-captain-never-rows-4o2p"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "I audited my own migrations. It was not fine.",
       "slug": "the-ferryman-rows-one-way",
       "pillar": "data-integrity",
       "series": "crossing-the-schema",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-31",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/i-audited-my-own-migrations-it-was-not-fine-f45",
       "tags": [
         "android",
         "room",
@@ -43,16 +159,24 @@ export const writing: Writing = {
         "kotlin"
       ],
       "project": "Doori",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/i-audited-my-own-migrations-it-was-not-fine-f45"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "Plausible is worse than wrong",
       "slug": "the-borrowed-hand",
       "pillar": "engineering-practice",
       "series": "notes-from-the-loop",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-29",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/plausible-is-worse-than-wrong-2dl2",
       "tags": [
         "ai-assisted-development",
         "code-review",
@@ -61,16 +185,24 @@ export const writing: Writing = {
         "android"
       ],
       "project": "The Loopdown",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/plausible-is-worse-than-wrong-2dl2"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 1,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "Your thresholds do not belong in constants",
       "slug": "thresholds-in-config",
       "pillar": "data-integrity",
       "series": "chain-of-custody",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-27",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/your-thresholds-do-not-belong-in-constants-3loe",
       "tags": [
         "architecture",
         "configuration",
@@ -79,16 +211,24 @@ export const writing: Writing = {
         "tuning"
       ],
       "project": "Doori",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/your-thresholds-do-not-belong-in-constants-3loe"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 1
+        }
+      }
     },
     {
       "title": "Invariants are cheap. Silent corruption is not.",
       "slug": "invariants-are-cheap",
       "pillar": "data-integrity",
       "series": "chain-of-custody",
-      "status": "ready",
+      "status": "published",
       "created": "2026-08-25",
-      "live": "",
+      "live": "https://dev.to/darkpandawarrior/invariants-are-cheap-silent-corruption-is-not-c9m",
       "tags": [
         "data-integrity",
         "validation",
@@ -97,7 +237,15 @@ export const writing: Writing = {
         "testing"
       ],
       "project": "Doori",
-      "links": {}
+      "links": {
+        "devto": "https://dev.to/darkpandawarrior/invariants-are-cheap-silent-corruption-is-not-c9m"
+      },
+      "engagement": {
+        "devto": {
+          "reactions": 0,
+          "comments": 0
+        }
+      }
     },
     {
       "title": "Every filter needs a documented exception",
@@ -420,7 +568,7 @@ export const writing: Writing = {
     {
       "id": "chain-of-custody",
       "title": "Chain Of Custody",
-      "episodes": 4
+      "episodes": 5
     },
     {
       "id": "crossing-the-schema",
@@ -430,17 +578,17 @@ export const writing: Writing = {
     {
       "id": "ghosts-in-the-recomposition",
       "title": "Ghosts In The Recomposition",
-      "episodes": 2
+      "episodes": 3
     },
     {
       "id": "notes-from-the-loop",
       "title": "Notes From The Loop",
-      "episodes": 2
+      "episodes": 3
     },
     {
       "id": "one-brain-two-bodies",
       "title": "One Brain Two Bodies",
-      "episodes": 1
+      "episodes": 2
     },
     {
       "id": "sensors-who-lie",
@@ -450,12 +598,12 @@ export const writing: Writing = {
     {
       "id": "the-coroutine-court",
       "title": "The Coroutine Court",
-      "episodes": 1
+      "episodes": 2
     },
     {
       "id": "the-night-shift",
       "title": "The Night Shift",
-      "episodes": 1
+      "episodes": 2
     }
   ],
   "archive": [
@@ -599,14 +747,26 @@ export const writing: Writing = {
   "cast": [
     {
       "id": "the-concussed-witness",
-      "appearances": 5
+      "appearances": 6
     },
     {
       "id": "the-archivist",
-      "appearances": 4
+      "appearances": 5
     },
     {
       "id": "the-recomposer",
+      "appearances": 3
+    },
+    {
+      "id": "the-understudy",
+      "appearances": 2
+    },
+    {
+      "id": "the-messenger",
+      "appearances": 2
+    },
+    {
+      "id": "doze-the-jailer",
       "appearances": 2
     },
     {
@@ -624,20 +784,8 @@ export const writing: Writing = {
     {
       "id": "the-second-witness",
       "appearances": 1
-    },
-    {
-      "id": "the-understudy",
-      "appearances": 1
-    },
-    {
-      "id": "doze-the-jailer",
-      "appearances": 1
-    },
-    {
-      "id": "the-messenger",
-      "appearances": 1
     }
   ]
 };
 
-export const writingGeneratedAt = "2026-10-28";
+export const writingGeneratedAt = "2026-11-06";
