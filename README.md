@@ -4,54 +4,22 @@
   <img src="./.github/readme-assets/hero.gif" width="100%" alt="cv-siddharth, an interactive résumé with an AI assistant">
 </p>
 
-<p align="center">
-  <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0b0f0d">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-7-blue?logo=typescript&logoColor=white">
-  <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white">
-  <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-v4-06B6D4?logo=tailwindcss&logoColor=white">
-  <a href="https://vercel.com/sid-pandalais-projects/cv-siddharth"><img alt="Deploy" src="https://img.shields.io/badge/deployed%20on-Vercel-black?logo=vercel"></a>
-</p>
+**Live: [siddharth-pandalai.vercel.app](https://siddharth-pandalai.vercel.app/)**. The Vercel project was renamed from cv-siddharth, and the old address [cv-siddharth.vercel.app](https://cv-siddharth.vercel.app/) still works as an alias, so old links keep resolving.
 
-**Live: [cv-siddharth.vercel.app](https://siddharth-pandalai.vercel.app/)** (the Vercel project
-itself is now named **siddharth-pandalai**, reachable at
-[siddharth-pandalai.vercel.app](https://siddharth-pandalai.vercel.app/) too; the original
-domain stays a live alias so every existing link keeps working)
+My portfolio, built as a site you can poke at rather than a page of bullet points. It has case studies with production numbers, Kotlin Multiplatform apps running as WebAssembly inside the page, a résumé view laid out for A4 that prints to PDF from the browser ([/resume](https://siddharth-pandalai.vercel.app/resume)), and a chat assistant called Panda that answers questions about my experience in the third person.
 
-Interactive CV for **Siddharth Pandalai**, Senior Android Engineer. A portfolio
-that demonstrates the work instead of listing it: case studies with real
-production metrics, four Kotlin Multiplatform builds running as WebAssembly in
-the page, a print-perfect [résumé view](https://siddharth-pandalai.vercel.app/resume)
-(A4, PDF via the print dialog), and an AI assistant ("Panda") that answers
-questions about his experience in the third person.
-
-Inspired by [santifer/cv-santiago](https://github.com/santifer/cv-santiago),
-rebuilt and simplified: the entire CV fits in an LLM's context, so there is no
-RAG pipeline. Knowledge lives in a single generated system prompt
-([api/_lib/system-prompt.ts](api/_lib/system-prompt.ts)).
-
-<p align="center">
-  <b><a href="#stack">Stack</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#quick-start">Quick start</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#the-surfaces">The surfaces</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#one-registry">One registry</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#deploy">Deploy</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#structure">Structure</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#generators">Generators</a></b>&nbsp;&nbsp;·&nbsp;&nbsp;<b><a href="#gates">Gates</a></b>
-</p>
+The idea came from [santifer/cv-santiago](https://github.com/santifer/cv-santiago). I rebuilt it smaller: the whole CV fits in a model's context, so there is no retrieval step. What Panda knows lives in one generated system prompt, [api/_lib/system-prompt.ts](api/_lib/system-prompt.ts).
 
 ## Stack
 
-React 19 · TypeScript 7 · Vite 8 · TanStack Start · Tailwind v4 · Vercel ·
-**provider-agnostic chat backend**. Four providers sit behind one SSE format, so
-the widget never knows which answered: **Google Gemini**, **Cerebras**,
+React 19, TypeScript 7, Vite 8, TanStack Start, Tailwind v4, hosted on Vercel. The chat backend is provider-agnostic: four providers sit behind one SSE format, so the widget never knows which answered: **Google Gemini**, **Cerebras**,
 **Groq** and **Anthropic Claude**. Whichever keys are configured are tried in
 order, with fallback on failure; model names are overridable per provider
 (`GROQ_MODEL`, `GEMINI_MODEL`, `CEREBRAS_MODEL`, `ANTHROPIC_MODEL`).
 
-The order is chosen per request by prompt size, not fixed. `providerOrderFor()`
-sends anything above `GROQ_TPM_HEADROOM` (7,000 tokens) to the roomier
-providers first. The generated system prompt is ~26k chars ≈ 6.6k tokens
-on its own, so in practice **every chat request leads with Gemini** and Groq
-is the fast path for the short non-chat modes only. This is measured, not
-assumed. `chat-handler.test.ts` carries a tripwire that fails if the prompt
-grows past the headroom, and it is currently past it. If Groq-first matters,
-the fix is a smaller prompt, not a reordered list.
+The order is chosen per request by prompt size. `providerOrderFor()` sends anything above `GROQ_TPM_HEADROOM` (7,000 estimated tokens, about 4 characters each) to the roomier providers first. The generated prompt file `api/_lib/system-prompt.ts` is 30,479 bytes, so the prompt alone is already past that line and chat requests normally lead with Gemini, with Groq taking the short non-chat modes. `system-prompt.test.ts` caps the prompt's size so it cannot quietly regrow, and `chat-handler.test.ts` records where it sits against the headroom. If Groq-first matters, the fix is a smaller prompt, not a reordered list.
 
-**TypeScript 7.0.2 compatibility note:** The repo runs TypeScript 7.0.2 for compilation (`npx tsc --version` confirms it). Because `typescript-eslint` doesn't support TS 7's compiler API yet (support lands in 7.1), `package.json` uses Microsoft's documented side-by-side pattern: `@typescript/native` (real TS 7.0.2) + `@typescript/typescript6` (TS 6.0-API shim for lint). If lint ever fails with "typescript-eslint does not support TS 7.0" after an `npm install`, check `npx tsc --version` first. If it is not 7.0.2, run `npm install` again to resolve the `tsc` binary race.
+TypeScript here is 7.0.2 (`npx tsc --version`). `typescript-eslint` cannot read the TS 7 compiler API yet, so `package.json` installs two packages side by side: `@typescript/native` for `tsc` and `@typescript/typescript6` as the `typescript` that lint sees. If lint complains that typescript-eslint does not support TS 7, run `npx tsc --version` first; anything other than 7.0.2 means `npm install` lost the race for the `tsc` binary, and running it again fixes it.
 
 ## Quick start
 
@@ -125,8 +93,8 @@ rather than things to read off a screen.
 
 Plus, on the scroll itself:
 
-- **The multiplatform section**. The four Kotlin Multiplatform builds that ship
-  a web target, compiled to Wasm and served from this domain, re-framed live
+- **The multiplatform section**. Five WebAssembly apps are served from `heavy/`: the Compose builds of Doori, Gaddi, PaymentsLab-KMP and
+  this site's own [Compose twin](https://github.com/darkpandawarrior/cv-siddharth-kmp), plus the Godot export of Stutter. They are re-framed live
   across the real Android window size classes (compact / medium / expanded).
   One iframe, so changing the form factor re-lays-out the running app instead
   of reloading it. Nothing boots until you click it.
@@ -164,14 +132,7 @@ Plus, on the scroll itself:
 
 ## Open source
 
-`scripts/gen-oss-stats.mjs` measures every upstream he has actually opened a
-PR against with `gh pr list`, not the search API (career-ops's own rename
-returns 0 rows there). Two orgs, both rows in `src/data/careerOpsUpstream.ts`:
-**career-ops-hq/career-ops** (24 merged, 1 open, 2 closed unmerged) and three
-**openMF** (Mifos) repos: `kmp-project-template` (#298, #299 merged),
-`mifos-passcode-cmp` (#82 open) and `mifos-x-actionhub` (#89 open). Both
-groups render on the homepage under `#open-source` and on `/resume`; neither
-is a hand-kept count.
+`scripts/gen-oss-stats.mjs` measures every upstream I have opened a PR against with `gh pr list`, not the search API (career-ops's rename makes search return 0 rows). The rows live in `src/data/careerOpsUpstream.ts` and render on the homepage under `#open-source` and on `/resume`. I do not copy the counts here, because they move daily: on 2026-11-06 `gh pr list -R career-ops-hq/career-ops --author darkpandawarrior` showed 29 merged, 6 open and 2 closed unmerged, while the committed data file still said 25 merged. The other upstream is Mifos (openMF): `kmp-project-template` (#298 and #299 merged), `mifos-passcode-cmp` (#82 open) and `mifos-x-actionhub` (#89 open).
 
 ## One registry
 
@@ -273,177 +234,56 @@ installs are never orphaned: [Doori](https://github.com/darkpandawarrior/Doori)
 (formerly DEADLOCK). `vercel.json`'s redirects keep every old `/project/<old-slug>`
 and `/p/<old-slug>` link resolving to the current one.
 
-This consolidation itself landed as one merge train: roughly a dozen feature
-lanes (the system graph, the rooms and rail, the labs and chess room, the
-compose playground, the corridor world, the new surfaces, mobile performance,
-the asset offload) each ran in its own git worktree and PR, stacked and
-merged bottom-up onto `integration/site-stack`, which landed on `main` as one
-PR once every lane's own gate was green.
-
 ## Generators
 
-<details>
-<summary><b>Nothing is hand-mirrored</b>: content and assets generate from <code>profile.ts</code>, the registry and the source repos</summary>
-<br/>
-
-Forty `gen:` scripts over forty-six generator files. The ones you will
-actually reach for:
+Forty `gen:` scripts over forty-six generator files produce everything on the site that is a number, a list or an image: stats, galleries, OG cards, the system prompt, the store history, the chess corpus. Nothing is hand-mirrored from `profile.ts` or the registry.
 
 ```bash
-npm run refresh           # media sync + every generator (stats, galleries, og, prompt…)
+npm run refresh           # media sync plus every generator
 npm run gen:system-prompt # rebuild Panda's prompt after editing profile.ts
 npm run gen:og            # branded per-project OG cards (/p/<slug>/og.png)
-npm run capture:site      # screenshot every route (feeds the sentinel)
-npm run capture:globe-plate # /globe's no-WebGL static fallback (manual, needs a running preview)
+npm run capture:site      # screenshot every route, feeds the sentinel
 ```
 
-`gen:og` rasterizes at author time and commits its output, so the Vercel
-build needs no browser and no image toolchain.
-
-Every generator is ONE typed node in
-[scripts/generators.mjs](scripts/generators.mjs): its real inputs, its
-outputs and which pipelines include it. `package.json`'s prebuild chain,
-`refresh.mjs`'s step list and `check-generated.mjs`'s deterministic set all
-derive from this one file now, in a topological order over declared
-input/output edges, instead of three hand-kept lists that used to disagree
-(and once let a dead generator sit fifth in a 15-link `&&` chain, silencing
-the thirteen after it for eight days). `generators.test.mjs` fails the build
-if a script has no node, a node names a script that doesn't exist, or a
-generated file isn't a declared output.
-
-More generator files exist outside every build/refresh/check chain,
-deliberately: each needs something a build machine doesn't have, or reads
-live data whose mean barely moves. Most still have an `npm run gen:<name>`
-alias for running them by hand; the rest are invoked directly with `node`.
-`check-generated.mjs`'s header carries the same reasoning; this is that
-reasoning where a README reader can find it.
-
-- `gen-excelsior.mjs`. Manual and occasional: renders the source magazine
-  PDFs, which live on MANIT's CDN and are not in this repo, and needs
-  `poppler` installed locally. Output is committed; the build never touches
-  a PDF.
-- `gen-excelsior-text.mjs`. OCRs the rendered pages into a static per-edition
-  text manifest (`public/excelsior/text/<year>.json`) so the in-reader search
-  has something to search. Needs `tesseract` installed locally; best-effort
-  on scanned magazine columns, not a transcript.
-- `gen-store-archive.mjs`. Queries the Internet Archive for delisted Play
-  listings. A floor, not a count, since the Archive only has what it happened
-  to crawl. `npm run gen:store` merges its output.
-- `gen-store-flavours.mjs`. Refuses to run without `SHELF_RIDER_REPO` and
-  `SHELF_DRIVER_REPO` pointing at two private checkouts, so it cannot run on
-  a CI box at all.
-- `gen-maps-places.mjs`. Refuses to run without `MAPS_TAKEOUT_DIR` pointing
-  at a private Google Maps Takeout export; `MAPS_PHOTOS_DIR` is optional and
-  falls back to the committed thumbnails when absent. Writes city-level
-  aggregates only, never a business name, address, review text, place URL
-  or original photo filename.
-- `gen-store-siblings.mjs`. Walks each shelf client's Play developer page
-  live, looking for a merchant-side sibling app the rider/driver data misses.
-  Writes a gitignored cache; `npm run gen:store` merges it.
-- `gen-csp.mjs`. Reads the already-built `dist/server/server.js` to hash every
-  route's inline hydration scripts, so it structurally cannot run before
-  `npm run build` and stays out of prebuild: `npm run build && node
-  scripts/gen-csp.mjs`.
-- `gen-pune-normals.mjs` (`npm run gen:pune-normals`). Manual annual refresh
-  of the 2015-2025 mean rainfall per calendar day from Open-Meteo's ERA5
-  archive; the mean barely moves year to year, so it stays out of every
-  build/refresh/check chain.
-- `gen-starfield.mjs` (`npm run gen:starfield`). Manual and occasional:
-  fetches the 34 MB HYG v41 star catalogue and filters it to
-  `public/sky/stars-hyg41-m5.bin`. Run by hand when the catalogue needs a
-  refresh.
-- `gen-globe-earth.mjs` (`npm run gen:globe-earth`). Manual and occasional:
-  bakes NASA's public-domain Black Marble night-radiance composite into a
-  360x180 land mask, `public/sky/earth-720x360.bin`. The build must never
-  block on NASA's server, so it stays out of every build/refresh/check chain.
-- `gen-globe-geo.mjs` (`npm run gen:globe-geo`). Manual and occasional: bakes
-  country centroids from Natural Earth's admin-0 GeoJSON mirror into
-  `src/world/globe/centroids.ts`. Same posture as `gen-globe-earth.mjs`
-  above.
-- `gen-terrain.mjs` (`npm run gen:terrain`, `scripts/world-v2/`). Manual:
-  bakes World v2's Sangam terrain heightmaps and flow map from committed
-  layout data plus `real-relief.mjs`'s real micro-relief. Never touches the
-  network; kept manual because it is heavy, not because it is live.
-- `gen-world-models.mjs` (`npm run gen:world-models`). Manual, needs a local
-  Blender 5.2 LTS binary: runs every World v2 Blender landmark kit in
-  `scripts/blender/world-v2/` headless, one at a time through
-  `render-watchdog.sh`. Each kit meshopt-packs its own GLB(s) through the
-  pinned `npx -y gltfpack@1.2.0 -cc -kn` (never added to `package.json`, M68).
-- `eval-ai-golden.mjs` (no `npm run` alias, runs only from
-  `ai-golden-eval.yml`, dispatch + weekly). Calls a live model against 5 JD
-  fixtures; inherently non-deterministic (model sampling, provider drift), so
-  it is never a required PR gate. Writes `not-run` with no provider key
-  configured; a band miss is recorded on `/ops`, never a failing exit code.
-
-`gen-world-grammar.mjs` (`gen:world-grammar`) runs in the refresh stage now,
-after `gen:stats`, `gen:chess`, `gen:store`, `gen:loopdown`, `gen:weeb`,
-`gen:timeline` and `gen:history` (living-ledger-spec.md §3.4 D5): it derives
-`growthCounts.json` and `placements.json` from GRAMMAR plus the committed
-Ledger, which reads all seven through `src/data/*.ts`.
-
-`gen-loopdown-art.mjs` (`gen:loopdown-art`) runs in the refresh stage now: it
-pulls the Loopdown's 13 cast portraits and 8 series covers (3.39 MB) from
-the-loopdown's own `lore/assets/manifest.json` over `raw.githubusercontent.com`,
-never the local checkout. A failed fetch exits 0 and keeps whatever
-`heavy/loopdown/` and `loopdownArt.ts` already committed.
-
-</details>
+[scripts/generators.mjs](scripts/generators.mjs) declares each generator once, with its inputs, outputs and the pipelines it belongs to, and the prebuild chain, `refresh.mjs` and `check-generated.mjs` all derive from it. `generators.test.mjs` fails if a script has no node there, a node names a missing script, or a generated file is not a declared output. Some generators sit outside every chain on purpose, because they need a local tool (poppler, tesseract, Blender), a private checkout, or a large download. Each is listed with its reason in [docs/generators.md](docs/generators.md).
 
 ## Gates
 
-The recurring failure in this repo has been a hand-kept list quietly falling
-behind the thing it mirrors, with every test green. The gates exist for that
-specific shape:
+The failure that keeps recurring in this repo is a hand-kept list that falls behind the thing it mirrors while every test stays green. The gates are built for that shape.
 
 ```bash
-npm test          # 3386 unit tests across 355 files (vitest)
+npm test          # 3392 unit tests across 355 files (vitest)
 npm run test:e2e  # 1006 Playwright tests across 113 files, every registry route
 npm run lint
+npx tsc -b        # not --noEmit: different program, different config, misses errors the build fails on
 npm run sentinel  # screenshots: blank, duplicate, uncaptured, orphaned, stale
 ```
 
-Those two counts are not typed here by hand. `scripts/gen-repo-stats.mjs`
-counts the suite with `vitest list`, writes `src/data/repoStats.ts` in the
-daily refresh (it reads sibling repos, so it never runs in the hermetic
-build stage) and the homepage renders the committed result, so the figure on
-the site is generator output, refreshed on a schedule rather than every deploy.
-`readme.test.ts` then asserts this file agrees with it. The site once claimed
-619 tests in 46 files while the suite had grown to 812 in 73, which is the
-whole reason that generator exists.
+Those two counts are not typed by hand. `scripts/gen-repo-stats.mjs` counts the suite with `vitest list` and writes `src/data/repoStats.ts` in the daily refresh; the homepage renders that file, and `src/data/readme.test.ts` fails if this README disagrees with it, or with the Playwright listing, the `gen:` script count, the route count or the surface table. The site once claimed 619 tests in 46 files when the suite had reached 812 in 73, which is why all of that exists. The numbers above match the committed `repoStats.ts` generated on 2026-11-06 and will move on the next refresh.
 
-CI runs five workflows. `ci.yml` is the gate: `tsc -b`, lint, the unit tests
-and `npm run check:budget` on every push. The budget check
-([budgets.json](budgets.json), `scripts/check-budget.mjs`) fails when the
-homepage's eager JS graph (everything Vite's manifest marks as a static
-import from the route, not a lazy chunk) or any named chunk grows past
-today's measured byte ceiling, a ratchet rather than a target: it cannot go green
-on its own, and a deliberate increase needs a reviewed edit to `budgets.json`,
-never a silent one. `lighthouse.yml` builds, runs the full Playwright suite, then
-Lighthouse CI over 23 URLs, one run each, asserting accessibility at 1.00 and
-SEO at 0.95 as errors, cumulative layout shift, total byte weight and script
-size also as errors (all three are properties of the bytes and the layout, so
-they measure the same on a CI runner as on a laptop), and LCP, first
-contentful paint and total blocking time as warnings until a runner-measured
-calibration promotes them too. Three more run on a schedule, not a push:
-`refresh-twin.yml` rebuilds the embedded Compose twin daily,
-`refresh-media.yml` pulls project media and stats from the app repos daily,
-and `screenshot-sentinel.yml` runs the capture sentinel weekly and on any PR
-that touches a capture.
+Nine workflows live in `.github/workflows`:
 
-Run `npx tsc -b`, not `npx tsc --noEmit`. They are different programs over
-different configs, and `--noEmit` misses errors the build fails on.
+| Workflow | When | What it does |
+|---|---|---|
+| `ci.yml` | push to main, PRs | `tsc -b`, lint, unit tests, `check:generated`, `check:old-names`, `check:ai-wiring`, `vite build`, `check:budget` |
+| `lighthouse.yml` | push to main, PRs | builds, runs the Playwright suite, then Lighthouse CI over 29 URLs, 3 runs each |
+| `refresh-media.yml` | daily 06:17 UTC | pulls project media and stats from the app repos; opens a rolling PR |
+| `refresh-twin.yml` | Mondays 05:41 UTC | rebuilds the embedded Compose twin (was daily until the 10 GB Vercel deployment cap) |
+| `doctor.yml` | daily 07:30 UTC | checks every freshness SLA and files an issue per stale entry |
+| `screenshot-sentinel.yml` | Mondays, and PRs touching a capture | runs the capture sentinel |
+| `ai-golden-eval.yml` | Mondays | runs 5 job-description fixtures against a live model; records, never gates |
+| `relay-volcanoes.yml` | Thursdays | copies a weekly RSS feed to a branch because the origin blocks Vercel and most runners |
+| `publish-assets.yml` | push to main | rsyncs `heavy/` to the GitHub Pages repo |
 
-- `surfaces.test.ts`. The route list on disk against the registry.
-- `navigation.spec.ts`. Reads the section ids out of the **rendered** homepage
-  and asserts `SECTION_ID_LIST` matches, order included, then proves the command
-  palette can reach every route.
-- `a11y.spec.ts`. Axe over every route, at desktop **and** 390px, with
-  `best-practice` and the experimental `label-content-name-mismatch` rule
-  enabled. Lighthouse scores the live site 1.00 on accessibility.
-- `beforeTheCode.test.ts`. Every magazine citation points at a scan that exists
-  and a `/read` piece that still exists.
-- `claim-audit` (in the private harness). Mechanically re-checks every claim
-  this site makes about his work before anything outward-facing ships.
+The size gate is a ratchet. `budgets.json` holds a measured byte ceiling for the homepage's eager JS and for named chunks, `scripts/check-budget.mjs` fails when either grows, and raising a ceiling takes a reviewed edit. In `lighthouserc.json`, accessibility 1.00, SEO 0.95, layout shift, total byte weight and script size are errors. Performance, LCP, FCP and TBT are warnings, plus a second set of generous runner-calibrated errors on every URL except `/playground`. Details and the numbers are in [docs/perf-budgets.md](docs/perf-budgets.md).
+
+Checks worth knowing by name:
+
+- `surfaces.test.ts` compares the route list on disk with the registry.
+- `navigation.spec.ts` reads section ids out of the rendered homepage and proves the command palette reaches every route.
+- `a11y.spec.ts` runs axe on every route at desktop and 390px width.
+- `beforeTheCode.test.ts` checks that every magazine citation points at a scan and a `/read` piece that exist.
+- `claim-audit`, in my private tooling, re-checks every claim the site makes about my work before anything outward-facing ships.
 
 ## Rendering and vitals
 
@@ -453,80 +293,7 @@ computed at load and a server render would ship a timestamp already wrong by
 the time it is read; `/pulse`'s numbers come off a websocket, so there is
 nothing meaningful to render on the server.
 
-`/playground` used to be the seventh. Lighthouse did not score it slow, it
-scored it `NO_FCP`, meaning the page painted no content whatsoever: a phone saw
-a blank screen until the client bundle and three.js had both arrived. One
-import caused it. The room grid reads the interaction counter from a module
-that loads `@playhtml/react`, which reads `document` when it is imported, and
-that killed the route's SSR in the loader before render began. The counter now
-reaches components through a context whose default is a working no-op, which is
-the truth on the server anyway, and the route serves its room grid and a baked
-terrain plate as real HTML.
-
-Six things hold the numbers up, and each is enforced rather than remembered:
-
-- **Content-hashed assets are immutable.** Everything under `/assets` is
-  `max-age=31536000, immutable`. It was `max-age=0, must-revalidate`, so every
-  returning visitor paid a revalidation round trip for every file.
-- **HTML is cached at the edge** with `s-maxage` and `stale-while-revalidate`,
-  which is safe here because two fetches of the same page differ by eight
-  characters of router timestamp and nothing else.
-- **The LCP element must not animate its opacity.** Chrome does not count a
-  transparent element as painted, so an entrance fade adds its own duration to
-  the measured LCP. `.rise-in-lcp` in `src/index.css` is the translate-only
-  keyframe for anything that could be the largest paint.
-- **`content-visibility: auto` on four below-the-fold sections**, every
-  `contain-intrinsic-size` measured against the deployed page rather than
-  guessed, because a wrong one buys paint time by trading away layout
-  stability. Cumulative layout shift measures 0.0086 at `/ops`, the worst URL
-  in the fleet, and 0.058 or under everywhere else; `lighthouserc.json` errors
-  above 0.25, a ceiling with real headroom rather than the measured figure
-  itself.
-- **SSR import protection fails the build, not the browser.** TanStack
-  Start's own `importProtection` denies `leaflet`, `tldraw`,
-  `@playhtml/react`, `playhtml`, `three` and `@react-three/*` from the SSR
-  bundle at build time, naming the file and the specifier instead of shipping
-  a `ReferenceError: document is not defined` (this repo's own history: both
-  libraries have done exactly that in production before). A `lazy()` import
-  alone does not keep a module out of the SSR compile; every SSR-reachable
-  client-only render site (a WebGL scene, a tldraw board, a `playhtml` room)
-  renders through `<ClientOnly>`, which Start's compiler recognises and
-  strips from the server build.
-- **Below-the-fold homepage sections hydrate late, on purpose.** The nine
-  sections under the hero (case studies, projects, experience, skills,
-  circuit, doorways, contact, the multiplatform frame switcher) mount inside
-  `<Hydrate when={visible()}>`, so their client JS stops competing with the
-  hero for the main thread until they are near the viewport. Measured
-  (`npx lighthouse --preset=perf --form-factor=mobile`, before → after):
-  `/` performance 63 → 66, LCP 6.44s → 5.56s, TBT 19ms → 29ms; `/project/doori`
-  performance 60 → 65, LCP 8.55s → 6.08s. Short of an 80/2.5s aspirational
-  bar, said plainly rather than rounded up; `lighthouserc.json`'s own header
-  is where that's written down, and only `/`'s total-blocking-time (still a
-  6-15x margin against the 300ms budget) was promoted to an error gate on
-  the strength of it.
-
-Heavy static assets live on GitHub Pages, not Vercel: the five bundled WASM
-apps, Excelsior's 396 magazine scans, the project screenshot galleries,
-showcase films and OG cards moved out of `public/` into a top-level `heavy/`
-directory Vite never copies, served from
-`https://darkpandawarrior.github.io/cv` through one
-[`heavy()`](src/lib/assetBase.ts) helper. Vercel's free tier caps deployment
-storage at 10 GB and this site redeploys on every merge to main; moving
-~251 MB off it dropped `dist/client` to about 25 MB.
-[`distSize.test.ts`](src/data/distSize.test.ts) gates it going forward: no
-file over 2 MB outside the hashed `assets/` bundles, the whole directory
-under 60 MB. `scripts/publish-heavy-assets.mjs` rsyncs `heavy/` into the
-sibling Pages checkout (a no-op if it isn't checked out);
-`VITE_HEAVY_ASSET_BASE=/` in `.env.local` points local dev back at `heavy/`
-directly.
-
-Generators refuse to make things worse. A fetch that succeeds and returns
-nothing is not treated as truth: `gen-chess-stats.mjs`, `gen-timeline.mjs` and
-`gen-repo-stats.mjs` each compare against what is already committed and decline
-to write a smaller number, because an empty success once deleted three real
-chess ratings. `scripts/lib/net.mjs` gives every fetch a timeout and bounded
-retries, since a stalled socket never rejects and hung the build for ten
-minutes.
+How that is kept fast, and the measured numbers, are in [docs/rendering-and-vitals.md](docs/rendering-and-vitals.md): immutable hashed assets, edge-cached HTML, an LCP element that never animates opacity, SSR import protection that fails the build, late hydration below the fold, and the move of the heavy assets to GitHub Pages. Those assets are served from `https://darkpandawarrior.github.io/cv` through one `heavy()` helper in [src/lib/assetBase.ts](src/lib/assetBase.ts); `VITE_HEAVY_ASSET_BASE=/` in `.env.local` points local dev at `heavy/` directly.
 
 ## Public surface
 
