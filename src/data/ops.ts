@@ -65,7 +65,7 @@ export const perimeter = [
   },
   {
     "file": "repoStats.ts",
-    "generatedAt": "2026-10-28",
+    "generatedAt": "2026-11-06",
     "slaDays": 30,
     "generator": "npm run gen:repo-stats"
   },
@@ -283,4 +283,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-10-28";
+export const opsGeneratedAt = "2026-11-06";

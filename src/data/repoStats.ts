@@ -2,13 +2,13 @@
 // Collected with `vitest list`, which enumerates the suite without running it.
 // Run `npm run gen:repo-stats` to refresh.
 export const repoStats = {
-  "generatedAt": "2026-10-28",
+  "generatedAt": "2026-11-06",
   "tests": 3392,
   "testFiles": 355,
   "kotlinLines": 35854,
   "kotlinFiles": 77,
-  "kotlin": "2.4.21",
-  "compose": "1.13.0-alpha02",
-  "agp": "9.5.0-alpha10",
-  "gradle": "9.8.0"
+  "kotlin": "2.5.0-Beta2",
+  "compose": "1.13.0-beta02",
+  "agp": "9.6.0-alpha03",
+  "gradle": "9.9.0-rc-1"
 } as const;
