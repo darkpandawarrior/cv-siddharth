@@ -37,8 +37,7 @@ Vercel runs in production, so no `vercel dev` is needed.
 
 ## The surfaces
 
-The site is not a page with a few easter eggs; it is **twenty-three destinations**,
-each its own route. The homepage renders every one of them as a tile in the
+The site has **twenty-three destinations**, each its own route. The homepage renders every one of them as a tile in the
 device frame it is best seen in, and the same grid is reachable from anywhere
 via the **Surfaces** launcher in the nav. ⌘K searches by name; the launcher
 shows what exists, and you cannot search for a room you do not know about.
@@ -66,7 +65,7 @@ falls through it unregistered.
 | [`/hire`](https://siddharth-pandalai.vercel.app/hire) | the 90-second version | numbers, résumé, contact. For someone who will not explore |
 | [`/resume`](https://siddharth-pandalai.vercel.app/resume) | print · pdf | A4 `@page`, no chrome, straight to PDF from the browser |
 | [`/shipped`](https://siddharth-pandalai.vercel.app/shipped) | store · verified | every Android app that reached Play from work he touched, each checked against its live listing |
-| [`/lab`](https://siddharth-pandalai.vercel.app/lab) | canvas · physics | **11 experiments** that prove the numbers: GPS filtering, crash triage, recomposition and module graphs, running in your browser |
+| [`/lab`](https://siddharth-pandalai.vercel.app/lab) | canvas · physics | **12 experiments** that prove the numbers: GPS filtering, crash triage, recomposition and module graphs, running in your browser |
 | [`/pulse`](https://siddharth-pandalai.vercel.app/pulse) | telemetry · live | a live count of what visitors actually touch across the site |
 | [`/compose`](https://siddharth-pandalai.vercel.app/compose) | live editor · AI | write Jetpack Compose, watch it recompose in a phone frame |
 | [`/ops`](https://siddharth-pandalai.vercel.app/ops) | control loop · live | every workflow, every generated dataset against its own SLA, what is published and signed, and a ledger of the failures a green check did not catch |
@@ -113,7 +112,7 @@ Plus, on the scroll itself:
   than photographs of paper, each piece linked to the scanned page it ran on.
 - **The Canon and The Making**. The anthology's reference shelf: the lore
   rules `/canon` gates behind a spoiler divider, and `/making`'s own record
-  of building it, for a reader who wants the machinery, not just the story.
+  of building it, for a reader who wants to see how it was made.
 - **EB Profiles**. One card per Editorial Board year, a teammate's
   in-character answer about him, each linking through to the scanned
   magazine page it came from. The same grid renders on the homepage and in
@@ -204,15 +203,15 @@ api/
 ├── chat.ts                  # Vercel Edge entry
 └── _lib/
     ├── chat-handler.ts      # Web-standard handler (shared dev/prod), 4 providers
-    ├── system-prompt.ts     # GENERATED — Panda persona + CV knowledge
-    └── jd-prompt.ts         # GENERATED — the fit-check analyzer
+    ├── system-prompt.ts     # GENERATED: Panda persona + CV knowledge
+    └── jd-prompt.ts         # GENERATED: the fit-check analyzer
 src/
 ├── App.tsx                  # The homepage sections, in scroll order
-├── routes/                  # One file per route — the router derives from disk
+├── routes/                  # One file per route; the router derives from disk
 ├── data/
 │   ├── surfaces.ts          # THE registry: every route, its tile, its device
 │   ├── profile.ts           # CV content (single source of truth)
-│   ├── labs.ts              # the 11 Lab Bench experiments
+│   ├── labs.ts              # the 12 Lab Bench experiments
 │   └── *.ts                 # GENERATED: chess, weeb, store, writing, galleries…
 ├── lib/navigation.ts        # section ids + hash classification
 ├── Launcher.tsx             # the wall, from anywhere
@@ -229,9 +228,9 @@ The five case-study projects this site embeds live and links to were renamed
 installs are never orphaned: [Doori](https://github.com/darkpandawarrior/Doori)
 (formerly Mileway), [Gaddi](https://github.com/darkpandawarrior/Gaddi)
 (formerly Kursi), [PaymentsLab-KMP](https://github.com/darkpandawarrior/PaymentsLab-KMP)
-(formerly PaymentsLab), [Candidai](https://github.com/darkpandawarrior/Candidai)
-(formerly HireSignal) and [Stutter](https://github.com/darkpandawarrior/Stutter)
-(formerly DEADLOCK). `vercel.json`'s redirects keep every old `/project/<old-slug>`
+(formerly PaymentsLab), Candidai (formerly HireSignal) and Stutter (formerly
+DEADLOCK). The last two repos are private, so the case studies on the site are
+the public view of them. `vercel.json`'s redirects keep every old `/project/<old-slug>`
 and `/p/<old-slug>` link resolving to the current one.
 
 ## Generators
