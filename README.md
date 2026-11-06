@@ -228,8 +228,8 @@ The five case-study projects this site embeds live and links to were renamed
 installs are never orphaned: [Doori](https://github.com/darkpandawarrior/Doori)
 (formerly Mileway), [Gaddi](https://github.com/darkpandawarrior/Gaddi)
 (formerly Kursi), [PaymentsLab-KMP](https://github.com/darkpandawarrior/PaymentsLab-KMP)
-(formerly PaymentsLab), Candidai (formerly HireSignal) and Stutter (formerly
-DEADLOCK). The last two repos are private, so the case studies on the site are
+(formerly PaymentsLab), Candidai (formerly HireSignal) and
+Stutter (formerly DEADLOCK). The last two repos are private, so the case studies on the site are
 the public view of them. `vercel.json`'s redirects keep every old `/project/<old-slug>`
 and `/p/<old-slug>` link resolving to the current one.
 
