@@ -25,9 +25,9 @@ export interface Timeline {
 }
 
 export const timeline: Timeline = {
-  "generatedAt": "2026-10-20T12:06:09.053Z",
+  "generatedAt": "2026-11-08T13:54:45.091Z",
   "from": "2019-01",
-  "to": "2026-10",
+  "to": "2026-11",
   "months": [
     "2019-01",
     "2019-02",
@@ -122,7 +122,8 @@ export const timeline: Timeline = {
     "2026-07",
     "2026-08",
     "2026-09",
-    "2026-10"
+    "2026-10",
+    "2026-11"
   ],
   "lanes": [
     {
@@ -219,33 +220,40 @@ export const timeline: Timeline = {
         "2026-01": 17,
         "2026-02": 17,
         "2026-03": 17,
-        "2026-04": 19,
-        "2026-05": 19,
-        "2026-06": 19,
-        "2026-07": 19,
-        "2026-08": 19,
-        "2026-09": 19,
-        "2026-10": 2
+        "2026-04": 20,
+        "2026-05": 20,
+        "2026-06": 20,
+        "2026-07": 20,
+        "2026-08": 20,
+        "2026-09": 20,
+        "2026-10": 20,
+        "2026-11": 3
       },
-      "total": 900,
+      "total": 927,
       "milestones": [
         {
           "ym": "2026-04",
           "lane": "work",
           "kind": "role",
-          "label": "Neev Consulting: Consulting Engineer, Platform & AI"
+          "label": "Neev Consulting: Founding Engineer, Tech Lead"
         },
         {
           "ym": "2026-05",
           "lane": "work",
           "kind": "delivered",
-          "label": "Built the LLM assistant layer of an ERPNext/Frappe consulting ERP: business-context resolution, capability discovery, and an AI capability gate that defaults OFF with a test provin"
+          "label": "Tech lead of ERP systems for project based firms, built on one ERPNext and Frappe platform forked per client. Wrote 488 of the 647 merged PRs across six repositories, under Jira an"
         },
         {
-          "ym": "2026-09",
+          "ym": "2026-08",
           "lane": "work",
           "kind": "delivered",
-          "label": "Shipped the platform on Python and Frappe over MariaDB under Docker Compose, with a LibreChat deployment and MCP tool wiring for Atlassian and Playwright. Four repositories, all of"
+          "label": "Designed the delivery platform and its client forks: a 60 doctype vertical for an environmental engineering contractor (RFQs, bills of quantities, award, milestones, retention), a "
+        },
+        {
+          "ym": "2026-10",
+          "lane": "work",
+          "kind": "delivered",
+          "label": "Built the guard rails for coding agents on client code: a gate that keeps client amounts, names and contacts out of the repo, core edit guards, a plan gate and a release register. "
         },
         {
           "ym": "2023-06",
@@ -266,7 +274,7 @@ export const timeline: Timeline = {
           "label": "I owned requirements as well as delivery: sprint planning, feature allocation across the team, review, release, and the crash dashboard the morning after. Built the platform so a n"
         },
         {
-          "ym": "2023-11",
+          "ym": "2023-12",
           "lane": "work",
           "kind": "delivered",
           "label": "I ran interview loops and hiring for the frontend and React Native teams. Mentored a junior engineer from Flutter to production Kotlin; he now manages this app at the company that "
@@ -284,7 +292,7 @@ export const timeline: Timeline = {
           "label": "I built the in-app AI assistant: streaming responses, server-held conversation history, voice mode, and a feedback loop ranking what people actually ask. Earlier I built the odomet"
         },
         {
-          "ym": "2024-06",
+          "ym": "2024-07",
           "lane": "work",
           "kind": "delivered",
           "label": "I owned the GPS pipeline behind a location-type foreground service for 22,000+ DAU: staged dead reckoning over GPS/IMU with a 1D Kalman smoother and spike rejection, surviving Andr"
@@ -296,7 +304,7 @@ export const timeline: Timeline = {
           "label": "I took production crashes down 85%. The fix was the concurrency and threading model, not defensive try/catch. Firebase Crashlytics and Sentry caught regressions before users report"
         },
         {
-          "ym": "2024-11",
+          "ym": "2024-12",
           "lane": "work",
           "kind": "delivered",
           "label": "I hardened the app to VAPT and banking compliance: AES-256 Android Keystore field-level encryption, a biometric access gate, and SSL pinning across 9 domains (5 SHA-256 pins) via b"
@@ -314,7 +322,7 @@ export const timeline: Timeline = {
           "label": "I built the in-app review prompting that took the Play Store listing from 1.6 stars across 67 reviews to 4.5 stars across 27,300, and the A/B experiment framework behind it: determ"
         },
         {
-          "ym": "2025-06",
+          "ym": "2025-07",
           "lane": "work",
           "kind": "delivered",
           "label": "I built the multi-tenant theme platform: a server-supplied tenant seed colour resolves into a full Material 3 scheme at runtime (MaterialKolor), with dark mode, colour override and"
@@ -326,13 +334,13 @@ export const timeline: Timeline = {
           "label": "I built a second assistant inside travel that drafts and amends an itinerary in conversation, reusing the same streaming and history layer."
         },
         {
-          "ym": "2025-11",
+          "ym": "2025-12",
           "lane": "work",
           "kind": "delivered",
           "label": "I built the dynamic form engine the expense, travel and procurement modules all render their inputs through, so a new field type is a server change rather than a release."
         },
         {
-          "ym": "2026-01",
+          "ym": "2026-02",
           "lane": "work",
           "kind": "delivered",
           "label": "I built the storage management screen and moved the app onto Scoped Storage, dropping the external-storage permission entirely."
@@ -344,13 +352,13 @@ export const timeline: Timeline = {
           "label": "I built the in-app QR payment flow and the corporate card surfaces alongside the expense modules they settle against."
         },
         {
-          "ym": "2026-06",
+          "ym": "2026-07",
           "lane": "work",
           "kind": "delivered",
           "label": "I led the procurement module, from purchase request through goods inward note to invoice, and shipped its vendor-inventory flows through review by the engineer I was mentoring."
         },
         {
-          "ym": "2026-08",
+          "ym": "2026-09",
           "lane": "work",
           "kind": "delivered",
           "label": "I ran the build platform: Fastlane build, signing and release pipelines, the AGP 9 upgrade, and agent tooling wired into the build itself (Firebender over MCP). Kept the app curren"
@@ -418,7 +426,7 @@ export const timeline: Timeline = {
       ],
       "peak": {
         "ym": "2026-04",
-        "v": 19
+        "v": 20
       }
     },
     {
@@ -521,9 +529,10 @@ export const timeline: Timeline = {
         "2026-07": 272,
         "2026-08": 205,
         "2026-09": 240,
-        "2026-10": 150
+        "2026-10": 4,
+        "2026-11": 41
       },
-      "total": 19352,
+      "total": 19247,
       "peak": {
         "ym": "2020-12",
         "v": 619
@@ -628,8 +637,9 @@ export const timeline: Timeline = {
         "2026-06": 0,
         "2026-07": 2,
         "2026-08": 2,
-        "2026-09": 1,
-        "2026-10": 0
+        "2026-09": 0,
+        "2026-10": 0,
+        "2026-11": 1
       },
       "total": 25,
       "milestones": [
@@ -753,13 +763,14 @@ export const timeline: Timeline = {
         "2026-03": 58,
         "2026-04": 103,
         "2026-05": 49,
-        "2026-06": 1410,
-        "2026-07": 3105,
-        "2026-08": 1681,
-        "2026-09": 2923,
-        "2026-10": 1088
+        "2026-06": 1415,
+        "2026-07": 3223,
+        "2026-08": 1768,
+        "2026-09": 3004,
+        "2026-10": 1563,
+        "2026-11": 754
       },
-      "total": 10735,
+      "total": 12255,
       "milestones": [
         {
           "ym": "2026-08",
@@ -878,7 +889,7 @@ export const timeline: Timeline = {
       ],
       "peak": {
         "ym": "2026-07",
-        "v": 3105
+        "v": 3223
       }
     }
   ]
