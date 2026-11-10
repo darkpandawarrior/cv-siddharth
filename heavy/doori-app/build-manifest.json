@@ -1,7 +1,7 @@
 {
   "repo": "darkpandawarrior/Doori",
-  "commit": "03553ed",
-  "builtAt": "2026-10-20",
-  "engine": "Compose Multiplatform 1.13.0-alpha01 / Kotlin 2.4.20",
+  "commit": "91c8266",
+  "builtAt": "2026-11-10",
+  "engine": "Compose Multiplatform 1.13.0-beta02 / Kotlin 2.5.0-Beta2",
   "bytes": 14363839
 }
