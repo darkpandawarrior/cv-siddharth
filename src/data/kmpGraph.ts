@@ -10,22 +10,22 @@ export interface KmpDependencyEdge { from: string; to: string }
 export interface KmpGraph { generatedAt: string; modules: KmpModule[]; consumers: KmpConsumer[]; dependencySpine: KmpDependencyEdge[] }
 
 export const kmpGraph: KmpGraph = {
-  "generatedAt": "2026-10-16",
+  "generatedAt": "2026-11-12",
   "modules": [
     {
       "id": "result",
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -33,7 +33,7 @@ export const kmpGraph: KmpGraph = {
         },
         {
           "app": "portfolio",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -42,15 +42,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -63,15 +63,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -84,15 +84,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -100,7 +100,7 @@ export const kmpGraph: KmpGraph = {
         },
         {
           "app": "portfolio",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -109,11 +109,11 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -138,7 +138,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -155,15 +155,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -176,15 +176,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -197,15 +197,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -214,11 +214,11 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -227,15 +227,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -248,15 +248,15 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         },
         {
           "app": "candidai",
@@ -264,7 +264,7 @@ export const kmpGraph: KmpGraph = {
         },
         {
           "app": "portfolio",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -273,7 +273,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -282,7 +282,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -291,7 +291,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -300,7 +300,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -309,7 +309,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -318,7 +318,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "doori",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -331,7 +331,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "gaddi",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -344,7 +344,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -353,7 +353,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -362,7 +362,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -375,7 +375,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -384,7 +384,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -393,7 +393,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -402,7 +402,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -411,7 +411,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -420,7 +420,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -429,7 +429,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -438,7 +438,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -447,7 +447,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -456,7 +456,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -465,7 +465,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -474,7 +474,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -483,7 +483,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -492,7 +492,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -501,7 +501,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     },
@@ -510,7 +510,7 @@ export const kmpGraph: KmpGraph = {
       "usedBy": [
         {
           "app": "paymentslab-kmp",
-          "firstMonth": "2026-10"
+          "firstMonth": "2026-11"
         }
       ]
     }
