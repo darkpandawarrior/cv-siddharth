@@ -18,7 +18,7 @@ export const projectStats = {
     "features": 13,
     "cores": 12,
     "dbVersion": 50,
-    "screenshots": 412,
+    "screenshots": 425,
     "schemaVersion": 50,
     "substitutedModules": [
       "location",
@@ -45,11 +45,11 @@ export const projectStats = {
     "providers": 0,
     "features": 4,
     "cores": 9,
-    "gatewaysNative": 15,
-    "gatewaysInternal": 1,
-    "gatewaysHosted": 44,
-    "gatewaysMobileMoney": 7,
-    "gatewaysStub": 3,
+    "gatewaysNative": 0,
+    "gatewaysInternal": 0,
+    "gatewaysHosted": 0,
+    "gatewaysMobileMoney": 0,
+    "gatewaysStub": 0,
     "screenshots": 28,
     "substitutedModules": [
       "common",
@@ -104,7 +104,7 @@ export const projectStats = {
     ]
   }
 } as const;
-export const projectStatsGeneratedAt = "2026-10-20";
+export const projectStatsGeneratedAt = "2026-11-13";
 export const kmpAdoption = {
   "candidai": {
     "composedModules": 9,
