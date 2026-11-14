@@ -1,7 +1,7 @@
 {
   "repo": "darkpandawarrior/PaymentsLab-KMP",
-  "commit": "70dde5f",
-  "builtAt": "2026-10-20",
-  "engine": "Compose Multiplatform 1.13.0-alpha02 / Kotlin 2.4.21",
+  "commit": "9b7ea14",
+  "builtAt": "2026-11-14",
+  "engine": "Compose Multiplatform 1.13.0-beta02 / Kotlin 2.5.0-Beta2",
   "bytes": 13536285
 }
