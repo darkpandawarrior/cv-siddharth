@@ -5,7 +5,7 @@
 export const perimeter = [
   {
     "file": "anthology.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-13",
     "slaDays": 21,
     "generator": "npm run gen:anthology"
   },
@@ -29,7 +29,7 @@ export const perimeter = [
   },
   {
     "file": "history.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-13",
     "slaDays": 21,
     "generator": "npm run gen:history"
   },
@@ -53,7 +53,7 @@ export const perimeter = [
   },
   {
     "file": "projectStats.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-13",
     "slaDays": 21,
     "generator": "npm run gen:stats"
   },
@@ -65,7 +65,7 @@ export const perimeter = [
   },
   {
     "file": "repoStats.ts",
-    "generatedAt": "2026-11-06",
+    "generatedAt": "2026-11-13",
     "slaDays": 30,
     "generator": "npm run gen:repo-stats"
   },
@@ -89,7 +89,7 @@ export const perimeter = [
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-10-20",
+    "generatedAt": "2026-11-13",
     "slaDays": 21,
     "generator": "npm run gen:weeb"
   },
@@ -283,4 +283,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-11-06";
+export const opsGeneratedAt = "2026-11-13";
