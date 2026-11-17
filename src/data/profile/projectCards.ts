@@ -142,22 +142,22 @@ export const projectCards: ProjectCard[] = [
     "description": "A local-first job-search engine rebuilt from scratch in Kotlin Multiplatform: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s. Its scoring engine is ported and verified against the open-source career-ops project I actively contribute to upstream.",
     "hasDetail": true,
     "repoUrl": "https://github.com/career-ops-hq/career-ops",
-    "overview": "Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (75k+ stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
+    "overview": "Candidai is a local-first AI career-intelligence engine: resume onboarding, reverse-ATS discovery, evidence-based fit scoring and tailored r\u00e9sum\u00e9s, in one pipeline. The product idea and scoring model started on career-ops, an open-source Node.js job-search engine (83k+ stars) that I actively contribute to upstream. The native app is a from-scratch Kotlin Multiplatform rebuild: the same A-F fit-scoring engine, ported and verified line-for-line against the original, now running identically on Android, iOS, Desktop, Web and a Spring Boot server instead of a single Node process.",
     "stack": [
       "Kotlin Multiplatform",
       "Compose Multiplatform",
       "Spring Boot 4",
       "Room (KMP)",
       "Ktor",
-      "111 ATS/board providers"
+      "146 ATS/board providers"
     ],
     "highlights": [
       "25-module Kotlin Multiplatform clean architecture (12 feature + 6 core modules) targeting Android, iOS, Desktop, Web and a Spring Boot 4 server from one shared engine.",
       "core:engine is a no-IO module: A-F fit scoring, ATS search, SimHash fingerprinting, and funnel math ported 1:1 from career-ops and verified against its own test vectors.",
-      "111 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
-      "25 merged PRs to the public career-ops project (75k+ stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below)."
+      "146 ATS & job-board provider integrations and a zero-token scan path (direct Greenhouse/Ashby/Lever APIs, no LLM cost) inherited from the open-source engine it's built on.",
+      "30 merged PRs to the public career-ops project (83k+ stars): new ATS providers, an opt-in LLM re-ranker, an agent-inbox feature, and a run of correctness fixes, each with a reproduction and a regression test (full list below)."
     ],
-    "status": "Active · 25 PRs merged to public career-ops · member of the career-ops-hq org",
+    "status": "Active · 30 PRs merged to public career-ops · member of the career-ops-hq org",
     "badges": [
       "Kotlin Multiplatform",
       "25 modules",
@@ -169,7 +169,7 @@ export const projectCards: ProjectCard[] = [
     "slug": "portfolio",
     "name": "Portfolio Twin",
     "tagline": "The site you're reading, plus Panda the assistant that answers for me, and the whole thing rebuilt a second time in Compose Multiplatform, one commonMain to Web, Desktop, Android and iOS.",
-    "description": "An interactive r\u00e9sum\u00e9 built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 35.7k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.",
+    "description": "An interactive r\u00e9sum\u00e9 built twice, on purpose. The React 19 original runs on Vercel Edge with a provider-agnostic LLM assistant grounded in this same profile data. The Compose Multiplatform port renders the same portfolio from 35.9k lines of Kotlin to Kotlin/Wasm, Desktop, Android and iOS. An honest test of how far CMP reaches on the web, including where it doesn't.",
     "hasDetail": true,
     "repoUrl": "https://github.com/darkpandawarrior/cv-siddharth",
     "overview": "A CV that is also the portfolio piece. Rather than describe the work, the site is built the way the work is built, and then rebuilt a second time on an entirely different stack to see what survives the move. The React version renders everything from one TypeScript file of profile data, which is also what the AI assistant, the r\u00e9sum\u00e9, the OG images and the two /llms.txt files are generated from, so none of them can disagree with each other. The Compose twin transcribes that file by hand, which is a different contract and a weaker one.",
@@ -291,7 +291,7 @@ export const projectCards: ProjectCard[] = [
     "description": "A dev-content engine and writing archive. A lesson pulled from a real project is written once and adapted to LinkedIn, dev.to, Hashnode and Medium, each with a generated branded graphic, plus the consolidated back catalogue.",
     "hasDetail": true,
     "repoUrl": "https://github.com/darkpandawarrior/the-loopdown",
-    "overview": "The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted, never re-derived from scratch, for every place it will be read. 17 lessons across 8 series sit alongside a 10-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.",
+    "overview": "The Loopdown is the writing side of the same discipline the rest of this site argues for: a lesson is pulled from a real production incident, written once, and adapted, never re-derived from scratch, for every place it will be read. 23 lessons across 8 series sit alongside a 10-piece back catalogue from before the code, all versioned in one repo with the same public/private split a codebase gets: the engine and what's published are tracked, drafts and personal notes are gitignored.",
     "stack": [
       "Node.js",
       "Markdown",

@@ -75,6 +75,10 @@ async function pngCount(repo, ref, path, token) {
 }
 
 const count = (s, re) => (s.match(re) || []).length;
+// A README that stops saying a number must not zero it: undefined keys are dropped before the merge,
+// so the last committed value survives (a vanished README sentence once zeroed 70 gateways to 0).
+const readmeNum = (text, re) => { const m = text.match(re); return m ? Number(m[1]) : undefined; };
+const definedOnly = (o) => Object.fromEntries(Object.entries(o ?? {}).filter(([, v]) => v !== undefined));
 
 // GEN_PROJECT_STATS_FAIL: test-only fault injection, same shape as
 // gen-oss-stats.mjs's GEN_OSS_STATS_FAIL — lets a test force the network
@@ -152,11 +156,11 @@ export async function fetchNetworkStats(token = process.env.GITHUB_TOKEN) {
       cores: count(pSettings, /^include\(":core:/gm),
       // Pulled from the README's own "Modular KMP architecture, N gateways
       // behind it" highlight bullet — see the note above on why.
-      gatewaysNative: Number(pReadme.match(/catalog spans (\d+) native-SDK integrations/i)?.[1] ?? 0),
-      gatewaysInternal: Number(pReadme.match(/(\d+) internal wallet ledger/i)?.[1] ?? 0),
-      gatewaysHosted: Number(pReadme.match(/(\d+) hosted-webview gateways/i)?.[1] ?? 0),
-      gatewaysMobileMoney: Number(pReadme.match(/(\d+) mobile-money flows/i)?.[1] ?? 0),
-      gatewaysStub: Number(pReadme.match(/(\d+) catalog-only\/KYC-gated entries/i)?.[1] ?? 0),
+      gatewaysNative: readmeNum(pReadme, /catalog spans (\d+) native-SDK integrations/i),
+      gatewaysInternal: readmeNum(pReadme, /(\d+) internal wallet ledger/i),
+      gatewaysHosted: readmeNum(pReadme, /(\d+) hosted-webview gateways/i),
+      gatewaysMobileMoney: readmeNum(pReadme, /(\d+) mobile-money flows/i),
+      gatewaysStub: readmeNum(pReadme, /(\d+) catalog-only\/KYC-gated entries/i),
       screenshots: await pngCount(pRepo, "main", "docs/screenshots", token),
     },
     gaddi: {
@@ -379,7 +383,7 @@ async function main() {
     doori: { ...previousStats.doori, ...baseline.doori, ...adoptionFor("doori", localScan, previousStats, baseline.doori) },
     "paymentslab-kmp": {
       ...previousStats["paymentslab-kmp"],
-      ...baseline["paymentslab-kmp"],
+      ...definedOnly(baseline["paymentslab-kmp"]),
       ...adoptionFor("paymentslab-kmp", localScan, previousStats, baseline["paymentslab-kmp"]),
     },
     gaddi: { ...previousStats.gaddi, ...baseline.gaddi, ...adoptionFor("gaddi", localScan, previousStats, baseline.gaddi) },
