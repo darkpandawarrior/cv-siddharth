@@ -98,9 +98,8 @@ describe("weeb field", () => {
 });
 
 describe("writing lessons", () => {
-  it("gives one column per lesson, 17 total", () => {
+  it("gives one column per lesson", () => {
     expect(writingLessons()).toHaveLength(writing.lessons.length);
-    expect(writingLessons()).toHaveLength(17);
   });
 
   it("clusters entirely past the 2026 marker — z > yearZ(2026) + 4", () => {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "862d4b130ff4",
+  "generatedAt": "6aae4b9fb9a1",
   "profile": {
     "name": "Siddharth Pandalai",
     "title": "Senior Android Engineer",
@@ -154,11 +154,11 @@
       "providers": 0,
       "features": 4,
       "cores": 9,
-      "gatewaysNative": 0,
-      "gatewaysInternal": 0,
-      "gatewaysHosted": 0,
-      "gatewaysMobileMoney": 0,
-      "gatewaysStub": 0,
+      "gatewaysNative": 15,
+      "gatewaysInternal": 1,
+      "gatewaysHosted": 44,
+      "gatewaysMobileMoney": 7,
+      "gatewaysStub": 3,
       "screenshots": 28,
       "substitutedModules": [
         "common",

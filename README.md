@@ -251,7 +251,7 @@ npm run capture:site      # screenshot every route, feeds the sentinel
 The failure that keeps recurring in this repo is a hand-kept list that falls behind the thing it mirrors while every test stays green. The gates are built for that shape.
 
 ```bash
-npm test          # 3392 unit tests across 355 files (vitest)
+npm test          # 3395 unit tests across 356 files (vitest)
 npm run test:e2e  # 1006 Playwright tests across 113 files, every registry route
 npm run lint
 npx tsc -b        # not --noEmit: different program, different config, misses errors the build fails on
