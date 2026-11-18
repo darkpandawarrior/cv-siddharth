@@ -221,9 +221,9 @@ export const lanes: Lane[] = [
       "2026-08": 1768,
       "2026-09": 3004,
       "2026-10": 1563,
-      "2026-11": 789
+      "2026-11": 863
     },
-    "total": 12290,
+    "total": 12364,
     "peak": {
       "ym": "2026-07",
       "v": 3223
@@ -437,13 +437,13 @@ export const lanes: Lane[] = [
       "2026-08": 205,
       "2026-09": 240,
       "2026-10": 4,
-      "2026-11": 77
+      "2026-11": 89
     },
-    "total": 19283,
+    "total": 19295,
     "peak": {
       "ym": "2020-12",
       "v": 619
     }
   }
 ] as const;
-export const lanesGeneratedAt = "2026-11-16";
+export const lanesGeneratedAt = "2026-11-18";
