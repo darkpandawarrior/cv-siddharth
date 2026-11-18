@@ -114,10 +114,10 @@ export const historyMonths: HistoryMonth[] = [
   },
   {
     "ym": "2026-11",
-    "commits": 28,
-    "insertions": 562,
-    "deletions": 192,
-    "filesChanged": 91,
+    "commits": 31,
+    "insertions": 2691,
+    "deletions": 2078,
+    "filesChanged": 182,
     "subjects": [
       "fix(assets): heavy() URL joins in generators, dedupe globe thumbnails (#222)",
       "feat(profile): show the true extent of the work, fix stale claims",
@@ -127,13 +127,13 @@ export const historyMonths: HistoryMonth[] = [
       "fix(app-pages): preserve zoom and announce slow loading"
     ],
     "cumulative": {
-      "commits": 1323,
-      "insertions": 317966,
-      "deletions": 65358
+      "commits": 1326,
+      "insertions": 320095,
+      "deletions": 67244
     }
   }
 ] as const;
-export const historyGeneratedAt = "2026-11-16";
+export const historyGeneratedAt = "2026-11-18";
 export const historyFrom = "2026-06";
 export const historyTo = "2026-11";
-export const totalCommits = 1323;
+export const totalCommits = 1326;
