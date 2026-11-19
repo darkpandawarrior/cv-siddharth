@@ -50,7 +50,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 30,
     "open": 5,
     "closedUnmerged": 2,
-    "measuredAt": "2026-11-18"
+    "measuredAt": "2026-11-19"
   },
   {
     "repo": "openMF/kmp-project-template",
@@ -58,7 +58,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 2,
     "open": 0,
     "closedUnmerged": 1,
-    "measuredAt": "2026-11-18"
+    "measuredAt": "2026-11-19"
   },
   {
     "repo": "openMF/mifos-passcode-cmp",
@@ -66,7 +66,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 0,
     "open": 1,
     "closedUnmerged": 0,
-    "measuredAt": "2026-11-18"
+    "measuredAt": "2026-11-19"
   },
   {
     "repo": "openMF/mifos-x-actionhub",
@@ -74,7 +74,7 @@ export const upstreamStats: UpstreamStat[] = [
     "merged": 0,
     "open": 0,
     "closedUnmerged": 1,
-    "measuredAt": "2026-11-18"
+    "measuredAt": "2026-11-19"
   }
 ];
 
