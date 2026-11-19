@@ -5,31 +5,31 @@
 export const perimeter = [
   {
     "file": "anthology.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 21,
     "generator": "npm run gen:anthology"
   },
   {
     "file": "archiveText.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 45,
     "generator": "npm run gen:archive-text"
   },
   {
     "file": "chess.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 21,
     "generator": "npm run gen:chess"
   },
   {
     "file": "chessDeep.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 21,
     "generator": "npm run gen:chess-deep"
   },
   {
     "file": "history.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 21,
     "generator": "npm run gen:history"
   },
@@ -41,13 +41,13 @@ export const perimeter = [
   },
   {
     "file": "lanes.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 45,
     "generator": "npm run gen:lanes"
   },
   {
     "file": "loopdownArt.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 45,
     "generator": "npm run gen:loopdown-art"
   },
@@ -77,31 +77,31 @@ export const perimeter = [
   },
   {
     "file": "systemGraph.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 30,
     "generator": "npm run gen:system-graph"
   },
   {
     "file": "timeline.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 45,
     "generator": "npm run gen:timeline"
   },
   {
     "file": "weeb.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 21,
     "generator": "npm run gen:weeb"
   },
   {
     "file": "weebTitles.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 45,
     "generator": "npm run gen:weeb"
   },
   {
     "file": "writing.ts",
-    "generatedAt": "2026-11-18",
+    "generatedAt": "2026-11-19",
     "slaDays": 21,
     "generator": "npm run gen:loopdown"
   }
@@ -228,30 +228,30 @@ export const drift: Drift[] = [
   {
     "repo": "Doori",
     "upstream": "kmp-build-logic",
-    "pin": "b8a97a1",
-    "behind": null,
-    "pinnedAt": null
+    "pin": "1ccb6bc",
+    "behind": 0,
+    "pinnedAt": "2026-11-06"
   },
   {
     "repo": "Doori",
     "upstream": "kmp-toolkit",
-    "pin": "5ae7844",
-    "behind": null,
-    "pinnedAt": null
+    "pin": "d4d0222",
+    "behind": 0,
+    "pinnedAt": "2026-11-06"
   },
   {
     "repo": "Gaddi",
     "upstream": "kmp-build-logic",
-    "pin": "b8a97a1",
-    "behind": null,
-    "pinnedAt": null
+    "pin": "1ccb6bc",
+    "behind": 0,
+    "pinnedAt": "2026-11-06"
   },
   {
     "repo": "Gaddi",
     "upstream": "kmp-toolkit",
-    "pin": "5ae7844",
-    "behind": null,
-    "pinnedAt": null
+    "pin": "d4d0222",
+    "behind": 0,
+    "pinnedAt": "2026-11-06"
   },
   {
     "repo": "PaymentsLab-KMP",
@@ -283,4 +283,4 @@ export const drift: Drift[] = [
   }
 ];
 
-export const opsGeneratedAt = "2026-11-18";
+export const opsGeneratedAt = "2026-11-19";
