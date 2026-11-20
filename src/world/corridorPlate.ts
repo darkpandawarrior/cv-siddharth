@@ -27,7 +27,7 @@ export interface CorridorPlateMeta {
   years: CorridorPlateYear[];
 }
 export const corridorPlateMeta: CorridorPlateMeta = {
-  "generatedAt": "2026-11-19T16:31:22.359Z",
+  "generatedAt": "2026-11-20T16:14:00.407Z",
   "width": 2400,
   "height": 800,
   "from": "2019-01",
