@@ -189,7 +189,7 @@ function disposeEntry(entry: TileEntry): void {
 
 export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Date; tier: 1 | 2 | 3; earthRef?: RefObject<THREE.Mesh> }) {
   const groupRef = useRef<THREE.Group>(null!);
-  const { size, camera, gl } = useThree();
+  const { size, camera, gl, invalidate } = useThree();
   const reducedMotion = useReducedMotion();
   const imagery = useGlobe((s) => s.imagery);
   // perf.md: TileLayer and EarthImagery used to fire the same-region fetch
@@ -223,7 +223,12 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     // A clock/scrubber change can select a new frame without camera motion.
     lastCamPos.current.set(Infinity, Infinity, Infinity);
     lastRecomputeAtMs.current = -Infinity;
-  }, [now]);
+    invalidate();
+  }, [now, invalidate]);
+
+  useEffect(() => {
+    if (earthReady) invalidate();
+  }, [earthReady, invalidate]);
 
   useEffect(() => {
     tileLayerStats.cacheMax = cacheMax;
@@ -300,6 +305,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
           req.entry.status = "loaded";
           tileLayerStats.loaded++;
           tileLayerStats.cacheSize = textureCache.size;
+          invalidate();
           pump();
         })
         .catch((err) => {
@@ -312,6 +318,7 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
           if (err?.name !== "AbortError") {
             req.entry.status = "error";
             tileLayerStats.failed++;
+            invalidate();
           } else {
             tileLayerStats.aborted++;
           }
@@ -641,8 +648,9 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
     // camera motion does.
     lastCamPos.current.set(Infinity, Infinity, Infinity);
     lastRecomputeAtMs.current = -Infinity;
+    invalidate();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- ensureRole/recomputeRole close over refs, not props; imagery is the real dependency.
-  }, [imagery]);
+  }, [imagery, invalidate]);
 
   return <group ref={groupRef} />;
 }

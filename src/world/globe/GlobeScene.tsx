@@ -12,6 +12,7 @@ import { EarthDots, GLOBE_RADIUS } from "./EarthDots.tsx";
 import { Markers } from "./Markers.tsx";
 import { sceneHandles, useGlobe, useSimNow } from "./globeStore.ts";
 import { isXrayEnabled, subscribeXray } from "./layers/xrayState.ts";
+import { isNearbyDoubleTap, recordTouchZoom } from "./useMarkerClick.ts";
 
 // One lazy chunk per layer (living-earth plan): the Globe chunk stays the
 // scene shell, and a layer a tier or a toggle never shows is never fetched.
@@ -53,11 +54,11 @@ const XRayTiles = lazy(() => import("./layers/XRayTiles.tsx"));
 
 declare global {
   interface Window {
-    __GLOBE_TEST_GET_DRAW_CALLS__?: () => number;
+    __GLOBE_TEST_GET_FRAME_STATS__?: () => Readonly<typeof frameStats>;
   }
 }
 // Like sceneHandles, these counters belong to the one mounted globe canvas.
-const frameStats = { calls: 0, triangles: 0 };
+const frameStats = { calls: 0, triangles: 0, lines: 0 };
 const EclipseLayer = lazy(() => import("./layers/EclipseLayer.tsx"));
 
 // §2 (Group A, Globe drag-to-orbit + zoom / auto-rotate): the button-click
@@ -173,21 +174,15 @@ function SceneRig({
     sceneHandles.canvas = gl.domElement;
     sceneHandles.scene = scene;
     sceneHandles.invalidate = invalidate;
-    // LANE C2 (X-ray mode e2e seam): completed-frame calls, readable
-    // whether or not X-ray is actually mounted -- so e2e/globe-C2.spec.ts can
-    // grade "toggling X-ray off removes its own draw call" against the real
-    // renderer instead of against the debug card's own number, which would
-    // only be proving X-ray agrees with itself. A no-op in production --
-    // nothing outside a test ever calls it (same convention TileLayer.tsx's
-    // own __GLOBE_TEST_* seams already use).
-    window.__GLOBE_TEST_GET_DRAW_CALLS__ = () => frameStats.calls;
+    // Completed-frame stats are readable with or without the X-ray panel.
+    window.__GLOBE_TEST_GET_FRAME_STATS__ = () => frameStats;
     return () => {
       gl.info.autoReset = autoReset;
       sceneHandles.camera = null;
       sceneHandles.canvas = null;
       sceneHandles.scene = null;
       sceneHandles.invalidate = null;
-      window.__GLOBE_TEST_GET_DRAW_CALLS__ = undefined;
+      window.__GLOBE_TEST_GET_FRAME_STATS__ = undefined;
     };
   }, [get]);
 
@@ -312,22 +307,14 @@ function SceneRig({
       controls.update();
     };
     canvas.addEventListener("dblclick", zoom);
-    // Native `dblclick` never fires for a touch double-tap (it is a mouse
-    // event; Chromium/WebKit only synthesize it from an actual mouse device)
-    // — W10D's own recheck note. `pointerup` fires for touch, mouse and pen
-    // alike, so a manual two-tap-within-a-window/distance gate here covers
-    // the touch case without duplicating the mouse one (a real mouse click
-    // also fires `pointerup`, but its own native `dblclick` already zoomed
-    // by the time this fires a second time, and dollying twice for one
-    // mouse double-click is harmless — same end distance, OrbitControls
-    // clamps at minDistance either way).
+    // Touch double taps arrive as pointerups rather than native dblclicks.
     let lastTap: { at: number; x: number; y: number } | null = null;
     const onPointerUp = (event: PointerEvent) => {
       if (event.pointerType !== "touch") return;
-      const now = performance.now();
       const prev = lastTap;
-      lastTap = { at: now, x: event.clientX, y: event.clientY };
-      if (prev && now - prev.at < 350 && Math.hypot(event.clientX - prev.x, event.clientY - prev.y) < 40) {
+      lastTap = { at: performance.now(), x: event.clientX, y: event.clientY };
+      if (prev && isNearbyDoubleTap(prev, lastTap) && controlsRef.current && useGlobe.getState().view === "orbit") {
+        recordTouchZoom(lastTap);
         lastTap = null;
         zoom(event);
       }

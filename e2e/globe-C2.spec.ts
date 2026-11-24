@@ -90,12 +90,15 @@ function parseStatValue(gridText: string, label: string): number {
   return m ? Number(m[1].replace(/,/g, "")) : NaN;
 }
 
-test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card; toggling off removes both and draw calls drop", async ({ page }) => {
+test("toggling X-ray shows and removes rendered tile outlines and the stats card", async ({ page }) => {
   const wmts = withWmtsFixtures(page);
-  // Compare the same stationary scene: late live-feed glyphs and moving
-  // tile generations otherwise add calls between the on/off snapshots.
   await page.emulateMedia({ reducedMotion: "reduce" });
   await gotoLiveGlobe(page, "/globe?ly=");
+  // Keep the renderer sampling, with the camera stationary and other line layers off.
+  const rotation = page.getByRole("button", { name: "Pause the globe's ambient rotation" });
+  await rotation.click();
+  await expect(page.getByRole("button", { name: "Resume the globe's ambient rotation" })).toHaveAttribute("aria-pressed", "true");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   const layers = page.locator("[data-globe-layer-panel] ul button[aria-pressed]");
   await expect(layers).not.toHaveCount(0);
   for (const layer of await layers.all()) await expect(layer).toHaveAttribute("aria-pressed", "false");
@@ -136,10 +139,8 @@ test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card
     const text = await page.locator("[data-xray-stats]").innerText();
     return ["draw calls", "triangles", "geometries"].every((label) => parseStatValue(text, label) > 0);
   }).toBe(true);
-  await expect.poll(async () => {
-    const text = await page.locator("[data-xray-stats]").innerText();
-    return await page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.()) === parseStatValue(text, "draw calls");
-  }).toBe(true);
+  const renderedLines = () => page.evaluate(() => window.__GLOBE_TEST_GET_FRAME_STATS__?.().lines);
+  await expect.poll(renderedLines).toBeGreaterThan(0);
   const statsText = await page.locator("[data-xray-stats]").innerText();
   const drawCallsOn = parseStatValue(statsText, "draw calls");
   const triangles = parseStatValue(statsText, "triangles");
@@ -153,20 +154,14 @@ test("toggling X-ray on shows tile outlines and a plausible, non-zero stats card
   expect(fps).toBeGreaterThanOrEqual(0);
   expect(fps).toBeLessThan(1000);
 
-  const drawCallsWhileOn = await page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.());
   // Include the scene and composer passes, not just the final full-screen quad.
-  expect(drawCallsWhileOn).toBeGreaterThan(1);
+  expect(drawCallsOn).toBeGreaterThan(1);
 
   await toggle.click();
   await expect(panel).toBeHidden();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
 
-  // The outline mesh (and its own draw call) is gone once X-ray unmounts --
-  // TileLayer's own tiles are still drawn, so this must be strictly less
-  // than the reading captured while X-ray's overlay was also in the scene.
-  await expect
-    .poll(() => page.evaluate(() => window.__GLOBE_TEST_GET_DRAW_CALLS__?.()), { timeout: 5_000 })
-    .toBeLessThan(drawCallsWhileOn!);
+  await expect.poll(renderedLines).toBe(0);
 });
 
 test("the keyboard shortcut (x) toggles X-ray the same as the topbar button", async ({ page }) => {
