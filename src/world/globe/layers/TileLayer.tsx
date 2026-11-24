@@ -227,10 +227,6 @@ export default function TileLayer({ now, tier, earthRef: _earthRef }: { now: Dat
   }, [now, invalidate]);
 
   useEffect(() => {
-    if (earthReady) invalidate();
-  }, [earthReady, invalidate]);
-
-  useEffect(() => {
     tileLayerStats.cacheMax = cacheMax;
     return () => {
       textureCache.clear();
