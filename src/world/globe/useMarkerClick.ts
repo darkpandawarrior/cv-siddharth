@@ -1,22 +1,39 @@
 import { useEffect, useRef } from "react";
 
+type Tap = { at: number; x: number; y: number };
+const TAP_WINDOW_MS = 350;
+let lastTouchZoom: Tap | undefined;
+
+export function isNearbyDoubleTap(first: Tap, second: Tap): boolean {
+  return Math.abs(second.at - first.at) < TAP_WINDOW_MS && Math.hypot(second.x - first.x, second.y - first.y) < 40;
+}
+
+export function recordTouchZoom(tap: Tap): void {
+  lastTouchZoom = tap;
+}
+
 /** Keep the first tap from opening a sheet over a double-tap's second tap. */
 export function useMarkerClick(curated = false) {
   const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const previous = useRef<{ at: number; x: number; y: number } | null>(null);
+  const previous = useRef<Tap | null>(null);
   useEffect(() => () => { if (pending.current !== null) clearTimeout(pending.current); }, []);
   return (event: { clientX: number; clientY: number }, select: () => void) => {
     if (!curated && claimGuideClick(event)) return;
-    const now = performance.now();
+    const tap = { at: performance.now(), x: event.clientX, y: event.clientY };
     const last = previous.current;
     if (pending.current !== null) clearTimeout(pending.current);
-    if (last && now - last.at < 350 && Math.hypot(event.clientX - last.x, event.clientY - last.y) < 40) {
+    if (last && isNearbyDoubleTap(last, tap)) {
       previous.current = null;
       pending.current = null;
       return;
     }
-    previous.current = { at: now, x: event.clientX, y: event.clientY };
-    pending.current = setTimeout(() => { pending.current = null; previous.current = null; select(); }, 350);
+    previous.current = tap;
+    pending.current = setTimeout(() => {
+      pending.current = null;
+      previous.current = null;
+      // The second ray may miss the marker after the native canvas zoom.
+      if (!lastTouchZoom || !isNearbyDoubleTap(tap, lastTouchZoom)) select();
+    }, TAP_WINDOW_MS);
   };
 }
 

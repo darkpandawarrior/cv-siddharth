@@ -7,7 +7,7 @@ import { SURFACE_EPS } from "./layers/reachAppRing.tsx";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { expect, it, vi } from "vitest";
-import { claimGuideClick, GUIDE_CLICK_RADIUS_PX, nearestScreenPointIndex, nearestGuideClickTarget, registerGuideClickTargets, useMarkerClick } from "./useMarkerClick.ts";
+import { claimGuideClick, GUIDE_CLICK_RADIUS_PX, nearestScreenPointIndex, nearestGuideClickTarget, recordTouchZoom, registerGuideClickTargets, useMarkerClick } from "./useMarkerClick.ts";
 
 it("selects a single marker tap but leaves a nearby double tap to canvas zoom", () => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
@@ -26,6 +26,12 @@ it("selects a single marker tap but leaves a nearby double tap to canvas zoom", 
     click({ clientX: 20, clientY: 30 }, select);
     vi.advanceTimersByTime(100);
     click({ clientX: 100, clientY: 100 }, select);
+    vi.advanceTimersByTime(350);
+    expect(select).toHaveBeenCalledTimes(2);
+    click({ clientX: 20, clientY: 30 }, select);
+    vi.advanceTimersByTime(100);
+    // The canvas recognized the second tap even though it missed this marker.
+    recordTouchZoom({ at: performance.now(), x: 21, y: 31 });
     vi.advanceTimersByTime(350);
     expect(select).toHaveBeenCalledTimes(2);
   } finally { vi.useRealTimers(); }
