@@ -228,50 +228,50 @@ export const drift: Drift[] = [
   {
     "repo": "Gaddi",
     "upstream": "kmp-build-logic",
-    "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "c2d31a0",
+    "behind": 12,
+    "pinnedAt": "2026-09-22"
   },
   {
     "repo": "Gaddi",
     "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "f2c83f8",
+    "behind": 0,
+    "pinnedAt": "2026-10-27"
   },
   {
     "repo": "PaymentsLab-KMP",
     "upstream": "kmp-build-logic",
-    "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "c2d31a0",
+    "behind": 12,
+    "pinnedAt": "2026-09-22"
   },
   {
     "repo": "PaymentsLab-KMP",
     "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "f2c83f8",
+    "behind": 0,
+    "pinnedAt": "2026-10-27"
   },
   {
     "repo": "kmp-app-template",
     "upstream": "kmp-build-logic",
-    "pin": "af78e20",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "1b7f221",
+    "behind": 30,
+    "pinnedAt": "2026-09-21"
   },
   {
     "repo": "kmp-app-template",
     "upstream": "kmp-toolkit",
-    "pin": "59dee39",
-    "behind": 1,
-    "pinnedAt": "2026-10-20"
+    "pin": "f2c83f8",
+    "behind": 0,
+    "pinnedAt": "2026-10-27"
   },
   {
     "repo": "Candidai",
     "upstream": "kmp-build-logic",
     "pin": "af78e20",
-    "behind": 1,
+    "behind": 4,
     "pinnedAt": "2026-10-20"
   },
   {

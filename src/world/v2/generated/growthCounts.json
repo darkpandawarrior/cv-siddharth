@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T05:15:00.487Z",
+  "generatedAt": "2026-11-13",
   "counts": {
     "year-strata": 8,
     "weir": 4,
@@ -11,7 +11,7 @@
     "firefly": 208,
     "deepmal-niche": 178,
     "benchmark": 53,
-    "site-courses": 25,
+    "site-courses": 26,
     "employer-marker": 2
   },
   "peaks": {
@@ -576,34 +576,34 @@
       "peakAt": "2026-09-25"
     },
     "landmark-facet:paymentslab-kmp:bellsNative": {
-      "current": 15,
+      "current": 0,
       "peak": 15,
       "peakAt": "2026-09-25"
     },
     "landmark-facet:paymentslab-kmp:bellsHosted": {
-      "current": 44,
+      "current": 0,
       "peak": 44,
       "peakAt": "2026-09-25"
     },
     "landmark-facet:paymentslab-kmp:bellsMobileMoney": {
-      "current": 7,
+      "current": 0,
       "peak": 7,
       "peakAt": "2026-09-25"
     },
     "landmark-facet:paymentslab-kmp:bellsInternal": {
-      "current": 1,
+      "current": 0,
       "peak": 1,
       "peakAt": "2026-09-25"
     },
     "landmark-facet:paymentslab-kmp:bellsStub": {
-      "current": 3,
+      "current": 0,
       "peak": 3,
       "peakAt": "2026-09-25"
     },
     "landmark-facet:employer:Neev Consulting:flights": {
-      "current": 2,
-      "peak": 2,
-      "peakAt": "2026-09-25"
+      "current": 3,
+      "peak": 3,
+      "peakAt": "2026-11-13"
     },
     "landmark-facet:employer:Dice.tech:flights": {
       "current": 17,
